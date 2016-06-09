@@ -67,8 +67,8 @@ f = f[:, ::-1, :]
 x = np.array([-122. + 360.,])
 y = np.array([47.5,])
 
-xi = zfun.get_interpolant_fast(x, np.array(lon))
-yi = zfun.get_interpolant_fast(y, np.array(lat))
+xi = zfun.get_interpolant(x, np.array(lon))
+yi = zfun.get_interpolant(y, np.array(lat))
 
 ii = int(xi[0, 0])
 jj = int(yi[0, 0])

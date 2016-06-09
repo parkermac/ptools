@@ -7,6 +7,11 @@ particles.  Then for each location of each particle it goes into the ROMS
 diagnostic output files and interpolates in time and space to get all the
 diagnostics.  These are added with their native names to the dict "p" - into
 which we have already read the particulator data, and then saved using pickle.
+
+WARNING: 5/3/2016 this code is a bit obsolete.  It needs:
+1. revise a few things to work with python 3
+2. the call to get_interpolant assumes the old version, that returned a tuple
+3. interpolate4D also needs to be fixed to reflect the new get_interpolant.
 """
 
 # USER: set values
@@ -87,7 +92,7 @@ tt0 = time.time()
 
 tt = 0
 for itp in itp_list[:pNT]: # use [:5] e.g. to speed up testing
-    print ' ** working on time ' + str(tt) + ' out of ' + str(pNT)
+    print(' ** working on time ' + str(tt) + ' out of ' + str(pNT))
     
     fn0 = rfn_list[itp[0]]
     fn1 = rfn_list[itp[1]]
@@ -152,7 +157,7 @@ for itp in itp_list[:pNT]: # use [:5] e.g. to speed up testing
     
     tt += 1
     
-print str(time.time() - tt0) + ' sec to get ' + str(tt) + ' rates'
+print(str(time.time() - tt0) + ' sec to get ' + str(tt) + ' rates')
 # RESULT takes 385 sec to get all temp and salt rates (361 times, 105 particles)
 # or 6.5 minutes per 5-day experiment - a full year would take overnight
 

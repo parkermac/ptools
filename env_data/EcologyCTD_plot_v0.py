@@ -35,19 +35,19 @@ sta_to_plot = [
 data_to_plot = [
     'Salinity',
     'Temperature',
-    #'Sigma',
-    #'Chl',
+    'Sigma',
+    'Chl',
     'DO',
     #'Trans',
     #'pH'
     ]
     
 # choose z limit for cast plots
-z_deep = -25 # positive up, zero at surface (m)
+z_deep = -40 # positive up, zero at surface (m)
 
 # set depth limits for averages (time series plot)
 ztop = -5 # red curve will be average above this z (m)
-zbot = -10 # blue curve will be average below this z (m)
+zbot = -5 # blue curve will be average below this z (m)
 
 # decide whether or not to print a figure (should appear as a .png
 # in whatever directory you are keeping your data files)
@@ -208,7 +208,7 @@ for sta in sta_to_plot:
         import numpy as np
         # drop repeat values (aiming for the first of a depth pair)
         zdf = np.diff(cast['Z'])
-        zdf = np.concatenate((np.array([1.,]),zdf),axis=1)
+        zdf = np.concatenate((np.array([1.,]),zdf))
         mask = zdf != 0
         cast = cast[mask]
         cast = cast[:-5] # drop bottom values (sometimes bad)

@@ -19,7 +19,7 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart('cascadia1','base')
 
-# Data collections
+# Data collections (should rewrite as dicts instead of tuples)
 dc = dict()
 dc[0] = ('Hood Canal South', 'HCB003_0', 'HC_HP', (0,8), 'Skokomish', (0,500), (2006,2009)) # GOOD (2006,2014)
 dc[1] = ('Hood Canal Twanoh', 'HCB004_0', 'HC_TW', (0,8), 'Skokomish', (0,500), (2005,2009)) # GOOD (2005,2014)
@@ -31,7 +31,7 @@ dc[5] = ('Hood Canal Duckabush', 'HCB010_0', 'HC_DK', (0,6), 'Duckabush', (0,100
 ##### USER INPUT #######
 
 # Choose the collection
-idc = 0
+idc = 5
 
 # and choose the time limits
 try:
@@ -50,7 +50,7 @@ strat_lims = dc[idc][3]
 riv_name = dc[idc][4]
 riv_lims = dc[idc][5]
 
-#%% EcologyCTD Data
+#%% Ecology CTD Data
 # These are saved as Series of Sigma (top or bottom layer)
 
 # where are the data csv files

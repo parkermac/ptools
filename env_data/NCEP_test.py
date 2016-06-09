@@ -95,7 +95,6 @@ anoms = pd.DataFrame(index=ncep_df.index)
 anoms['ncep'] = ncep_df['anom']
 anoms['psun'] = dfma['PSUN']
 anoms['tsun'] = dfma['TSUN']
-
     
 #%% Plotting
 
