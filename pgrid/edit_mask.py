@@ -24,33 +24,32 @@ The performance with a 300x600 grid gets a little slow, but is still OK.
 
 """
 
-dir0 = '/Users/PM5/Documents/'
+from importlib import reload
+import gfun; reload(gfun)
+gridname, dir0, pgdir, gdir = gfun.gstart()
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as pltc
 import shutil
 import os
+
+import zfun
+
+import matplotlib.pyplot as plt
+import matplotlib.colors as pltc
 import sys
 alp = os.path.abspath(dir0 + 'LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 from importlib import reload
-import zfun; reload(zfun)
-import matfun
 
 flag_testing = False
 
 if not flag_testing:
 
-    # load bathymetry grid file
-
-    indir = dir0 + 'ptools_output/pgrid/'
-
     if True:
         # interactive selection
         print('\n%s\n' % '** Choose file to edit **')
-        fn_list_raw = os.listdir(indir)
+        fn_list_raw = os.listdir(gdir)
         fn_list = []
         for item in fn_list_raw:
             if item[-3:] == '.nc':
@@ -60,18 +59,15 @@ if not flag_testing:
         for nfn in range(Nfn):
             print(str(nfn) + ': ' + fn_list[nfn])
         my_nfn = int(input('-- Input number -- '))
-        gname = fn_dict[my_nfn]
+        fn = fn_dict[my_nfn]
     else:
-        # test case created by make_grid.py
-        gname = 'test_m00_r00_s00_x00.nc'
+        fn = 'grid_m00_r00_s00_x00.nc'
 
-    in_fn = indir + gname
+    in_fn = gdir + fn
 
-    # create the new file name
-    gni = gname.find('_m')
-    new_num = ('00' + str(int(gname[gni+2: gni+4]) + 1))[-2:]
-    gname_new = gname.replace(gname[gni:gni+4],'_m' + new_num)
-    out_fn = indir + gname_new
+    #%% create the new file name
+    fn_new = gfun.increment_filename(fn, tag='_m')
+    out_fn = gdir + fn_new
 
     # get the grid from NetCDF
     import netCDF4 as nc
@@ -86,10 +82,7 @@ if not flag_testing:
     # coastline
     do_coast = True
     if do_coast:
-        c_dir = dir0 + 'tools_data/geo_data/coast/'
-        c_file = 'pnw_coast_combined.mat'
-        c_fn = c_dir + c_file
-        cmat = matfun.loadmat(c_fn)
+        cmat = gfun.get_coast()
 
 elif flag_testing:
     # simple grid for testing
@@ -168,7 +161,7 @@ NBcontinue = 3
 NBdone = NB
 active_color = 'k'
 inactive_color = 'w'
-mask_color = pltc.colorConverter.to_rgb('lavender')
+mask_color = pltc.colorConverter.to_rgb('lightsalmon')
 addButtonLabel(ax2, xbc, ybc, NBpause, 'PAUSE', tcol=inactive_color)
 addButtonLabel(ax2, xbc, ybc, NBcontinue, 'CONTINUE', tcol=inactive_color)
 addButtonLabel(ax2, xbc, ybc, NBstart, 'START', tcol=active_color)
@@ -258,7 +251,7 @@ if not flag_testing:
     mask_rho[mii == True] = 0.
 
     if not np.all(mask_rho == mask_rho_orig):
-        print('Creating ' + gname_new)
+        print('Creating ' + out_fn)
         try:
             os.remove(out_fn)
         except OSError:
