@@ -4,14 +4,19 @@ Created on Tue Jun 14 14:13:03 2016
 
 @author: PM5
 
-This makes the file river_info.csv, and the "tracks"
+This makes the file river_info.csv, and the individual river lon, lat: tracks.
 """
-
-dir0 = '/Users/PM5/Documents/'
 
 import os
 import sys
-alp = os.path.abspath(dir0 + 'LiveOcean/alpha')
+grp = os.path.abspath('../pgrid')
+if grp not in sys.path:
+    sys.path.append(grp)
+from importlib import reload
+import gfun; reload(gfun)
+G = gfun.gstart()
+
+alp = os.path.abspath(G['dir0'] + 'LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 import Lfun
@@ -21,14 +26,16 @@ import scipy.io as sio
 import numpy as np
 import pandas as pd
 
-#%% make place for track output
-gname = 'test'
-outdir0 = Ldir['LOo'] + 'grids/'
-Lfun.make_dir(outdir0, clean=False)
-outdir = outdir0 + gname +'/'
-Lfun.make_dir(outdir, clean=True)
-trackdir = outdir + 'tracks/'
-Lfun.make_dir(trackdir, clean=True)
+#%% make place for output
+ri_name = 'sng_2016_06'
+
+ri_dir0 = G['dir0'] + 'ptools_output/river/'
+ri_dir = ri_dir0 + ri_name +'/'
+rit_dir = ri_dir + 'tracks/'
+
+Lfun.make_dir(ri_dir0, clean=False)
+Lfun.make_dir(ri_dir, clean=True)
+Lfun.make_dir(rit_dir, clean=True)
 
 #%% load information from SNG
 
@@ -67,7 +74,7 @@ for ii in range(NC):
     df_tr['lon'] = lon
     df_tr['lat'] = lat
     df_tr.index.name = 'ind'
-    fn_tr = trackdir + rn + '_track.csv'
+    fn_tr = rit_dir + rn + '.csv'
     df_tr.to_csv(fn_tr)
 
     depth[ii] = a[3].flatten()[0]
@@ -207,9 +214,10 @@ df.index.name = 'rname'
 #df_final = df_final.drop(['yaquina', 'coos', 'skagit_south'])
 
 #%% save to a csv file
-fn_ri = outdir + 'river_info.csv'
+fn_ri = ri_dir + 'river_info.csv'
 df_final.to_csv(fn_ri)
 
+# here is how you would read it back into a DataFrame
 #df1 = pd.read_csv(fn_ri, index_col='rname')
 
 

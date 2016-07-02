@@ -39,7 +39,7 @@ tf = 'm'
 # load and process NDBC Buoy Data
 
 """
-For wtpo1 the colums are:
+For wtpo1 the columns are:
 
 1984-1993:
 YY MM DD hh WD   WSPD GST  WVHT  DPD   APD  MWD  BAR    ATMP  WTMP  DEWP  VIS

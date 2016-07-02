@@ -7,59 +7,52 @@ Created on Thu Jun 16 13:07:01 2016
 
 from importlib import reload
 import gfun; reload(gfun)
-gridname, dir0, pgdir, gdir = gfun.gstart()
+G = gfun.gstart()
 
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 
-import os
+#import os
 import zfun
 
 import numpy as np
 
-#%% load grid file
+#%% select grid file
+fn = gfun.select_file(G)
+in_fn = G['gdir'] + fn
 
-if True:
-    # interactive selection
-    print('\n%s\n' % '** Choose file to edit **')
-    fn_list_raw = os.listdir(gdir)
-    fn_list = []
-    for item in fn_list_raw:
-        if item[-3:] == '.nc':
-            fn_list.append(item)
-    Nfn = len(fn_list)
-    fn_dict = dict(zip(range(Nfn), fn_list))
-    for nfn in range(Nfn):
-        print(str(nfn) + ': ' + fn_list[nfn])
-    my_nfn = int(input('-- Input number -- '))
-    fn = fn_dict[my_nfn]
-else:
-    fn = 'grid_m00_r00_s00_x00.nc'
-
-in_fn = gdir + fn
-
-#%% coastline
-
-cmat = gfun.get_coast()
-
-#%% Test: retrieve the output
+#%% load the data
 
 ds = nc.Dataset(in_fn)
 z = ds.variables['z'][:]
-m = ds.variables['mask_rho'][:]
-zm = np.ma.masked_where(m==0, z)
+mask_rho = ds.variables['mask_rho'][:]
 plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
-ds.close()
 
-ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
+show_grids = True
+NC = 1
+if show_grids:
+    NC = 2
+    lon_dict = dict()
+    lat_dict = dict()
+    tag_list = ['rho', 'u', 'v', 'psi']
+    for tag in tag_list:
+        lon_dict[tag] = ds.variables['lon_'+tag][:]
+        lat_dict[tag] = ds.variables['lat_'+tag][:]
+
+ds.close()
 
 #%% plotting
 
+cmat = gfun.get_coast()
+ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
+zm = np.ma.masked_where(mask_rho==0, z)
+
 plt.close()
 
-fig = plt.figure(figsize=(10,10))
-ax = fig.add_subplot(111)
+fig = plt.figure(figsize=(10*NC,10))
+
+ax = fig.add_subplot(1,NC,1)
 cmap1 = plt.get_cmap(name='terrain')
 cs = ax.pcolormesh(plon, plat, zm,
                    vmin=-200, vmax=200, cmap = cmap1)
@@ -68,6 +61,23 @@ zfun.dar(ax)
 fig.colorbar(cs, ax=ax, extend='both')
 ax.set_xlim(ax_lims[:2])
 ax.set_ylim(ax_lims[-2:])
-ax.set_title(gridname + '/' + fn)
+ax.set_title(G['gridname'] + '/' + fn)
+
+if show_grids:
+    marker_dict = {'rho': 'ok',
+                 'u': '>r',
+                 'v': '^b',
+                 'psi': 'xg'}
+    ax = fig.add_subplot(1,NC,2)
+    for tag in tag_list:
+        if tag == 'rho':
+            ax.plot(lon_dict[tag][mask_rho==1], lat_dict[tag][mask_rho==1],
+                    marker_dict[tag])
+        else:
+            ax.plot(lon_dict[tag], lat_dict[tag], marker_dict[tag])
+    ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
+    zfun.dar(ax)
+    ax.set_xlim(ax_lims[:2])
+    ax.set_ylim(ax_lims[-2:])
 
 plt.show()

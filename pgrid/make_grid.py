@@ -9,7 +9,7 @@ Code to make a ROMS grid file.
 
 from importlib import reload
 import gfun; reload(gfun)
-gridname, dir0, pgdir, gdir = gfun.gstart()
+G = gfun.gstart()
 
 import numpy as np
 import h5py
@@ -21,22 +21,23 @@ import Lfun
 import zfun
 import matfun
 
-Lfun.make_dir(gdir, clean=True)
+
+Lfun.make_dir(G['gdir'], clean=True)
 
 fn = 'grid_m00_r00_s00_x00.nc'
-out_fn = gdir + fn
+out_fn = G['gdir'] + fn
 print(50*'*')
 print(out_fn)
 
 # vectors to define the plaid grid
 # start with cell corners (like an extended psi grid)
 
-if gridname == 'test':
+if G['gridname'] == 'test':
     # cascadia-like
     plon_vec = np.linspace(-127,-122,100)
     plat_vec = np.linspace(43,50,200)
 
-elif gridname == 'ps':
+elif G['gridname'] == 'ps':
     # Puget Sound
     plon_vec = np.linspace(-124,-122,400)
     plat_vec = np.linspace(47,49,600)
@@ -45,7 +46,7 @@ plon, plat = np.meshgrid(plon_vec, plat_vec)
 ax_lims = (plon_vec[0], plon_vec[-1], plat_vec[0], plat_vec[-1])
 
 # specify topography files to use
-t_dir = dir0 + 'tools_data/geo_data/topo/'
+t_dir = G['dir0'] + 'tools_data/geo_data/topo/'
 # list of topo files: coarsest to finest
 t_list = ['smith_sandwell/pnw_smithsand.mat',
           'cascadia/cascadia_gridded.mat',
@@ -58,13 +59,7 @@ lon, lat = np.meshgrid(lon_vec, lat_vec)
 NR, NC = lon.shape
 
 # initialize the final bathymetry array
-TZ = np.nan * lon
-
-# coastline
-c_dir = dir0 + 'tools_data/geo_data/coast/'
-c_file = 'pnw_coast_combined.mat'
-c_fn = c_dir + c_file
-cmat = matfun.loadmat(c_fn)
+z = np.nan * lon
 
 def how_many_nans(arr):
     print(' Array: npts=' + str(arr.size) + ' nnan=' +
@@ -103,13 +98,16 @@ for t_file in t_list:
     print('\nOPENING BATHY FILE: ' + t_file)
     tlon_vec, tlat_vec, tz = load_bathy(t_fn)
 
-    TZv = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
+    z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
                                          tlon_vec, tlat_vec, tz)
-    TZpart = TZv.reshape((NR, NC))
+    z_part = z_flat.reshape((NR, NC))
 
-    # put good values of TZpart in TZ
-    TZ[~np.isnan(TZpart)] = TZpart[~np.isnan(TZpart)]
+    # put good values of z_part in z
+    z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
 
+#%% Adjust zero of the bathymetry to account for the fact that mean sea level
+# is somewhat higher than NAVD88.
+z = z - 1.06
 
 #%% save the output to NetCDF
 
@@ -120,25 +118,68 @@ except OSError:
     pass # assume error was because the file did not exist
 
 # create new NetCDF file
-M, L = lon.shape # use ROMS teminology
 foo = nc.Dataset(out_fn, 'w')
-foo.createDimension('eta_rho', M)
-foo.createDimension('xi_rho', L)
-foo.createDimension('y1', M + 1)
-foo.createDimension('x1', L + 1)
-lat_var = foo.createVariable('lat_rho', float, ('eta_rho', 'xi_rho'))
-lon_var = foo.createVariable('lon_rho', float, ('eta_rho', 'xi_rho'))
-# we call these "_psi_ex" becasue they extend one point beyond
-# that of the standard ROMS psi grid
-plat_var = foo.createVariable('lat_psi_ex', float, ('y1', 'x1'))
-plon_var = foo.createVariable('lon_psi_ex', float, ('y1', 'x1'))
+
+# create dimensions
+M, L = lon.shape # use ROMS teminology
+size_dict = {'rho': (M, L),
+             'u': (M, L-1),
+             'v': (M-1, L),
+             'psi': (M-1, L-1),
+             'psi_ex': (M+1, L+1)}
+tag_list = ['rho', 'u', 'v', 'psi', 'psi_ex']
+for tag in tag_list:
+    foo.createDimension('eta_'+tag, size_dict[tag][0])
+    foo.createDimension('xi_'+tag, size_dict[tag][1])
+
+# create variables
+lon_var = dict()
+lat_var = dict()
+for tag in tag_list:
+    lat_var[tag] = foo.createVariable('lat_'+tag, float, ('eta_'+tag, 'xi_'+tag))
+    lon_var[tag] = foo.createVariable('lon_'+tag, float, ('eta_'+tag, 'xi_'+tag))
 z_var = foo.createVariable('z', float, ('eta_rho', 'xi_rho'))
 mask_var = foo.createVariable('mask_rho', int, ('eta_rho', 'xi_rho'))
-lat_var[:] = lat
-lon_var[:] = lon
-plat_var[:] = plat
-plon_var[:] = plon
-z_var[:] = TZ
+dx_var = foo.createVariable('dx', float, ('eta_rho', 'xi_rho'))
+dy_var = foo.createVariable('dy', float, ('eta_rho', 'xi_rho'))
+pm_var = foo.createVariable('pm', float, ('eta_rho', 'xi_rho'))
+pn_var = foo.createVariable('pn', float, ('eta_rho', 'xi_rho'))
+
+# create other grids
+lon_dict = dict()
+lat_dict = dict()
+
+lon_dict['rho'] = lon
+lat_dict['rho'] = lat
+
+lon_dict['psi_ex'] = plon
+lat_dict['psi_ex'] = plat
+
+lon_dict['u'] = lon[:, :-1] + np.diff(lon, axis=1)/2
+lat_dict['u'] = lat[:, :-1]
+
+lon_dict['v'] = lon[:-1, :]
+lat_dict['v'] = lat[:-1, :] + np.diff(lat, axis=0)/2
+
+lon_dict['psi'] = plon[1:-1, 1:-1]
+lat_dict['psi'] = plat[1:-1, 1:-1]
+
+# create dx, dy and pm, pn
+ulon = plon[:-1, :]
+vlat = plat[:, :-1]
+R = zfun.earth_rad(np.mean(plat[:,1]))
+dx = R * np.cos(np.pi*lat/180) * (np.pi*np.diff(ulon, axis=1)/180)
+dy = R * (np.pi*np.diff(vlat, axis=0)/180)
+
+# add data to fields
+for tag in tag_list:
+    lon_var[tag][:] = lon_dict[tag]
+    lat_var[tag][:] = lat_dict[tag]
+
+z_var[:] = z
 mask_rho = np.ones((M, L)) # start with all ones (unmasked for ROMS)
 mask_var[:] = mask_rho
+dx_var[:] = dx
+dy_var[:] = dy
+
 foo.close()

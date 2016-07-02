@@ -26,7 +26,7 @@ The performance with a 300x600 grid gets a little slow, but is still OK.
 
 from importlib import reload
 import gfun; reload(gfun)
-gridname, dir0, pgdir, gdir = gfun.gstart()
+G = gfun.gstart()
 
 import numpy as np
 import shutil
@@ -37,7 +37,7 @@ import zfun
 import matplotlib.pyplot as plt
 import matplotlib.colors as pltc
 import sys
-alp = os.path.abspath(dir0 + 'LiveOcean/alpha')
+alp = os.path.abspath(G['dir0'] + 'LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 from importlib import reload
@@ -46,39 +46,23 @@ flag_testing = False
 
 if not flag_testing:
 
-    if True:
-        # interactive selection
-        print('\n%s\n' % '** Choose file to edit **')
-        fn_list_raw = os.listdir(gdir)
-        fn_list = []
-        for item in fn_list_raw:
-            if item[-3:] == '.nc':
-                fn_list.append(item)
-        Nfn = len(fn_list)
-        fn_dict = dict(zip(range(Nfn), fn_list))
-        for nfn in range(Nfn):
-            print(str(nfn) + ': ' + fn_list[nfn])
-        my_nfn = int(input('-- Input number -- '))
-        fn = fn_dict[my_nfn]
-    else:
-        fn = 'grid_m00_r00_s00_x00.nc'
-
-    in_fn = gdir + fn
-
-    #%% create the new file name
+    # select grid file
+    fn = gfun.select_file(G)
+    in_fn = G['gdir'] + fn
+    # create new file name
     fn_new = gfun.increment_filename(fn, tag='_m')
-    out_fn = gdir + fn_new
+    out_fn = G['gdir'] + fn_new
 
     # get the grid from NetCDF
     import netCDF4 as nc
     ds = nc.Dataset(in_fn)
-    XC = ds.variables['lon_psi_ex'][:]
-    YC = ds.variables['lat_psi_ex'][:]
-    Z = ds.variables['z'][:]
-    M = ds.variables['mask_rho'][:] == 0
+    plon = ds.variables['lon_psi_ex'][:]
+    plat = ds.variables['lat_psi_ex'][:]
+    z = ds.variables['z'][:]
+    m = ds.variables['mask_rho'][:] == 0
     ds.close()
-    xc = XC[0,:]
-    yc = YC[:,0]
+    plon = plon[0,:]
+    plat = plat[:,0]
     # coastline
     do_coast = True
     if do_coast:
@@ -87,29 +71,29 @@ if not flag_testing:
 elif flag_testing:
     # simple grid for testing
     # grid corners
-    xc = np.linspace(0,10,9)
-    yc = np.linspace(0,10,11)
+    plon = np.linspace(0,10,9)
+    plat = np.linspace(0,10,11)
     # grid centers
-    x = xc[:-1] + np.diff(xc)/2
-    y = yc[:-1] + np.diff(yc)/2
+    x = plon[:-1] + np.diff(plon)/2
+    y = plat[:-1] + np.diff(plat)/2
     # matrix versions of grids
     X, Y = np.meshgrid(x,y)
-    XC, YC = np.meshgrid(xc,yc)
+    plon, plat = np.meshgrid(plon,plat)
     # data
-    Z = (X**2 + Y**2) - 50
+    z = (X**2 + Y**2) - 50
     # mask
-    M = Z > 0 # True over land (positive Z)
+    m = z > 0 # True over land (positive Z)
     # coastline
     do_coast = False
 
 # mi a vector version of the mask (True = masked) that we
 # use when accessing the mesh colors
-mi = M.flatten()
+mi = m.flatten()
 # this flattens by default in row-major (C-style) order, meaning it
 # gives a row, appended by the next row, etc.
 
 # size of the topo array
-[NR, NC] = Z.shape
+[NR, NC] = z.shape
 
 # PLOTTING
 plt.close()
@@ -121,14 +105,15 @@ ax2 = plt.subplot2grid((1,3), (0,2), colspan=1)
 
 # initialize the data plot
 cmap1 = plt.get_cmap(name='terrain')
-cs = ax1.pcolormesh(XC,YC,Z, vmin=-200, vmax=200, cmap = cmap1)
+cs = ax1.pcolormesh(plon,plat,z, vmin=-200, vmax=200, cmap = cmap1)
 if do_coast:
     ax1.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
     zfun.dar(ax1)
-xl0 = (xc.min(), xc.max())
-yl0 = (yc.min(), yc.max())
+xl0 = (plon.min(), plon.max())
+yl0 = (plat.min(), plat.max())
 ax1.set_xlim(xl0)
 ax1.set_ylim(yl0)
+
 fig.colorbar(cs, ax=ax1, extend='both')
 
 # create control buttons
@@ -142,15 +127,15 @@ cmap2 = plt.get_cmap(name='viridis')
 ax2.pcolormesh(XBC,YBC,ZB, vmin=0, vmax=NB, cmap = cmap2)
 ax2.set_axis_off()
 
-def addButtonLabel(ax, xc, yc, nb, lab, tcol='k'):
+def addButtonLabel(ax, plon, plat, nb, lab, tcol='k'):
     # draw and label buttons
     pad = .1
     ax.add_patch(
-        plt.Rectangle((xc[0]+pad,yc[nb-1]+pad),
-                      np.diff(xc)[-1]-2*pad, np.diff(yc)[-1]-2*pad,
+        plt.Rectangle((plon[0]+pad,plat[nb-1]+pad),
+                      np.diff(plon)[-1]-2*pad, np.diff(plat)[-1]-2*pad,
                       fill=True, facecolor=inactive_color,
                       edgecolor='w'))
-    ax.text(xc.mean(),yc[nb-1:nb+1].mean(), lab, fontsize=15,
+    ax.text(plon.mean(),plat[nb-1:nb+1].mean(), lab, fontsize=15,
              horizontalalignment='center', verticalalignment='center',
              color=tcol)
 
@@ -219,11 +204,11 @@ while flag_get_ginput:
 
     elif flag_continue and not flag_start:
         # we are in the data field
-        ix0, ix1, frx = zfun.get_interpolant(b[:,0],xc)
-        iy0, iy1, fry = zfun.get_interpolant(b[:,1],yc)
+        ix0, ix1, frx = zfun.get_interpolant(b[:,0],plon)
+        iy0, iy1, fry = zfun.get_interpolant(b[:,1],plat)
         iix = ix0[0]
         iiy = iy0[0]
-        this_z = Z[iiy, iix]
+        this_z = z[iiy, iix]
         # this toggles the colors
         jj = iiy*NC + iix # index into the flattened array
         if mi[jj] == True:
@@ -246,9 +231,9 @@ if not flag_testing:
     ds.close()
 
     # create the new mask
-    mii = mi.reshape(NR, NC)
+    m = mi.reshape(NR, NC)
     mask_rho = np.ones((NR,NC))
-    mask_rho[mii == True] = 0.
+    mask_rho[m == True] = 0.
 
     if not np.all(mask_rho == mask_rho_orig):
         print('Creating ' + out_fn)

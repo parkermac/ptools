@@ -7,43 +7,41 @@ Created on Wed Jun 15 16:43:32 2016
 This plots river tacks.
 """
 
-dir0 = '/Users/PM5/Documents/'
+from importlib import reload
+import gfun; reload(gfun)
+G = gfun.gstart()
+
+import zfun
 
 import os
-import sys
-alp = os.path.abspath(dir0 + 'LiveOcean/alpha')
-if alp not in sys.path:
-    sys.path.append(alp)
-import Lfun
-Ldir = Lfun.Lstart()
-import zfun
-import matfun
-
+import shutil
 import netCDF4 as nc
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seawater as sw
 
 #%% get river info
-gname = 'test'
-outdir0 = Ldir['LOo'] + 'grids/'
-outdir = outdir0 + gname +'/'
-trackdir = outdir + 'tracks/'
+ri_name = 'sng_2016_06'
 
-fn_ri = outdir + 'river_info.csv'
+ri_dir0 = G['dir0'] + 'ptools_output/river/'
+ri_dir = ri_dir0 + ri_name +'/'
+rit_dir = ri_dir + 'tracks/'
 
-df = pd.read_csv(fn_ri, index_col='rname')
+ri_fn = ri_dir + 'river_info.csv'
 
-#%% get a bathymetry file
+df = pd.read_csv(ri_fn, index_col='rname')
 
-dir0 = '/Users/PM5/Documents/'
-outdir = dir0 +'ptools_output/pgrid/'
-gname_base = 'test'
-gname_tag = '_m02_r00_s00_x00'
-gname = gname_base + gname_tag + '.nc'
-g_fn = outdir + gname
+#%% select grid file
+fn = gfun.select_file(G)
+in_fn = G['gdir'] + fn
+# create new file name
+fn_new = gfun.increment_filename(fn, tag='_r')
+out_fn = G['gdir'] + fn_new
 
-ds = nc.Dataset(g_fn)
+#%% get the grid data
+
+ds = nc.Dataset(in_fn)
 z = ds.variables['z'][:]
 mask_rho = ds.variables['mask_rho'][:]
 plon = ds.variables['lon_psi_ex'][:]
@@ -54,14 +52,18 @@ ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
 
 #%% try carving river channels
 
-zm = mask_rho==0
+m = mask_rho==0
 
 plon_vec = plon[0,:].flatten()
 plat_vec = plat[:,0].flatten()
 
+ilon_dict = dict()
+ilat_dict = dict()
+dir_dict = dict()
+
 for rn in df.index:
     depth = df.ix[rn, 'depth']
-    fn_tr = trackdir + rn + '_track.csv'
+    fn_tr = rit_dir + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
@@ -76,42 +78,65 @@ for rn in df.index:
         ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
         jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
         # this unmasks points crossed by the river
-        zm[jj0, ii0] = False
+        m[jj0, ii0] = False
         # and this sets the depth in those places, if needed,
         # "carving the river channel"
         for ff in range(len(ii0)):
             JJ = jj0[ff]
             II = ii0[ff]
             z[JJ, II] = np.min((z[JJ, II], -depth))
+    # this creates information about the index and direction of the river
+    ilon_dict[rn] = II
+    ilat_dict[rn] = JJ
+    # phaseangle is degrees -180:180 with 0 = East
+    dist, phaseangle = sw.dist([y[I], y[I+1]], [x[I], x[I+1]])
+    dir_dict[rn] = phaseangle
 
-# make a masked array for plotting
-zma = np.ma.masked_where(zm, z)
-
-#%% coast
-
-c_dir = dir0 + 'tools_data/geo_data/coast/'
-c_file = 'pnw_coast_combined.mat'
-c_fn = c_dir + c_file
-cmat = matfun.loadmat(c_fn)
+#%% figure out river locations
+ji_dict = dict()
+for rn in df.index:
+    ii = ilon_dict[rn]
+    jj = ilat_dict[rn]
+    ji = np.array([jj,ii])
+    ph = dir_dict[rn]
+    if -45 <= ph and ph <= 45:
+        JI = np.array([0,1])
+    elif 135 <= ph and ph < 45:
+        JI = np.array([1,0])
+    elif -135 <= ph and ph < -45:
+        JI = np.array([-1,0])
+    elif np.abs(ph) > 135:
+        JI = np.array([0,-1])
+    is_right = False
+    while is_right == False:
+        ji = ji + JI
+        if mask_rho[ji[0],ji[1]] == 0:
+            ji_dict[rn] = ji
+            print(rn)
+            is_right = True
 
 #%% plotting
+
+zm = np.ma.masked_where(m, z)
+
+cmat = gfun.get_coast()
 
 plt.close()
 
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(111)
 cmap1 = plt.get_cmap(name='rainbow')
-cs = ax.pcolormesh(plon, plat,zma,
+cs = ax.pcolormesh(plon, plat,zm,
                    vmin=-200, vmax=200, cmap = cmap1)
 ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
 zfun.dar(ax)
 fig.colorbar(cs, ax=ax, extend='both')
 ax.set_xlim(ax_lims[:2])
 ax.set_ylim(ax_lims[-2:])
-ax.set_title(gname)
+ax.set_title(G['gridname'])
 
 for rn in df.index:
-    fn_tr = trackdir + rn + '_track.csv'
+    fn_tr = rit_dir + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
@@ -119,3 +144,20 @@ for rn in df.index:
     ax.plot(x[-1], y[-1], '*r')
 
 plt.show()
+
+#%% Save the output file
+
+# create the new mask
+mask_rho[m == True] = 0
+mask_rho[m == False] = 1
+
+print('Creating ' + out_fn)
+try:
+    os.remove(out_fn)
+except OSError:
+    pass # assume error was because the file did not exist
+shutil.copyfile(in_fn, out_fn)
+ds = nc.Dataset(out_fn, 'a')
+ds['mask_rho'][:] = mask_rho
+ds['z'][:] = z
+ds.close()
