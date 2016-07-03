@@ -30,7 +30,7 @@ import netCDF4 as nc
 ds = nc.Dataset(in_fn)
 plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
-z = ds.variables['z'][:]
+z = -ds.variables['h'][:]
 mask_rho_orig = ds.variables['mask_rho'][:]
 ds.close()
 plon_vec = plon[0,:]

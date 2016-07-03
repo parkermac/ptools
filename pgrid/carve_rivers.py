@@ -42,10 +42,14 @@ out_fn = G['gdir'] + fn_new
 #%% get the grid data
 
 ds = nc.Dataset(in_fn)
-z = ds.variables['z'][:]
+z = -ds.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
+lonu = ds.variables['lon_u'][:]
+latu = ds.variables['lat_u'][:]
+lonv = ds.variables['lon_v'][:]
+latv = ds.variables['lat_v'][:]
 ds.close()
 
 ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
@@ -92,28 +96,75 @@ for rn in df.index:
     dist, phaseangle = sw.dist([y[I], y[I+1]], [x[I], x[I+1]])
     dir_dict[rn] = phaseangle
 
+
 #%% figure out river locations
+idir_dict = dict()
+isign_dict = dict()
+uv_dict = dict()
+row_dict_py = dict()
+col_dict_py = dict()
+
 ji_dict = dict()
 for rn in df.index:
     ii = ilon_dict[rn]
     jj = ilat_dict[rn]
     ji = np.array([jj,ii])
     ph = dir_dict[rn]
-    if -45 <= ph and ph <= 45:
-        JI = np.array([0,1])
-    elif 135 <= ph and ph < 45:
-        JI = np.array([1,0])
-    elif -135 <= ph and ph < -45:
-        JI = np.array([-1,0])
-    elif np.abs(ph) > 135:
-        JI = np.array([0,-1])
+    JI_W = np.array([0,1])
+    JI_S = np.array([1,0])
+    JI_N = np.array([-1,0])
+    JI_E = np.array([0,-1])
+    if -45 <= ph and ph <= 45: # River flowing W
+        JI = JI_W
+    elif 135 <= ph and ph < 45: # S
+        JI = JI_S
+    elif -135 <= ph and ph < -45: # N
+        JI = JI_N
+    elif np.abs(ph) > 135: # E
+        JI = JI_E
     is_right = False
     while is_right == False:
         ji = ji + JI
-        if mask_rho[ji[0],ji[1]] == 0:
+        try:
+            if m[ji[0],ji[1]] == True:
+                ji_dict[rn] = ji
+                print(rn)
+                is_right = True
+        except IndexError:
+            # assume we hit the edge of the grid and so move back a step
+            ji = ji - JI
+            m[ji[0],ji[1]] = True
             ji_dict[rn] = ji
-            print(rn)
+            print(rn + ' (hit boundary) ' + str(ji))
             is_right = True
+    if (JI == JI_E).all():
+        idir_dict[rn] = 0 # 0 = E/W, 1 = N/S
+        isign_dict[rn] = 1
+        uv_dict[rn] = 'u'
+        row_dict_py[rn] = ji[0]
+        col_dict_py[rn] = ji[1]
+    elif (JI == JI_W).all():
+        idir_dict[rn] = 0
+        isign_dict[rn] = -1
+        uv_dict[rn] = 'u'
+        row_dict_py[rn] = ji[0]
+        col_dict_py[rn] = ji[1] - 1
+    elif (JI == JI_N).all():
+        idir_dict[rn] = 1
+        isign_dict[rn] = 1
+        uv_dict[rn] = 'v'
+        row_dict_py[rn] = ji[0]
+        col_dict_py[rn] = ji[1]
+    elif (JI == JI_S).all():
+        idir_dict[rn] = 1
+        isign_dict[rn] = -1
+        uv_dict[rn] = 'v'
+        row_dict_py[rn] = ji[0] - 1
+        col_dict_py[rn] = ji[1]
+
+#%% create the new mask
+mask_rho[m == True] = 0
+mask_rho[m == False] = 1
 
 #%% plotting
 
@@ -143,15 +194,24 @@ for rn in df.index:
     ax.plot(x, y, '-r', linewidth=2)
     ax.plot(x[-1], y[-1], '*r')
 
+    if uv_dict[rn] == 'u' and isign_dict[rn] == 1:
+        ax.plot(lonu[row_dict_py[rn], col_dict_py[rn]],
+                latu[row_dict_py[rn], col_dict_py[rn]], '>r')
+    elif uv_dict[rn] == 'u' and isign_dict[rn] == -1:
+        ax.plot(lonu[row_dict_py[rn], col_dict_py[rn]],
+                latu[row_dict_py[rn], col_dict_py[rn]], '<r')
+    elif uv_dict[rn] == 'v' and isign_dict[rn] == 1:
+        ax.plot(lonv[row_dict_py[rn], col_dict_py[rn]],
+                latv[row_dict_py[rn], col_dict_py[rn]], '^b')
+    elif uv_dict[rn] == 'v' and isign_dict[rn] == -1:
+        ax.plot(lonv[row_dict_py[rn], col_dict_py[rn]],
+                latv[row_dict_py[rn], col_dict_py[rn]], 'vb')
+
 plt.show()
 
 #%% Save the output file
 
-# create the new mask
-mask_rho[m == True] = 0
-mask_rho[m == False] = 1
-
-print('Creating ' + out_fn)
+print('\nCreating ' + out_fn)
 try:
     os.remove(out_fn)
 except OSError:
@@ -159,5 +219,5 @@ except OSError:
 shutil.copyfile(in_fn, out_fn)
 ds = nc.Dataset(out_fn, 'a')
 ds['mask_rho'][:] = mask_rho
-ds['z'][:] = z
+ds['h'][:] = -z
 ds.close()

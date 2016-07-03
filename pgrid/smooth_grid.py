@@ -28,7 +28,7 @@ out_fn = G['gdir'] + fn_new
 #%% Test: retrieve the output
 
 ds = nc.Dataset(in_fn)
-z = ds.variables['z'][:]
+z = -ds.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
@@ -79,7 +79,7 @@ except OSError:
     pass # assume error was because the file did not exist
 shutil.copyfile(in_fn, out_fn)
 ds = nc.Dataset(out_fn, 'a')
-ds['z'][:] = zn
+ds['h'][:] = -zn
 ds.close()
 
 #%% plotting

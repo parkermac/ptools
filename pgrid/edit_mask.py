@@ -58,7 +58,7 @@ if not flag_testing:
     ds = nc.Dataset(in_fn)
     plon = ds.variables['lon_psi_ex'][:]
     plat = ds.variables['lat_psi_ex'][:]
-    z = ds.variables['z'][:]
+    z = -ds.variables['h'][:]
     m = ds.variables['mask_rho'][:] == 0
     ds.close()
     plon = plon[0,:]

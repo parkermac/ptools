@@ -24,12 +24,12 @@ in_fn = G['gdir'] + fn
 #%% load the data
 
 ds = nc.Dataset(in_fn)
-z = ds.variables['z'][:]
+z = -ds.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
 
-show_grids = True
+show_grids = False
 NC = 1
 if show_grids:
     NC = 2

@@ -4,7 +4,13 @@ Created on Fri Apr 29 15:34:17 2016
 
 @author: PM5
 
-Code to make a ROMS grid file.
+Code to initialize the creation of a ROMS grid file.
+
+NOTE: the gridname is set in gfun.gstart().
+
+Throughout this code I try to use ROMS nameing conventions, except that
+when manipulating or plotting I refer to [lon,lat]_rho as [lon,lat],
+and [lon,lat]_psi_ex as [plon,plat].
 """
 
 from importlib import reload
@@ -138,7 +144,7 @@ lat_var = dict()
 for tag in tag_list:
     lat_var[tag] = foo.createVariable('lat_'+tag, float, ('eta_'+tag, 'xi_'+tag))
     lon_var[tag] = foo.createVariable('lon_'+tag, float, ('eta_'+tag, 'xi_'+tag))
-z_var = foo.createVariable('z', float, ('eta_rho', 'xi_rho'))
+h_var = foo.createVariable('h', float, ('eta_rho', 'xi_rho'))
 mask_var = foo.createVariable('mask_rho', int, ('eta_rho', 'xi_rho'))
 dx_var = foo.createVariable('dx', float, ('eta_rho', 'xi_rho'))
 dy_var = foo.createVariable('dy', float, ('eta_rho', 'xi_rho'))
@@ -176,7 +182,7 @@ for tag in tag_list:
     lon_var[tag][:] = lon_dict[tag]
     lat_var[tag][:] = lat_dict[tag]
 
-z_var[:] = z
+h_var[:] = -z
 mask_rho = np.ones((M, L)) # start with all ones (unmasked for ROMS)
 mask_var[:] = mask_rho
 dx_var[:] = dx
