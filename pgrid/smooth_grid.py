@@ -34,8 +34,8 @@ plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
 lon = ds.variables['lon_rho'][:]
 lat = ds.variables['lat_rho'][:]
-dx = ds.variables['dx'][:]
-dy = ds.variables['dy'][:]
+dx = 1/ds.variables['pm'][:]
+dy = 1/ds.variables['pn'][:]
 ds.close()
 
 #%% Smoothing set up

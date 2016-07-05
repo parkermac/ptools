@@ -11,6 +11,8 @@ Utility function for pgrid.
 gridname = 'test'
 dir0 = '/Users/PM5/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'
+ri_dir = dir0 + 'ptools_output/river/sng_2016_06/'
+
 # END USER EDIT
 
 import os
@@ -25,7 +27,8 @@ import matfun
 
 def gstart():
     gdir = pgdir + gridname + '/'
-    G = {'gridname': gridname, 'dir0': dir0, 'pgdir': pgdir, 'gdir': gdir}
+    G = {'gridname': gridname, 'dir0': dir0, 'pgdir': pgdir, 'gdir': gdir,
+         'ri_dir': ri_dir}
     return G
 
 def select_file(G):
@@ -160,9 +163,9 @@ def GRID_PlusMinusScheme_rx0_v2(MSK, Hobs, rx0max, AreaMatrix):
     count = 0
     maxcount = 1000
     while True and count < maxcount:
-        if np.mod(count,10) == 0:
-            print('Count = ' + str(count))
-        count += 1
+#        if np.mod(count,10) == 0:
+#            print('Count = ' + str(count))
+#        count += 1
         IsFinished=1
         for ff in range(5):
             if ff == 0:

@@ -146,8 +146,6 @@ for tag in tag_list:
     lon_var[tag] = foo.createVariable('lon_'+tag, float, ('eta_'+tag, 'xi_'+tag))
 h_var = foo.createVariable('h', float, ('eta_rho', 'xi_rho'))
 mask_var = foo.createVariable('mask_rho', int, ('eta_rho', 'xi_rho'))
-dx_var = foo.createVariable('dx', float, ('eta_rho', 'xi_rho'))
-dy_var = foo.createVariable('dy', float, ('eta_rho', 'xi_rho'))
 pm_var = foo.createVariable('pm', float, ('eta_rho', 'xi_rho'))
 pn_var = foo.createVariable('pn', float, ('eta_rho', 'xi_rho'))
 
@@ -185,7 +183,7 @@ for tag in tag_list:
 h_var[:] = -z
 mask_rho = np.ones((M, L)) # start with all ones (unmasked for ROMS)
 mask_var[:] = mask_rho
-dx_var[:] = dx
-dy_var[:] = dy
+pm_var[:] = 1/dx
+pn_var[:] = 1/dy
 
 foo.close()

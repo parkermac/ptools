@@ -22,13 +22,7 @@ import matplotlib.pyplot as plt
 import seawater as sw
 
 #%% get river info
-ri_name = 'sng_2016_06'
-
-ri_dir0 = G['dir0'] + 'ptools_output/river/'
-ri_dir = ri_dir0 + ri_name +'/'
-rit_dir = ri_dir + 'tracks/'
-
-ri_fn = ri_dir + 'river_info.csv'
+ri_fn = G['ri_dir'] + 'river_info.csv'
 
 df = pd.read_csv(ri_fn, index_col='rname')
 
@@ -67,7 +61,7 @@ dir_dict = dict()
 
 for rn in df.index:
     depth = df.ix[rn, 'depth']
-    fn_tr = rit_dir + rn + '.csv'
+    fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
@@ -126,6 +120,10 @@ for rn in df.index:
     while is_right == False:
         ji = ji + JI
         try:
+            z[ji[0], ji[1]] = np.min((z[ji[0], ji[1]], -depth))
+        except IndexError:
+            pass
+        try:
             if m[ji[0],ji[1]] == True:
                 ji_dict[rn] = ji
                 print(rn)
@@ -162,6 +160,13 @@ for rn in df.index:
         row_dict_py[rn] = ji[0] - 1
         col_dict_py[rn] = ji[1]
 
+#%% save all the new info fields to the DAtaFrame
+df['idir'] = pd.Series(idir_dict)
+df['isign'] = pd.Series(isign_dict)
+df['uv'] = pd.Series(uv_dict)
+df['row_py'] = pd.Series(row_dict_py)
+df['col_py'] = pd.Series(col_dict_py)
+
 #%% create the new mask
 mask_rho[m == True] = 0
 mask_rho[m == False] = 1
@@ -187,7 +192,7 @@ ax.set_ylim(ax_lims[-2:])
 ax.set_title(G['gridname'])
 
 for rn in df.index:
-    fn_tr = rit_dir + rn + '.csv'
+    fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
@@ -209,7 +214,7 @@ for rn in df.index:
 
 plt.show()
 
-#%% Save the output file
+#%% Save the output files
 
 print('\nCreating ' + out_fn)
 try:
@@ -221,3 +226,8 @@ ds = nc.Dataset(out_fn, 'a')
 ds['mask_rho'][:] = mask_rho
 ds['h'][:] = -z
 ds.close()
+
+out_rfn = G['gdir'] + 'river_info.p'
+print('\nCreating ' + out_rfn)
+df.to_pickle(out_rfn)
+

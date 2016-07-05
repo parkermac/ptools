@@ -31,6 +31,7 @@ G = gfun.gstart()
 import numpy as np
 import shutil
 import os
+import pandas as pd
 
 import zfun
 
@@ -58,6 +59,10 @@ if not flag_testing:
     ds = nc.Dataset(in_fn)
     plon = ds.variables['lon_psi_ex'][:]
     plat = ds.variables['lat_psi_ex'][:]
+    lonu = ds.variables['lon_u'][:]
+    latu = ds.variables['lat_u'][:]
+    lonv = ds.variables['lon_v'][:]
+    latv = ds.variables['lat_v'][:]
     z = -ds.variables['h'][:]
     m = ds.variables['mask_rho'][:] == 0
     ds.close()
@@ -105,10 +110,39 @@ ax2 = plt.subplot2grid((1,3), (0,2), colspan=1)
 
 # initialize the data plot
 cmap1 = plt.get_cmap(name='terrain')
-cs = ax1.pcolormesh(plon,plat,z, vmin=-200, vmax=200, cmap = cmap1)
+tvmin = -200
+tvmax = 200
+cs = ax1.pcolormesh(plon,plat,z, vmin=tvmin, vmax=tvmax, cmap = cmap1)
 if do_coast:
     ax1.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
     zfun.dar(ax1)
+
+# add rivers
+if not flag_testing:
+    in_rfn = G['gdir'] + 'river_info.p'
+    df = pd.read_pickle(in_rfn)
+
+    for rn in df.index:
+        fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
+        df_tr = pd.read_csv(fn_tr, index_col='ind')
+        x = df_tr['lon'].values
+        y = df_tr['lat'].values
+        ax1.plot(x, y, '-r', linewidth=2)
+        ax1.plot(x[-1], y[-1], '*r')
+
+        if df.ix[rn, 'uv'] == 'u' and df.ix[rn, 'isign'] == 1:
+            ax1.plot(lonu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
+                    latu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '>r')
+        elif df.ix[rn, 'uv'] == 'u' and df.ix[rn, 'isign'] == -1:
+            ax1.plot(lonu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
+                    latu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '<r')
+        elif df.ix[rn, 'uv'] == 'v' and df.ix[rn, 'isign'] == 1:
+            ax1.plot(lonv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
+                    latv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '^b')
+        elif df.ix[rn, 'uv'] == 'v' and df.ix[rn, 'isign'] == -1:
+            ax1.plot(lonv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
+                    latv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], 'vb')
+
 xl0 = (plon.min(), plon.max())
 yl0 = (plat.min(), plat.max())
 ax1.set_xlim(xl0)
@@ -117,7 +151,7 @@ ax1.set_ylim(yl0)
 fig.colorbar(cs, ax=ax1, extend='both')
 
 # create control buttons
-NB = 4 # number of buttons
+NB = 5 # number of buttons
 ybc = np.arange(NB+1)
 offset = 1e5 # kludgey way to distinguish buttons from topography
 xbc = np.arange(2) + offset
@@ -142,13 +176,15 @@ def addButtonLabel(ax, plon, plat, nb, lab, tcol='k'):
 # label the buttons
 NBstart = 1
 NBpause = 2
-NBcontinue = 3
+NBcontinueM = 3
+NBcontinueZ = 4
 NBdone = NB
 active_color = 'k'
 inactive_color = 'w'
 mask_color = pltc.colorConverter.to_rgb('lightsalmon')
 addButtonLabel(ax2, xbc, ybc, NBpause, 'PAUSE', tcol=inactive_color)
-addButtonLabel(ax2, xbc, ybc, NBcontinue, 'CONTINUE', tcol=inactive_color)
+addButtonLabel(ax2, xbc, ybc, NBcontinueM, 'CONTINUE\nEdit Mask', tcol=inactive_color)
+addButtonLabel(ax2, xbc, ybc, NBcontinueZ, 'CONTINUE\nEdit Z', tcol=inactive_color)
 addButtonLabel(ax2, xbc, ybc, NBstart, 'START', tcol=active_color)
 addButtonLabel(ax2, xbc, ybc, NBdone, 'DONE', tcol=inactive_color)
 
@@ -158,6 +194,7 @@ plt.show()
 flag_get_ginput = True # Make False to exit the ginput loop
 flag_continue = False # need to push START to make this True
 flag_start = True # to ensure we only push the start button once
+flag_mz = 'm' # 'm' to edit mask, 'z' to edit z
 
 while flag_get_ginput:
 
@@ -181,16 +218,23 @@ while flag_get_ginput:
             # label the rest of the buttons
             addButtonLabel(ax2, xbc, ybc, NBstart, 'START', tcol=inactive_color)
             addButtonLabel(ax2, xbc, ybc, NBpause, 'PAUSE', tcol=active_color)
-            addButtonLabel(ax2, xbc, ybc, NBcontinue, 'CONTINUE', tcol=active_color)
+            addButtonLabel(ax2, xbc, ybc, NBcontinueM, 'CONTINUE\nEdit Mask', tcol=active_color)
+            addButtonLabel(ax2, xbc, ybc, NBcontinueZ, 'CONTINUE\nEdit Z', tcol=active_color)
             addButtonLabel(ax2, xbc, ybc, NBdone, 'DONE', tcol=active_color)
             plt.draw()
         elif (np.ceil(b[:,1]).astype(int) == NBpause) and not flag_start:
             flag_continue = False
             ax1.set_title('PAUSED')
             plt.draw()
-        elif (np.ceil(b[:,1]).astype(int) == NBcontinue) and not flag_start:
+        elif (np.ceil(b[:,1]).astype(int) == NBcontinueM) and not flag_start:
             flag_continue = True
-            ax1.set_title('RESTARTED')
+            flag_mz = 'm'
+            ax1.set_title('EDITING Mask')
+            plt.draw()
+        elif (np.ceil(b[:,1]).astype(int) == NBcontinueZ) and not flag_start:
+            flag_continue = True
+            flag_mz = 'z'
+            ax1.set_title('EDITING Z')
             plt.draw()
         elif (np.ceil(b[:,1]).astype(int) == NBdone) and not flag_start:
             flag_get_ginput = False
@@ -209,16 +253,30 @@ while flag_get_ginput:
         iix = ix0[0]
         iiy = iy0[0]
         this_z = z[iiy, iix]
-        # this toggles the colors
-        jj = iiy*NC + iix # index into the flattened array
-        if mi[jj] == True:
+        if flag_mz == 'm':
+            # this toggles the colors
+            jj = iiy*NC + iix # index into the flattened array
+            if mi[jj] == True:
+                mi[jj] = False
+                fc[jj,:3] = fc0[jj,:3] # original color
+            elif mi[jj] == False:
+                mi[jj] = True
+                fc[jj,:3] = mask_color # 1 = white, 0 = black
+            ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
+                          + ' z=' + str(int(this_z)) + ' m')
+        elif flag_mz == 'z':
+            # this carves to a specified depth, and removes the mask
+            jj = iiy*NC + iix # index into the flattened array
             mi[jj] = False
-            fc[jj,:3] = fc0[jj,:3] # original color
-        elif mi[jj] == False:
-            mi[jj] = True
-            fc[jj,:3] = mask_color # 1 = white, 0 = black
-        ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
-                      + ' z=' + str(int(this_z)) + ' m')
+            i_newcolor = np.arange(cmap1.N)
+            z_newcolor = np.linspace(tvmin, tvmax, cmap1.N)
+            ii_newcolor = i_newcolor[z_newcolor >= -5][0]
+            fc_new = cmap1(ii_newcolor)[:3]
+            fc[jj,:3] = fc_new # new color
+            z[iiy, iix] = -5
+            this_z = z[iiy, iix]
+            ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
+                          + ' z=' + str(int(this_z)) + ' m')
         plt.draw()
 
 #%% Save the output file
@@ -244,6 +302,7 @@ if not flag_testing:
         shutil.copyfile(in_fn, out_fn)
         ds = nc.Dataset(out_fn, 'a')
         ds['mask_rho'][:] = mask_rho
+        ds['h'][:] = -z
         ds.close()
     else:
         print('No change to mask')
