@@ -119,8 +119,8 @@ if do_coast:
 
 # add rivers
 if not flag_testing:
-    in_rfn = G['gdir'] + 'river_info.p'
-    df = pd.read_pickle(in_rfn)
+    in_rfn = G['gdir'] + 'river_info.csv'
+    df = pd.read_csv(in_rfn, index_col='rname')
 
     for rn in df.index:
         fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'

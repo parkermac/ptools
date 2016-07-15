@@ -29,16 +29,18 @@ mask_rho = ds.variables['mask_rho'][:]
 plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
 
-show_grids = False
+show_grids = True
 NC = 1
 if show_grids:
     NC = 2
     lon_dict = dict()
     lat_dict = dict()
+    mask_dict = dict()
     tag_list = ['rho', 'u', 'v', 'psi']
     for tag in tag_list:
         lon_dict[tag] = ds.variables['lon_'+tag][:]
         lat_dict[tag] = ds.variables['lat_'+tag][:]
+        mask_dict[tag] = ds.variables['mask_'+tag][:]
 
 ds.close()
 
@@ -70,11 +72,8 @@ if show_grids:
                  'psi': 'xg'}
     ax = fig.add_subplot(1,NC,2)
     for tag in tag_list:
-        if tag == 'rho':
-            ax.plot(lon_dict[tag][mask_rho==1], lat_dict[tag][mask_rho==1],
-                    marker_dict[tag])
-        else:
-            ax.plot(lon_dict[tag], lat_dict[tag], marker_dict[tag])
+        ax.plot(lon_dict[tag][mask_dict[tag]==1], lat_dict[tag][mask_dict[tag]==1],
+                marker_dict[tag])
     ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
     zfun.dar(ax)
     ax.set_xlim(ax_lims[:2])

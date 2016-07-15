@@ -227,7 +227,10 @@ ds['mask_rho'][:] = mask_rho
 ds['h'][:] = -z
 ds.close()
 
-out_rfn = G['gdir'] + 'river_info.p'
+out_rfn = G['gdir'] + 'river_info.csv'
 print('\nCreating ' + out_rfn)
-df.to_pickle(out_rfn)
+df.to_csv(out_rfn)
+
+# here is how you would read the DataFrame back in
+# df1 = pd.read_csv(out_rfn, index_col='rname')
 

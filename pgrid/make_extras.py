@@ -10,9 +10,10 @@ import gfun; reload(gfun)
 G = gfun.gstart()
 
 import netCDF4 as nc
+import numpy as np
+import shutil
 
 import os
-import seawater as sw
 
 #%% select grid file
 fn = gfun.select_file(G)
@@ -26,16 +27,24 @@ out_fn = G['gdir'] + fn_new
 
 ds = nc.Dataset(in_fn)
 
-lat = ds.variables['lat_rho'][:]
 mask_rho = ds.variables['mask_rho'][:]
 
 ds.close()
 
 #%% make the masks
 
-mask_u = mask_rho[:, 1:]
-mask_v = mask_rho[1:, :]
-mask_psi = mask_rho[1:, 1:]
+mask_u_bool = (mask_rho[:, 1:] == 0) | (mask_rho[:, :-1] == 0)
+mask_u = np.ones_like(mask_u_bool, dtype=int)
+mask_u[mask_u_bool] = 0
+
+mask_v_bool = (mask_rho[1:, :] == 0) | (mask_rho[:-1, :] == 0)
+mask_v = np.ones_like(mask_v_bool, dtype=int)
+mask_v[mask_v_bool] = 0
+
+mask_psi_bool = ( (mask_rho[1:, 1:] == 0) | (mask_rho[:-1, :-1] == 0) |
+                (mask_rho[1:, :-1] == 0) | (mask_rho[:-1, 1:] == 0) )
+mask_psi = np.ones_like(mask_psi_bool, dtype=int)
+mask_psi[mask_psi_bool] = 0
 
 #%% save the output to NetCDF
 
@@ -44,35 +53,16 @@ try:
     os.remove(out_fn)
 except OSError:
     pass # assume error was because the file did not exist
+print('Creating ' + out_fn)
+shutil.copyfile(in_fn, out_fn)
 
-# create new NetCDF file
-foo = nc.Dataset(out_fn, 'w')
-
-# create dimensions
-M, L = lat.shape # use ROMS teminology
-size_dict = {'rho': (M, L),
-             'u': (M, L-1),
-             'v': (M-1, L),
-             'psi': (M-1, L-1),
-             'psi_ex': (M+1, L+1)}
-tag_list = ['rho', 'u', 'v', 'psi', 'psi_ex']
-for tag in tag_list:
-    foo.createDimension('eta_'+tag, size_dict[tag][0])
-    foo.createDimension('xi_'+tag, size_dict[tag][1])
-
-# create variables
-tag_list = ['u', 'v', 'psi']
-mask_var = dict()
-for tag in tag_list:
-    mask_var[tag] = foo.createVariable('lat_'+tag, float, ('eta_'+tag, 'xi_'+tag))
-f_var = foo.createVariable('f', float, ('eta_rho', 'xi_rho'))
-
+# open NetCDF file
+ds = nc.Dataset(out_fn, 'a')
 
 # add data to fields
+tag_list = ['u', 'v', 'psi']
 mask_dict = {'u': mask_u, 'v': mask_v, 'psi': mask_psi}
 for tag in tag_list:
-    mask_var[tag][:] = mask_dict[tag]
+    ds['mask_'+tag][:] = mask_dict[tag]
 
-f_var[:] = sw.f(lat)
-
-foo.close()
+ds.close()

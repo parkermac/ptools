@@ -20,6 +20,7 @@ G = gfun.gstart()
 import numpy as np
 import h5py
 import netCDF4 as nc
+import seawater as sw
 
 import os
 
@@ -141,11 +142,13 @@ for tag in tag_list:
 # create variables
 lon_var = dict()
 lat_var = dict()
+mask_var = dict()
 for tag in tag_list:
     lat_var[tag] = foo.createVariable('lat_'+tag, float, ('eta_'+tag, 'xi_'+tag))
     lon_var[tag] = foo.createVariable('lon_'+tag, float, ('eta_'+tag, 'xi_'+tag))
+    mask_var[tag] = foo.createVariable('mask_'+tag, int, ('eta_'+tag, 'xi_'+tag))
 h_var = foo.createVariable('h', float, ('eta_rho', 'xi_rho'))
-mask_var = foo.createVariable('mask_rho', int, ('eta_rho', 'xi_rho'))
+f_var = foo.createVariable('f', float, ('eta_rho', 'xi_rho'))
 pm_var = foo.createVariable('pm', float, ('eta_rho', 'xi_rho'))
 pn_var = foo.createVariable('pn', float, ('eta_rho', 'xi_rho'))
 
@@ -179,11 +182,12 @@ dy = R * (np.pi*np.diff(vlat, axis=0)/180)
 for tag in tag_list:
     lon_var[tag][:] = lon_dict[tag]
     lat_var[tag][:] = lat_dict[tag]
+    # start with all ones (unmasked for ROMS)
+    mask_var[tag][:] = np.ones_like(lon_dict[tag], dtype=int)
 
 h_var[:] = -z
-mask_rho = np.ones((M, L)) # start with all ones (unmasked for ROMS)
-mask_var[:] = mask_rho
 pm_var[:] = 1/dx
 pn_var[:] = 1/dy
+f_var[:] = sw.f(lat_dict['rho'])
 
 foo.close()

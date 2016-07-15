@@ -9,14 +9,10 @@ This makes the file river_info.csv, and the individual river lon, lat: tracks.
 
 import os
 import sys
-grp = os.path.abspath('../pgrid')
-if grp not in sys.path:
-    sys.path.append(grp)
-from importlib import reload
-import gfun; reload(gfun)
-G = gfun.gstart()
 
-alp = os.path.abspath(G['dir0'] + 'LiveOcean/alpha')
+dir0 = '/Users/PM5/Documents/'
+
+alp = os.path.abspath(dir0 + 'LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 import Lfun
@@ -27,9 +23,9 @@ import numpy as np
 import pandas as pd
 
 #%% make place for output
-ri_name = 'sng_2016_06'
+ri_name = 'pnw_all_2016_07'
 
-ri_dir0 = G['dir0'] + 'ptools_output/river/'
+ri_dir0 = dir0 + 'ptools_output/river/'
 ri_dir = ri_dir0 + ri_name +'/'
 rit_dir = ri_dir + 'tracks/'
 
@@ -39,9 +35,9 @@ Lfun.make_dir(rit_dir, clean=True)
 
 #%% load information from SNG
 
-fn = (Ldir['parent'] +
-    'LiveOcean_NOTES/Notes_River/2016_06_SNG_River_Code/' +
-    'riverInformation.mat')
+fn = (Ldir['data'] +
+    'rivers/Info_curated/' +
+    'SNG_riverInformation.mat')
 
 aa = sio.loadmat(fn)
 
@@ -138,7 +134,7 @@ for RN in usgs_dict.keys():
 def get_nws_info(Ldir, riv_name):
     out_dict = dict()
     # This listing has all the stations with NWS Forecasts.
-    fn = Ldir['data'] + 'rivers/USGS_NWS_Codes.csv'
+    fn = Ldir['data'] + 'rivers/Info_curated/USGS_NWS_Codes.csv'
     df = pd.read_csv(fn, index_col='Name')
     if riv_name in df.index:
         out_dict['usgs_nws'] = str(int(df.ix[riv_name, 'Station Number']))
@@ -156,7 +152,7 @@ def get_ecy_info(Ldir, riv_name):
     # each with a USGS gage and a scaling factor.
     # We cordinate this list using riv_name, and assume it is the same
     # as the lower case version of the first word in the index (Watershed Name).
-    fn = Ldir['data'] + 'rivers/Ecology_Scale_Factors.csv'
+    fn = Ldir['data'] + 'rivers/Info_curated/Ecology_Scale_Factors.csv'
     df = pd.read_csv(fn, index_col='Watershed Name')
     for wn in df.index:
         if wn.split()[0].lower() == riv_name:
@@ -208,13 +204,20 @@ for rn in df.index:
               '.ne.' + str(df.ix[rn,'usgs_nws']))
 
 # clean up
-df_final = df[['usgs', 'ec', 'nws', 'ratio', 'depth', 'width', 'max_dist']]
-df.index.name = 'rname'
-# this line drops rivers without any gauging station
-#df_final = df_final.drop(['yaquina', 'coos', 'skagit_south'])
+# this drops rivers without any gauging station
+rn_to_drop = []
+for rn in df.index:
+    if ( pd.isnull(df.ix[rn,'usgs']) and pd.isnull(df.ix[rn,'ec']) ):
+        rn_to_drop.append(rn)
+        print(' -- Dropping ' + rn)
+df = df.drop(rn_to_drop)
 
 #%% save to a csv file
 fn_ri = ri_dir + 'river_info.csv'
+
+df_final = df[['usgs', 'ec', 'nws', 'ratio', 'depth', 'width', 'max_dist']]
+df_final.index.name = 'rname'
+
 df_final.to_csv(fn_ri)
 
 # here is how you would read it back into a DataFrame
