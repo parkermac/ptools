@@ -7,10 +7,9 @@ import matplotlib.pyplot as plt
 import os
 import sys
 
-alp = os.path.abspath('../../alpha')
+alp = os.path.abspath('../../LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
-
 
 from importlib import reload
 import Lfun
@@ -32,6 +31,10 @@ import numpy as np
 
 ri_fn = Ldir['parent'] + 'ptools_output/river/pnw_all_2016_07/river_info.csv'
 
+# decide which group to get
+get_usgs = True
+get_ec = False
+
 df = pd.read_csv(ri_fn, index_col='rname')
 
 # and create directory for output, if needed
@@ -40,34 +43,63 @@ out_dir = out_dir0 + 'Data_historical/'
 Lfun.make_dir(out_dir0, clean=False)
 Lfun.make_dir(out_dir, clean=False)
 
-#%% get river info
+#%% set time range
 
-dt0 = datetime(2015,1,1)
+dt0 = datetime(1980,1,1)
 dt1 = datetime(2015,12,31)
 days = (dt0, dt1)
 
 qt_dict = dict()
 
-for rn in df.index:
+#%% get USGS river data
 
-    if rn == 'fraser':
+if get_usgs:
+    for rn in df.index:
 
         rs = df.ix[rn] # a series with info for this river
-        riv = river_class.River(rn, rs, days)
+        riv = river_class.River(rn, rs)
 
         if not pd.isnull(rs.usgs):
+
             riv.get_usgs_data(days)
-        elif not pd.isnull(rs.ec) and dt1 >= datetime(2015,1,1):
-            riv.get_ec_data(days)
-        elif not pd.isnull(rs.ec) and dt1 <= datetime(2014,12,31):
-            # always gives a year of data, for dt0.year
-            riv.get_ec_data_historical(days)
 
-        riv.print_info()
-        sys.stdout.flush()
+            riv.print_info()
+            sys.stdout.flush()
 
-        if not riv.qt.empty:
-            qt_dict[rn] = riv.qt
+            if not riv.qt.empty:
+                qt_dict[rn] = riv.qt
+
+#%% get EC data, a year at a time
+if get_ec:
+    for rn in df.index:
+
+        rs = df.ix[rn] # a series with info for this river
+
+        Qt = pd.Series() # initialize a Series to concatenate into
+
+        if not pd.isnull(rs.ec):# and rn in ['clowhom']:
+
+            #for year in range(1991, 1995): # debugging
+            for year in range(dt0.year, dt1.year + 1):
+                print('year = ' + str(year))
+
+                this_days = (datetime(year,1,1), datetime(year,12,31))
+                riv = river_class.River(rn, rs)
+
+                if this_days[0] >= datetime(2015,1,1):
+                    print('get 1')
+                    riv.get_ec_data(this_days)
+                elif this_days[0] <= datetime(2014,12,31):
+                    print('get 2')
+                    riv.get_ec_data_historical(year)
+
+                riv.print_info()
+                sys.stdout.flush()
+
+                Qt = pd.concat([Qt, riv.qt])
+
+            if not Qt.empty:
+                qt_dict[rn] = Qt
 
 #%% save output
 
@@ -96,6 +128,7 @@ if True:
         ic = int(cc - NC*ir)
         ax = axes[ir, ic]
         qt_dict[rn].plot(ax=ax, title=rn, style='-k')
+        ax.set_xlim(dt0, dt1)
         cc += 1
 
     plt.show()
