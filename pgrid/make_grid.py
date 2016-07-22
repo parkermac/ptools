@@ -28,7 +28,7 @@ import Lfun
 import zfun
 import matfun
 
-
+#%%
 Lfun.make_dir(G['gdir'], clean=True)
 
 fn = 'grid_m00_r00_s00_x00.nc'
@@ -39,10 +39,27 @@ print(out_fn)
 # vectors to define the plaid grid
 # start with cell corners (like an extended psi grid)
 
-if G['gridname'] == 'test':
+def simple_grid(aa, res):
+    dlat = aa[3] - aa[2]
+    dlon = aa[1] - aa[0]
+    mean_lat = np.mean(aa[2:])
+    earth_rad = zfun.earth_rad(mean_lat)
+    dlatm = earth_rad * np.pi * dlat/180
+    dlonm = earth_rad * np.cos(np.pi*mean_lat/180) * np.pi * dlon/180
+    nx = int(np.ceil(dlonm/res))
+    ny = int(np.ceil(dlatm/res))
+    plon_vec = np.linspace(aa[0], aa[1], nx)
+    plat_vec = np.linspace(aa[2], aa[3], ny)
+    print('<< ' + G['gridname'] + ' >>')
+    print('   nx = %d' % (nx))
+    print('   ny = %d' % (ny))
+    return plon_vec, plat_vec
+
+if G['gridname'] == 'cascadia2':
     # cascadia-like
-    plon_vec = np.linspace(-127,-122,100)
-    plat_vec = np.linspace(43,50,200)
+    aa = [-127.4, -122, 43, 50]
+    res = 5000 # target resolution (m)
+    plon_vec, plat_vec = simple_grid(aa, res)
 
 if G['gridname'] == 'test_sub':
     # cascadia-like

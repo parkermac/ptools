@@ -62,6 +62,10 @@ if True:
     jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
     m[jj0, ii0] = False
 
+#%% enforce a minimum depth in unmasked cells
+# we will need to change this for truly wet-dry applications
+z[(~m) & (z>-5)] = -5
+
 #%% Save the output file
 
 # create the new mask_rho
@@ -77,6 +81,7 @@ if not np.all(mask_rho == mask_rho_orig):
     shutil.copyfile(in_fn, out_fn)
     ds = nc.Dataset(out_fn, 'a')
     ds['mask_rho'][:] = mask_rho
+    ds['h'][:] = -z
     ds.close()
 else:
     print('No change to mask')

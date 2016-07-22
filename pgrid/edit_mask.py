@@ -201,8 +201,10 @@ while flag_get_ginput:
     # get ginput
     a = plt.ginput(n=1) # returns a list of tuples - of length 1
     b = np.array(a)
+    if b.shape != (1,2):
+        b = np.array([[-1000, -1000]])
 
-    if (b[:,0] >= offset):
+    if (b[0,0] >= offset):
         # were are in the buttons
         if (np.ceil(b[:,1]).astype(int) == NBstart) and flag_start:
             flag_start = False
@@ -222,21 +224,21 @@ while flag_get_ginput:
             addButtonLabel(ax2, xbc, ybc, NBcontinueZ, 'CONTINUE\nEdit Z', tcol=active_color)
             addButtonLabel(ax2, xbc, ybc, NBdone, 'DONE', tcol=active_color)
             plt.draw()
-        elif (np.ceil(b[:,1]).astype(int) == NBpause) and not flag_start:
+        elif (np.ceil(b[0,1]).astype(int) == NBpause) and not flag_start:
             flag_continue = False
             ax1.set_title('PAUSED')
             plt.draw()
-        elif (np.ceil(b[:,1]).astype(int) == NBcontinueM) and not flag_start:
+        elif (np.ceil(b[0,1]).astype(int) == NBcontinueM) and not flag_start:
             flag_continue = True
             flag_mz = 'm'
             ax1.set_title('EDITING Mask')
             plt.draw()
-        elif (np.ceil(b[:,1]).astype(int) == NBcontinueZ) and not flag_start:
+        elif (np.ceil(b[0,1]).astype(int) == NBcontinueZ) and not flag_start:
             flag_continue = True
             flag_mz = 'z'
             ax1.set_title('EDITING Z')
             plt.draw()
-        elif (np.ceil(b[:,1]).astype(int) == NBdone) and not flag_start:
+        elif (np.ceil(b[0,1]).astype(int) == NBdone) and not flag_start:
             flag_get_ginput = False
             ax1.set_xlim(xl0)
             ax1.set_ylim(yl0)
@@ -248,8 +250,8 @@ while flag_get_ginput:
 
     elif flag_continue and not flag_start:
         # we are in the data field
-        ix0, ix1, frx = zfun.get_interpolant(b[:,0],plon)
-        iy0, iy1, fry = zfun.get_interpolant(b[:,1],plat)
+        ix0, ix1, frx = zfun.get_interpolant(np.array(b[0,0]),plon)
+        iy0, iy1, fry = zfun.get_interpolant(np.array(b[0,1]),plat)
         iix = ix0[0]
         iiy = iy0[0]
         this_z = z[iiy, iix]
