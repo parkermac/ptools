@@ -59,36 +59,49 @@ ilon_dict = dict()
 ilat_dict = dict()
 dir_dict = dict()
 
+good_riv = []
+
 for rn in df.index:
     depth = df.ix[rn, 'depth']
     fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
-    # This unmasks it in the places where the
-    # river crosses a tile
-    for I in range(len(x)-1):
-        xx = np.linspace(x[I], x[I+1], 10)
-        yy = np.linspace(y[I], y[I+1], 10)
-        ii0, ii1, ifr = zfun.get_interpolant(xx, plon_vec, extrap_nan=True)
-        jj0, jj1, jfr = zfun.get_interpolant(yy, plat_vec, extrap_nan=True)
-        # drop extrapolated points
-        ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
-        jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
-        # this unmasks points crossed by the river
-        m[jj0, ii0] = False
-        # and this sets the depth in those places, if needed,
-        # "carving the river channel"
-        for ff in range(len(ii0)):
-            JJ = jj0[ff]
-            II = ii0[ff]
-            z[JJ, II] = np.min((z[JJ, II], -depth))
-    # this creates information about the index and direction of the river
-    ilon_dict[rn] = II
-    ilat_dict[rn] = JJ
-    # phaseangle is degrees -180:180 with 0 = East
-    dist, phaseangle = sw.dist([y[I], y[I+1]], [x[I], x[I+1]])
-    dir_dict[rn] = phaseangle
+
+    # only include the river if it ends in the domain
+    if ( x[0] > ax_lims[0] and x[0] < ax_lims[1] and
+        y[0] > ax_lims[2] and y[0] < ax_lims[3]):
+
+        good_riv.append(rn)
+        print('including ' + rn.title())
+
+        # This unmasks it in the places where the
+        # river crosses a tile
+        for I in range(len(x)-1):
+            xx = np.linspace(x[I], x[I+1], 10)
+            yy = np.linspace(y[I], y[I+1], 10)
+            ii0, ii1, ifr = zfun.get_interpolant(xx, plon_vec, extrap_nan=True)
+            jj0, jj1, jfr = zfun.get_interpolant(yy, plat_vec, extrap_nan=True)
+            # drop extrapolated points
+            ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
+            jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
+            # this unmasks points crossed by the river
+            m[jj0, ii0] = False
+            # and this sets the depth in those places, if needed,
+            # "carving the river channel"
+            for ff in range(len(ii0)):
+                JJ = jj0[ff]
+                II = ii0[ff]
+                z[JJ, II] = np.min((z[JJ, II], -depth))
+        # this creates information about the index and direction of the river
+        ilon_dict[rn] = II
+        ilat_dict[rn] = JJ
+        # phaseangle is degrees -180:180 with 0 = East
+        dist, phaseangle = sw.dist([y[I], y[I+1]], [x[I], x[I+1]])
+        dir_dict[rn] = phaseangle
+
+    else:
+        print(' >> excluding ' + rn.title())
 
 
 #%% figure out river locations
@@ -99,7 +112,7 @@ row_dict_py = dict()
 col_dict_py = dict()
 
 ji_dict = dict()
-for rn in df.index:
+for rn in good_riv:
     ii = ilon_dict[rn]
     jj = ilat_dict[rn]
     ji = np.array([jj,ii])
@@ -160,7 +173,9 @@ for rn in df.index:
         row_dict_py[rn] = ji[0] - 1
         col_dict_py[rn] = ji[1]
 
-#%% save all the new info fields to the DAtaFrame
+#%% save all the new info fields to the DataFrame
+df = df.ix[good_riv]
+
 df['idir'] = pd.Series(idir_dict)
 df['isign'] = pd.Series(isign_dict)
 df['uv'] = pd.Series(uv_dict)
@@ -191,7 +206,7 @@ ax.set_xlim(ax_lims[:2])
 ax.set_ylim(ax_lims[-2:])
 ax.set_title(G['gridname'])
 
-for rn in df.index:
+for rn in good_riv:
     fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values

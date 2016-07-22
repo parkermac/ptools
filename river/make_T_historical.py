@@ -1,5 +1,16 @@
+# -*- coding: utf-8 -*-
 """
-Program to gather historical records for rivers.
+Created on Thu Jul 21 08:55:12 2016
+
+@author: PM5
+"""
+
+"""
+Program to gather historical TEMPERATURE records for rivers.
+
+It gets the last 35 years for USGS rivers, but only some of them.
+
+It gets only the last ~18 months for EC rivers.
 """
 
 #%% imports
@@ -20,8 +31,8 @@ rivp = os.path.abspath(Ldir['LO'] + 'forcing/riv1/')
 if rivp not in sys.path:
     sys.path.append(rivp)
 
-import river_class
-reload(river_class)
+import river_T_class
+reload(river_T_class)
 
 from datetime import datetime
 import pandas as pd
@@ -32,34 +43,35 @@ import numpy as np
 ri_fn = Ldir['parent'] + 'ptools_output/river/pnw_all_2016_07/river_info.csv'
 
 # decide which group to get
-get_usgs = True
-get_ec = False
+get_usgs = False
+get_ec = True
 
 df = pd.read_csv(ri_fn, index_col='rname')
 
 # and create directory for output, if needed
 out_dir0 = Ldir['data'] + 'rivers/'
-out_dir = out_dir0 + 'Data_historical/'
+out_dir = out_dir0 + 'Data_T_historical/'
 Lfun.make_dir(out_dir0, clean=False)
 Lfun.make_dir(out_dir, clean=False)
 
-#%% set time range
-
-dt0 = datetime(1980,1,1)
-dt1 = datetime(2015,12,31)
-days = (dt0, dt1)
+#%% initialize dict
 
 qt_dict = dict()
 
 #%% get USGS river data
 
 if get_usgs:
+
+    dt0 = datetime(1980,1,1)
+    dt1 = datetime(2015,12,31)
+    days = (dt0, dt1)
+
     for rn in df.index:
 
         rs = df.ix[rn] # a series with info for this river
-        riv = river_class.River(rn, rs)
+        riv = river_T_class.River(rn, rs)
 
-        if pd.notnull(rs.usgs):
+        if pd.notnull(rs.usgs):# and rn in ['cedar']:
 
             riv.get_usgs_data(days)
 
@@ -69,37 +81,28 @@ if get_usgs:
             if not riv.qt.empty:
                 qt_dict[rn] = riv.qt
 
-#%% get EC data, a year at a time
+#%% get EC data (only has temperature for recent times)
 if get_ec:
+
+    dt0 = datetime(2015,1,1)
+    dt1 = datetime(2016,6,30)
+    days = (dt0, dt1)
+
     for rn in df.index:
 
         rs = df.ix[rn] # a series with info for this river
 
-        Qt = pd.Series() # initialize a Series to concatenate into
+        if pd.notnull(rs.ec):# and rn in ['fraser']:
 
-        if pd.notnull(rs.ec):# and rn in ['clowhom']:
+            riv = river_T_class.River(rn, rs)
 
-            #for year in range(1991, 1995): # debugging
-            for year in range(dt0.year, dt1.year + 1):
-                print('year = ' + str(year))
+            riv.get_ec_data(days)
 
-                this_days = (datetime(year,1,1), datetime(year,12,31))
-                riv = river_class.River(rn, rs)
+            riv.print_info()
+            sys.stdout.flush()
 
-                if this_days[0] >= datetime(2015,1,1):
-                    print('get 1')
-                    riv.get_ec_data(this_days)
-                elif this_days[0] <= datetime(2014,12,31):
-                    print('get 2')
-                    riv.get_ec_data_historical(year)
-
-                riv.print_info()
-                sys.stdout.flush()
-
-                Qt = pd.concat([Qt, riv.qt])
-
-            if not Qt.empty:
-                qt_dict[rn] = Qt
+            if not riv.qt.empty:
+                qt_dict[rn] = riv.qt
 
 #%% save output
 

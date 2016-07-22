@@ -44,6 +44,11 @@ if G['gridname'] == 'test':
     plon_vec = np.linspace(-127,-122,100)
     plat_vec = np.linspace(43,50,200)
 
+if G['gridname'] == 'test_sub':
+    # cascadia-like
+    plon_vec = np.linspace(-125,-123.4,100)
+    plat_vec = np.linspace(46.3,47.3,100)
+
 elif G['gridname'] == 'ps':
     # Puget Sound
     plon_vec = np.linspace(-124,-122,400)
