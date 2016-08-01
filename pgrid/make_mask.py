@@ -11,6 +11,7 @@ Code to create an initial mask for a grid.
 from importlib import reload
 import gfun; reload(gfun)
 G = gfun.gstart()
+import pfun
 
 import numpy as np
 import shutil
@@ -38,7 +39,7 @@ plat_vec = plat[:,0]
 
 #%% coastline
 
-cmat = gfun.get_coast()
+cx, cy = pfun.get_coast()
 
 #%% create a boolean mask array (True where masked = land)
 
@@ -50,8 +51,6 @@ m = z > 0
 if True:
     # This unmasks it in the places where the
     # coastline crosses a tile, to facilitate wetting-drying
-    cx = cmat['lon']
-    cy = cmat['lat']
     cmask = np.isnan(cx)
     cx = cx[~cmask]
     cy = cy[~cmask]
@@ -79,7 +78,7 @@ if not np.all(mask_rho == mask_rho_orig):
     except OSError:
         pass # assume error was because the file did not exist
     shutil.copyfile(in_fn, out_fn)
-    ds = nc.Dataset(out_fn, 'a')
+    ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
     ds['mask_rho'][:] = mask_rho
     ds['h'][:] = -z
     ds.close()

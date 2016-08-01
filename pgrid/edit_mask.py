@@ -27,6 +27,7 @@ The performance with a 300x600 grid gets a little slow, but is still OK.
 from importlib import reload
 import gfun; reload(gfun)
 G = gfun.gstart()
+import pfun
 
 import numpy as np
 import shutil
@@ -70,8 +71,6 @@ if not flag_testing:
     plat = plat[:,0]
     # coastline
     do_coast = True
-    if do_coast:
-        cmat = gfun.get_coast()
 
 elif flag_testing:
     # simple grid for testing
@@ -114,8 +113,8 @@ tvmin = -200
 tvmax = 200
 cs = ax1.pcolormesh(plon,plat,z, vmin=tvmin, vmax=tvmax, cmap = cmap1)
 if do_coast:
-    ax1.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
-    zfun.dar(ax1)
+    pfun.add_coast(ax1)
+    pfun.dar(ax1)
 
 # add rivers
 if not flag_testing:
@@ -302,7 +301,7 @@ if not flag_testing:
         except OSError:
             pass # assume error was because the file did not exist
         shutil.copyfile(in_fn, out_fn)
-        ds = nc.Dataset(out_fn, 'a')
+        ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
         ds['mask_rho'][:] = mask_rho
         ds['h'][:] = -z
         ds.close()

@@ -61,6 +61,12 @@ if G['gridname'] == 'cascadia2':
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
 
+if G['gridname'] == 'cascadia3':
+    # cascadia-like
+    aa = [-127.4, -122, 43, 50]
+    res = 3000 # target resolution (m)
+    plon_vec, plat_vec = simple_grid(aa, res)
+
 if G['gridname'] == 'test_sub':
     # cascadia-like
     plon_vec = np.linspace(-125,-123.4,100)
@@ -147,7 +153,7 @@ except OSError:
     pass # assume error was because the file did not exist
 
 # create new NetCDF file
-foo = nc.Dataset(out_fn, 'w')
+foo = nc.Dataset(out_fn, 'w', format='NETCDF3_CLASSIC')
 
 # create dimensions
 M, L = lon.shape # use ROMS teminology
@@ -168,11 +174,14 @@ mask_var = dict()
 for tag in tag_list:
     lat_var[tag] = foo.createVariable('lat_'+tag, float, ('eta_'+tag, 'xi_'+tag))
     lon_var[tag] = foo.createVariable('lon_'+tag, float, ('eta_'+tag, 'xi_'+tag))
-    mask_var[tag] = foo.createVariable('mask_'+tag, int, ('eta_'+tag, 'xi_'+tag))
+    mask_var[tag] = foo.createVariable('mask_'+tag, float, ('eta_'+tag, 'xi_'+tag))
 h_var = foo.createVariable('h', float, ('eta_rho', 'xi_rho'))
 f_var = foo.createVariable('f', float, ('eta_rho', 'xi_rho'))
 pm_var = foo.createVariable('pm', float, ('eta_rho', 'xi_rho'))
 pn_var = foo.createVariable('pn', float, ('eta_rho', 'xi_rho'))
+xl_var = foo.createVariable('xl', float)
+el_var = foo.createVariable('el', float)
+sph_var = foo.createVariable('spherical', 'c')
 
 # create other grids
 lon_dict = dict()
@@ -211,5 +220,8 @@ h_var[:] = -z
 pm_var[:] = 1/dx
 pn_var[:] = 1/dy
 f_var[:] = sw.f(lat_dict['rho'])
+xl_var[:] = dx[0,:].sum()
+el_var[:] = dy[:,0].sum()
+sph_var[:] = 'T'
 
 foo.close()

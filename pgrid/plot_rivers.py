@@ -22,6 +22,7 @@ Ldir = Lfun.Lstart(gridname='test')
 
 import gfun; reload(gfun)
 G = gfun.gstart()
+import pfun
 
 import zfun
 
@@ -53,18 +54,15 @@ for m in c_list_raw:
 df = rivfun.get_tc_rn(df)
 
 #%% plotting
-
-cmat = gfun.get_coast()
-
 plt.close()
 
 fig = plt.figure(figsize=(12,17))
 ax = fig.add_subplot(111)
-ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
-zfun.dar(ax)
 ax_lims = [-127.5, -121, 42.5, 50.5]
 ax.set_xlim(ax_lims[:2])
 ax.set_ylim(ax_lims[-2:])
+pfun.add_coast(ax)
+pfun.dar(ax)
 
 for rn in df.index:
     fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'

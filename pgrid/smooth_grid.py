@@ -11,6 +11,7 @@ Smooth the grid.
 from importlib import reload
 import gfun; reload(gfun)
 G = gfun.gstart()
+import pfun
 
 import netCDF4 as nc
 import os
@@ -46,28 +47,15 @@ Hobs = -z.copy()
 rx0max = 0.15
 
 #%% create the area matrix
-#ulon = plon[:-1, :] + np.diff(plon, axis=0)/2
-#vlat = plat[:, :-1]
-#R = zfun.earth_rad(np.mean(plat[:,1]))
-#dx = R * np.cos(np.pi*lat/180) * (np.pi * np.diff(ulon, axis = 1) / 180)
-#dy = R * (np.pi * np.diff(vlat, axis = 0) / 180)
+
 AreaMatrix = dx * dy
 
 #%% create smoothed bathymetry
+
 import time
 tt0 = time.time()
-
-if False:
-    # slow version
-    Hnew, info1, info2 = gfun.GRID_PlusMinusScheme_rx0(
-                            MSK, Hobs, rx0max, AreaMatrix)
-else:
-    # fast version
-    Hnew = gfun.GRID_PlusMinusScheme_rx0_v2(
-                            MSK, Hobs, rx0max, AreaMatrix)
-
+Hnew = gfun.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
-
 zn = -Hnew
 
 #%% Save the output file
@@ -78,17 +66,14 @@ try:
 except OSError:
     pass # assume error was because the file did not exist
 shutil.copyfile(in_fn, out_fn)
-ds = nc.Dataset(out_fn, 'a')
+ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
 ds['h'][:] = -zn
-ds.close()
 
 #%% plotting
 
 if True:
 
     import matplotlib.pyplot as plt
-
-    cmat = gfun.get_coast()
 
     ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
 
@@ -104,22 +89,22 @@ if True:
     cmap1 = plt.get_cmap(name='terrain')
     cs = ax.pcolormesh(plon, plat, zn_m,
                        vmin=-200, vmax=200, cmap = cmap1)
-    ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
-    zfun.dar(ax)
     fig.colorbar(cs, ax=ax, extend='both')
-    ax.set_xlim(ax_lims[:2])
-    ax.set_ylim(ax_lims[-2:])
+    pfun.add_coast(ax)
+    pfun.dar(ax)
+    ax.axis(pfun.get_aa(ds))
     ax.set_title(G['gridname'] + '/' + fn_new)
 
     ax = fig.add_subplot(122)
     cmap1 = plt.get_cmap(name='bwr')
     cs = ax.pcolormesh(plon, plat, dz,
                        vmin=-100, vmax=100, cmap = cmap1)
-    ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
-    zfun.dar(ax)
     fig.colorbar(cs, ax=ax, extend='both')
-    ax.set_xlim(ax_lims[:2])
-    ax.set_ylim(ax_lims[-2:])
+    pfun.add_coast(ax)
+    pfun.dar(ax)
+    ax.axis(pfun.get_aa(ds))
     ax.set_title('New Z - Old Z (m)')
 
     plt.show()
+
+ds.close()

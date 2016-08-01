@@ -10,6 +10,7 @@ This plots river tacks.
 from importlib import reload
 import gfun; reload(gfun)
 G = gfun.gstart()
+import pfun
 
 import zfun
 
@@ -44,7 +45,6 @@ lonu = ds.variables['lon_u'][:]
 latu = ds.variables['lat_u'][:]
 lonv = ds.variables['lon_v'][:]
 latv = ds.variables['lat_v'][:]
-ds.close()
 
 ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
 
@@ -190,8 +190,6 @@ mask_rho[m == False] = 1
 
 zm = np.ma.masked_where(m, z)
 
-cmat = gfun.get_coast()
-
 plt.close()
 
 fig = plt.figure(figsize=(10,10))
@@ -199,12 +197,13 @@ ax = fig.add_subplot(111)
 cmap1 = plt.get_cmap(name='rainbow')
 cs = ax.pcolormesh(plon, plat,zm,
                    vmin=-200, vmax=200, cmap = cmap1)
-ax.plot(cmat['lon'],cmat['lat'], '-k', linewidth=.5)
-zfun.dar(ax)
 fig.colorbar(cs, ax=ax, extend='both')
-ax.set_xlim(ax_lims[:2])
-ax.set_ylim(ax_lims[-2:])
+pfun.add_coast(ax)
+pfun.dar(ax)
+ax.axis(pfun.get_aa(ds))
 ax.set_title(G['gridname'])
+
+ds.close()
 
 for rn in good_riv:
     fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
@@ -237,7 +236,7 @@ try:
 except OSError:
     pass # assume error was because the file did not exist
 shutil.copyfile(in_fn, out_fn)
-ds = nc.Dataset(out_fn, 'a')
+ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
 ds['mask_rho'][:] = mask_rho
 ds['h'][:] = -z
 ds.close()
