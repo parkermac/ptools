@@ -65,7 +65,7 @@ print('Creating ' + out_fn)
 shutil.copyfile(in_fn, out_fn)
 
 # open NetCDF file
-ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
+ds = nc.Dataset(out_fn, 'a')
 
 # add data to fields
 tag_list = ['u', 'v', 'psi']

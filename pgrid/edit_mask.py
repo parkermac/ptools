@@ -301,7 +301,7 @@ if not flag_testing:
         except OSError:
             pass # assume error was because the file did not exist
         shutil.copyfile(in_fn, out_fn)
-        ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
+        ds = nc.Dataset(out_fn, 'a')
         ds['mask_rho'][:] = mask_rho
         ds['h'][:] = -z
         ds.close()

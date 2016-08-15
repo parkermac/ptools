@@ -16,7 +16,6 @@ import pfun
 import netCDF4 as nc
 import os
 import shutil
-import zfun
 import numpy as np
 
 #%% select grid file
@@ -66,7 +65,7 @@ try:
 except OSError:
     pass # assume error was because the file did not exist
 shutil.copyfile(in_fn, out_fn)
-ds = nc.Dataset(out_fn, 'a', format='NETCDF3_CLASSIC')
+ds = nc.Dataset(out_fn, 'a')
 ds['h'][:] = -zn
 
 #%% plotting

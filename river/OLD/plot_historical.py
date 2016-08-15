@@ -12,7 +12,7 @@ import Lfun
 reload(Lfun)
 Ldir = Lfun.Lstart('cascadia1','base')
 
-pth = os.path.abspath('../../LiveOcean/forcing/riv2')
+pth = os.path.abspath('../../LiveOcean/forcing/riv1')
 if pth not in sys.path:
     sys.path.append(pth)
 import river_class
@@ -42,7 +42,7 @@ else:
     'deschutes',
     'duckabush'
     ]
-  
+
 from datetime import datetime
 dt0 = datetime(1980,1,1)
 dt1 = datetime(2015,12,31)
@@ -58,7 +58,7 @@ fig, axes = plt.subplots(nrows=NR, ncols=NC, figsize=(15,8), squeeze=False)
 cc = 0
 for rn in rnames:
     rqt = pd.read_pickle(indir + 'clim_' + rn + '.p')
-    
+
     # parse the data into years, with a yearday index
     rr = pd.DataFrame(index=range(366))
     for yr in range(dt0.year, dt1.year + 1):
@@ -67,12 +67,12 @@ for rn in rnames:
         rr[yr] = qt_yr
     rr['mean'] = rr.mean(axis=1)
     rr = rr/100.
-    
+
     nr = int(np.floor(cc/NC))
     nc = int(cc - NC*nr)
-    #print('cc=' + str(cc) + ', nr=' + str(nr) + ', nc=' + str(nc))   
+    #print('cc=' + str(cc) + ', nr=' + str(nr) + ', nc=' + str(nc))
     ax = axes[nr, nc]
-    
+
     for yr in range(dt0.year, dt1.year + 1):
         rr[yr].plot(ax=ax, style='-k', alpha=.2)
     rr['mean'].plot(ax=ax, style='-k', linewidth=4, alpha = .5)
@@ -101,7 +101,7 @@ for rn in rnames:
             ax.text(0.95, 0.8, str(focus_years_blue), horizontalalignment='right',
                 color='b', transform=ax.transAxes)
     ax.grid()
-    
+
     cc += 1
 
 plt.show()

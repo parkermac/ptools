@@ -9,7 +9,8 @@ Utility function for pgrid.
 
 # USER EDIT
 
-gridname = 'cascadia3'
+gridname = 'cascadia2'
+
 dir0 = '/Users/PM5/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'
 ri_dir = dir0 + 'ptools_output/river/pnw_all_2016_07/'
@@ -68,14 +69,6 @@ def increment_filename(fn, tag='_m'):
     fn_new = fn.replace(fn[gni:gni+4], tag + new_num)
 
     return fn_new
-
-#def get_coast():
-#    c_dir = dir0 + 'tools_data/geo_data/coast/'
-#    c_file = 'pnw_coast_combined.mat'
-#    c_fn = c_dir + c_file
-#    cmat = matfun.loadmat(c_fn)
-#
-#    return cmat
 
 def GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix):
     """

@@ -24,8 +24,6 @@ import gfun; reload(gfun)
 G = gfun.gstart()
 import pfun
 
-import zfun
-
 import pandas as pd
 import matplotlib.pyplot as plt
 

@@ -87,7 +87,6 @@ pfun.dar(ax)
 ax.axis(pfun.get_aa(ds))
 ax.set_title(G['gridname'] + '/' + fn)
 
-
 if show_grids:
     marker_dict = {'rho': 'ok',
                  'u': '>r',
