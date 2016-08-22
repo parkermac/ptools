@@ -21,23 +21,23 @@ dir0 = '/Users/PM5/Documents/tools_data/obs_data/ctd_bottles/DOE_csv/'
 # names ending in _0 are multi-year 1990-2014
 sta_to_plot = [
     #'BLL009_0',
-    'PSB003_0', # edited by hand to remove bad cast 9/18/2002
+    #'PSB003_0', # edited by hand to remove bad cast 9/18/2002
                 # salinity spike 4 m Feb/Mar 1994
                 # 2007 many T, s spikes, especially deep
-    #'DNA001_0', # deep T bad in July 2001
+    'DNA001_0', # deep T bad in July 2001
                 # 2002 shallow S low value Feb, shallow T spike Oct
                 # 2006 lots of little T & s spikes all depths, many months
-    'HCB004_0',
-    #'BUD005_0'
+    'HCB003_0',
+    'BUD005_0'
     ]
 
 # choose which data fields to plot by commenting out parts of this list
 data_to_plot = [
     'Salinity',
-    #'Temperature',
-    'Sigma',
+    'Temperature',
+    #'Sigma',
     #'Chl',
-    'DO',
+    #'DO',
     #'Trans',
     #'pH'
     ]
@@ -58,8 +58,8 @@ do_csv = False
 
 # if this is multi_year data, you can choose to plot a single year
 # by making this true, and selecting the year
-focus_year = False
-fyear = 2002
+focus_year = True
+fyear = 2013
 
 ## END USER INPUT ##
 
