@@ -19,8 +19,14 @@ import zfun
 import zrfun
 import collections
 
-from datetime import datetime, timedelta
+from datetime import datetime
 start_time = datetime.now()
+
+which_home = os.environ.get("HOME") # This works even when called by cron.
+if which_home == '/Users/PM5': # mac version
+    in_dir = Ldir['parent'] + 'roms/output/salish_2006_4/'
+elif which_home == '/home/parker': # fjord version
+    in_dir = '/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/'
 
 in_dir = Ldir['parent'] + 'roms/output/salish_2006_4/'
 out_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
@@ -39,7 +45,7 @@ flist = []
 # 'tm': datetime.datetime(2006, 7, 30, 12, 0) = GOOD
 #
 # for the full year we should start at ii0 = 26 and go to 8666, like this:
-# a = range(26, 8666 + 1, 24)
+# for ii0 in range(26, 8666 + 1, 24):
 
 for ii0 in [4994]:
 
