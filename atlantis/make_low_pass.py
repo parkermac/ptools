@@ -20,7 +20,6 @@ import zrfun
 import collections
 
 from datetime import datetime
-start_time = datetime.now()
 
 which_home = os.environ.get("HOME") # This works even when called by cron.
 if which_home == '/Users/PM5': # mac version
@@ -32,7 +31,7 @@ out_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
 Lfun.make_dir(out_dir0)
 
 # make input list (full paths)
-flist = []
+#
 # create the list of history files
 #
 # for salish_2006_4 we have 0025-8715, which have times:
@@ -49,8 +48,13 @@ flist = []
 # for ii0 in [4994]:
 
 for ii0 in range(26, 8666 + 1, 24):
+#for ii0 in range(4994, 4994 + 24 + 1, 24):
+#for ii0 in [4994]:
+    start_time = datetime.now()
 
     NF = 71
+    #NF = 3
+    flist = []
     for ii in range(NF):
         hh = ('000' + str(ii0 + ii))[-4:]
         flist.append(in_dir + 'ocean_his_' + hh + '.nc')
@@ -70,20 +74,25 @@ for ii0 in range(26, 8666 + 1, 24):
     out_fn = (out_dir + '/low_passed.nc')
 
     # create the filter
+    time_format = '%Y.%m.%d %H:%M:%S'
+
+    tsrt = start_time.strftime(time_format)
     nf = len(flist)
     if nf == 71:
-        print(TM.strftime('%Y.%m.%d') + ' - Using Godin filter')
+        print(tsrt + ' :: ' + TM.strftime(time_format) +
+            ' - Using Godin filter')
         filt0 = zfun.godin_shape()
     else:
-        print(TM.strftime('%Y.%m.%d') + ' - Using Hanning filter for list length = ' + str(nf))
+        print(tsrt + ' :: ' + TM.strftime(time_format) +
+            ' - Using Hanning filter for list length = ' + str(nf))
         filt0 = zfun.hanning_shape(nf)
+    sys.stdout.flush()
 
     # RUN THE FUNCTION
     zrfun.roms_low_pass(flist, out_fn, filt0)
 
     # save result info
     result_dict = collections.OrderedDict()
-    time_format = '%Y.%m.%d %H:%M:%S'
     result_dict['start_time'] = start_time.strftime(time_format)
     end_time = datetime.now()
     result_dict['end_time'] = end_time.strftime(time_format)
