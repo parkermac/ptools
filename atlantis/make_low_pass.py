@@ -56,6 +56,7 @@ for ii0 in [4994]:
 
     tm_list = []
     for fn in flist:
+        print(fn)
         [T] = zrfun.get_basic_info(fn, getG=False, getS=False)
         tm_list.append(T['tm'])
     # find the mean time
