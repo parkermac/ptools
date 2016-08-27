@@ -45,8 +45,10 @@ flist = []
 #
 # for the full year we should start at ii0 = 26 and go to 8666, like this:
 # for ii0 in range(26, 8666 + 1, 24):
+# for testing use
+# for ii0 in [4994]:
 
-for ii0 in [4994]:
+for ii0 in range(26, 8666 + 1, 24):
 
     NF = 71
     for ii in range(NF):
@@ -55,7 +57,6 @@ for ii0 in [4994]:
 
     tm_list = []
     for fn in flist:
-        print(fn)
         [T] = zrfun.get_basic_info(fn, getG=False, getS=False)
         tm_list.append(T['tm'])
     # find the mean time
@@ -71,10 +72,10 @@ for ii0 in [4994]:
     # create the filter
     nf = len(flist)
     if nf == 71:
-        print(' - Using Godin filter')
+        print(TM.strftime('%Y.%m.%d') + ' - Using Godin filter')
         filt0 = zfun.godin_shape()
     else:
-        print(' - Using Hanning filter for list length = ' + str(nf))
+        print(TM.strftime('%Y.%m.%d') + ' - Using Hanning filter for list length = ' + str(nf))
         filt0 = zfun.hanning_shape(nf)
 
     # RUN THE FUNCTION
