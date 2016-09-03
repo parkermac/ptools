@@ -27,7 +27,7 @@ import numpy as np
 
 #%% gather mooring data
 
-whichmoor = 'NH20' # 'NH10' or 'NH20'
+whichmoor = 'NH10' # 'NH10' or 'NH20'
 
 indir = (Ldir['parent'] + '/tools_data/obs_data/mooring/NH_Line/'
             + whichmoor +'/')
