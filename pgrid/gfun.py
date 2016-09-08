@@ -9,11 +9,14 @@ Utility function for pgrid.
 
 # USER EDIT
 
-gridname = 'cascadia2'
+gridname = 'aestus1'
 
 dir0 = '/Users/PM5/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'
-ri_dir = dir0 + 'ptools_output/river/pnw_all_2016_07/'
+if 'aestus' in gridname:
+    ri_dir = dir0 + 'ptools_output/river/analytical/'
+else:
+    ri_dir = dir0 + 'ptools_output/river/pnw_all_2016_07/'
 
 # END USER EDIT
 
@@ -148,63 +151,5 @@ def GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix):
 
     return HH
 
-def GRID_PlusMinusScheme_rx0_ORIG(MSK, Hobs, rx0max, AreaMatrix):
-    """
-    This was coded by copying matlab code from LP_Bathymetry.
-    It appears to give identical results to those from Matlab, but for
-    some reason its performance is 10x slower.
-    ** The depth matrix Hobs MUST BE POSITIVE outside of masked locations **
-    #% ---MSK(eta_rho,xi_rho) is the mask of the grid
-    #%      1 for sea
-    #%      0 for land
-    #% ---Hobs(eta_rho,xi_rho) is the raw depth of the grid
-    #% ---rx0max is the target rx0 roughness factor
-    #% ---AreaMatrix(eta_rho,xi_rho) is the matrix of areas at
-    #% rho-points.
-    """
-    eta_rho, xi_rho = Hobs.shape
-    ListNeigh=np.array([[1, 0], [0, 1], [-1, 0], [0, -1]])
-    RetBathy=Hobs.copy()
-    HmodifVal=0
-    TheMultiplier=(1-rx0max)/(1+rx0max)
-    tol=0.000001
-    ValueFct=0
-    IsFinished = 1
-    count = 0
-    while True and count < 1000:
-        if np.mod(count,10) == 0:
-            print('Count = ' + str(count))
-        count += 1
-        IsFinished=1
-        for iEta in range(eta_rho):
-            for iXi in range(xi_rho):
-                if MSK[iEta, iXi] == 1:
-                    Area=AreaMatrix[iEta, iXi]
-                    for ineigh in range(4):
-                        iEtaN=iEta+ListNeigh[ineigh,0];
-                        iXiN=iXi+ListNeigh[ineigh,1];
-                        if ((iEtaN < eta_rho) and (iEtaN >= 0)
-                            and (iXiN < xi_rho) and (iXiN >= 0)
-                            and MSK[iEtaN, iXiN] == 1):
-                            AreaN=AreaMatrix[iEtaN, iXiN]
-                            LowerBound=RetBathy[iEtaN, iXiN]*TheMultiplier
-                            if (RetBathy[iEta,iXi] - LowerBound < -tol):
-                                IsFinished=0
-                                h=(TheMultiplier*RetBathy[iEtaN, iXiN]-RetBathy[iEta, iXi])/(AreaN+TheMultiplier*Area)
-                                RetBathy[iEta, iXi]=RetBathy[iEta, iXi]+AreaN*h
-                                RetBathy[iEtaN, iXiN]=RetBathy[iEtaN, iXiN]-Area*h
-                                HmodifVal=HmodifVal+np.abs(h)
-                                ValueFct=ValueFct+np.abs(h)*(Area+AreaN)
-        if IsFinished == 1:
-            break
-    H=AreaMatrix*Hobs*MSK
-    TheBathymetry1=np.sum(H)
-    H=AreaMatrix*RetBathy*MSK
-    TheBathymetry2=np.sum(H)
-    DeltaBathymetry=TheBathymetry1-TheBathymetry2
-    print('Number of iterations = ' + str(count))
-    print('DeltaBathymetry=' + str(DeltaBathymetry))
-
-    return RetBathy, HmodifVal, ValueFct
 
 

@@ -55,27 +55,67 @@ def simple_grid(aa, res):
     print('   ny = %d' % (ny))
     return plon_vec, plat_vec
 
+def stretched_grid(lon_list, x_res_list, lat_list, y_res_list):
+    """
+    Input:
+    The four lists (units = degrees and meters) are points that define
+    segmented vectors along which the resolution changes linearly.
+    """
+    plon_list = []
+    plat_list = []
+    if (len(lon_list) != len(x_res_list)) or (len(lat_list) != len(y_res_list)):
+        print('Lists must be the same length')
+        return np.array(plon_list), np.array(plat_list)
+
+    lon_vec = np.array(lon_list)
+    x_res_vec = np.array(x_res_list)
+    lat_vec = np.array(lat_list)
+    y_res_vec = np.array(y_res_list)
+
+    R = zfun.earth_rad(np.mean(lat_vec))
+    clat = np.cos(np.pi*np.mean(lat_vec)/180)
+
+    lon = lon_list[0]
+    plon_list.append(lon)
+    while lon <= lon_list[-1]:
+        i0, i1, fr = zfun.get_interpolant(np.array([lon]), lon_vec)
+        xres = (1-fr)*x_res_vec[i0] + fr*x_res_vec[i1]
+        dlon = 180 * xres / (clat * R * np.pi)
+        lon = lon + dlon
+        plon_list.append(lon)
+    lat = lat_list[0]
+    plat_list.append(lat)
+    while lat <= lat_list[-1]:
+        i0, i1, fr = zfun.get_interpolant(np.array([lat]), lat_vec)
+        yres = (1-fr)*y_res_vec[i0] + fr*y_res_vec[i1]
+        dlat = 180 * yres / (R * np.pi)
+        lat = lat + dlat
+        plat_list.append(lat)
+    return np.array(plon_list), np.array(plat_list)
+
 if G['gridname'] == 'cascadia2':
     # cascadia-like
     aa = [-127.4, -122, 43, 50]
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
-
-if G['gridname'] == 'cascadia3':
-    # cascadia-like
-    aa = [-127.4, -122, 43, 50]
-    res = 3000 # target resolution (m)
+elif G['gridname'] == 'bigSalish1':
+    aa = [-130, -122, 43, 51.5]
+    res = 2000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
-
-if G['gridname'] == 'test_sub':
-    # cascadia-like
-    plon_vec = np.linspace(-125,-123.4,100)
-    plat_vec = np.linspace(46.3,47.3,100)
-
-elif G['gridname'] == 'ps':
-    # Puget Sound
-    plon_vec = np.linspace(-124,-122,400)
-    plat_vec = np.linspace(47,49,600)
+elif G['gridname'] == 'bigSalish2':
+    lon_list = [-130, -127, -122]
+    x_res_list = [5000, 2000, 2000]
+    lat_list = [43, 44, 50, 51.5]
+    y_res_list = [5000, 2000, 2000, 5000]
+    plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+elif G['gridname'] == 'aestus1':
+    lon_list = [-1, 0, 1, 2, 3]
+    x_res_list = [5000, 1000, 1000, 5000, 5000]
+    lat_list = [44, 44.9, 45.1, 46]
+    y_res_list = [5000, 1000, 1000, 5000]
+    plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
 
 plon, plat = np.meshgrid(plon_vec, plat_vec)
 ax_lims = (plon_vec[0], plon_vec[-1], plat_vec[0], plat_vec[-1])
@@ -128,21 +168,33 @@ def load_bathy(t_fn):
         tz = tmat['z'][:]
     return tlon_vec, tlat_vec, tz
 
-for t_file in t_list:
-    t_fn = t_dir + t_file
-    print('\nOPENING BATHY FILE: ' + t_file)
-    tlon_vec, tlat_vec, tz = load_bathy(t_fn)
+if G['gridname'] == 'aestus1':
+    # make grid and bathymetry by hand
+    z = np.zeros(lon.shape)
+    x, y = zfun.ll2xy(lon, lat, 0, 45)
+    zshelf = x * 1e-3
+    zestuary = -20 + 20*x/1e5 + 20/(1e4)*np.abs(y)
+    z = zshelf
+    mask = zestuary < z
+    z[mask] = zestuary[mask]
 
-    z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
-                                         tlon_vec, tlat_vec, tz)
-    z_part = z_flat.reshape((NR, NC))
+else:
+    # add bathymetry automatically from files
+    for t_file in t_list:
+        t_fn = t_dir + t_file
+        print('\nOPENING BATHY FILE: ' + t_file)
+        tlon_vec, tlat_vec, tz = load_bathy(t_fn)
 
-    # put good values of z_part in z
-    z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
+        z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
+                                             tlon_vec, tlat_vec, tz)
+        z_part = z_flat.reshape((NR, NC))
 
-#%% Adjust zero of the bathymetry to account for the fact that mean sea level
-# is somewhat higher than NAVD88.
-z = z - 1.06
+        # put good values of z_part in z
+        z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
+
+    #%% Adjust zero of the bathymetry to account for the fact that mean sea level
+    # is somewhat higher than NAVD88.
+    z = z - 1.06
 
 #%% save the output to NetCDF
 

@@ -37,10 +37,6 @@ ds.close()
 plon_vec = plon[0,:]
 plat_vec = plat[:,0]
 
-#%% coastline
-
-cx, cy = pfun.get_coast()
-
 #%% create a boolean mask array (True where masked = land)
 
 # note that this is the opposite of the ROMS convention
@@ -48,9 +44,12 @@ cx, cy = pfun.get_coast()
 
 m = z > 0
 
-if True:
+if G['gridname'] == 'aestus1':
+    pass
+else:
     # This unmasks it in the places where the
     # coastline crosses a tile, to facilitate wetting-drying
+    cx, cy = pfun.get_coast()
     cmask = np.isnan(cx)
     cx = cx[~cmask]
     cy = cy[~cmask]
@@ -63,6 +62,7 @@ if True:
 
 #%% enforce a minimum depth in unmasked cells
 # we will need to change this for truly wet-dry applications
+
 z[(~m) & (z>-5)] = -5
 
 #%% Save the output file

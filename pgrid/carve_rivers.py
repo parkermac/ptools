@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 import seawater as sw
 
 #%% get river info
-ri_fn = G['ri_dir'] + 'river_info.csv'
 
+ri_fn = G['ri_dir'] + 'river_info.csv'
 df = pd.read_csv(ri_fn, index_col='rname')
 
 #%% select grid file
