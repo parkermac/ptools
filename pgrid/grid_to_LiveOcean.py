@@ -25,8 +25,8 @@ in_fn = G['gdir'] + fn
 #%% copy to LiveOcean_data/grids
 
 # make sure directories exist
-out_dir = Ldir['grids'] + G['gridname'] + '/'
-Lfun.make_dir(Ldir['grids'], clean=False)
+out_dir = Ldir['grid']
+Lfun.make_dir(Ldir['data'] + 'grids/', clean=False)
 Lfun.make_dir(out_dir, clean=False)
 
 # copy files
@@ -36,7 +36,7 @@ shutil.copyfile(G['gdir'] + 'river_info.csv', out_dir + 'river_info.csv')
 #%% and put in the S coordinate info
 
 # copy file
-shutil.copyfile(Ldir['grids'] + 'S_COORDINATE_INFO_1.csv',
+shutil.copyfile(Ldir['data'] + 'grids/S_COORDINATE_INFO_1.csv',
                 out_dir + 'S_COORDINATE_INFO.csv')
 
 # create the S.mat file

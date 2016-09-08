@@ -1,5 +1,7 @@
 """
 Compare stratification and river flow.
+
+May be obsolete.  2016.09.08 PM
 """
 
 import os
@@ -24,7 +26,7 @@ sta_to_plot = [
     'BUD005_0', # Budd Inlet
     'DNA001_0', # Dana Passage
                 # 2001 deep T bad in July
-                # 2002 shallow S low value Feb, shallow T spike Oct 
+                # 2002 shallow S low value Feb, shallow T spike Oct
                 # 2006 lots of little T, s spikes all depths, many months
     'HCB004_0', # Hood Canal in Lynch Cove
     'PSB003_0', # Main Basin off Seattle
@@ -38,9 +40,9 @@ sta_to_plot = [
     'CRR001_0',
     ]
 
-ser_top_dict = dict()   
-ser_bot_dict = dict()   
-ser_strat_dict = dict()   
+ser_top_dict = dict()
+ser_bot_dict = dict()
+ser_strat_dict = dict()
 for sta in sta_to_plot:
     infile = indir + 'ser_top_' + sta + '.p'
     ser_top_dict[sta] = pd.read_pickle(infile)
@@ -64,27 +66,27 @@ def month_year_bins(ser):
             s_clim.ix[m][yr] = symm
     s_clim['mean'] = s_clim.mean(axis=1)
     return s_clim
- 
+
 clim_top_dict = dict()
 clim_bot_dict = dict()
 clim_strat_dict = dict()
-             
+
 for sta in sta_to_plot:
     clim_top_dict[sta] = month_year_bins(ser_top_dict[sta])
     clim_bot_dict[sta] = month_year_bins(ser_bot_dict[sta])
     clim_strat_dict[sta] = month_year_bins(ser_strat_dict[sta])
-    
+
 #%% RIVERS
 # these are saved in DataFrames with year columns (and mean)
-    
+
 pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
-    sys.path.append(pth)  
+    sys.path.append(pth)
 import Lfun
 Ldir = Lfun.Lstart('cascadia1','base')
 
 # get the list of rivers that we need for a run
-rdf = pd.read_csv(Ldir['run'] + 'rname_list.txt', header=None,
+rdf = pd.read_csv(Ldir['grid'] + 'rname_list.txt', header=None,
     names=['River Name'])
 rnames = rdf['River Name'].values
 rnames = rnames.tolist()
@@ -113,7 +115,7 @@ sta_to_plot = [
     'PSS019_0',
     'PSB003_0',
     'CRR001_0',
-    ]  
+    ]
 riv_for_sta = [
     #'fraser',
     #'deschutes',
@@ -133,7 +135,7 @@ s2r = dict(zip(sta_to_plot,riv_for_sta))
 aligned_strat_ser = dict()
 aligned_riv_ser = dict()
 for sta in sta_to_plot:
-    
+
     # stratification
     strat_dict = ser_strat_dict[sta]
     strat_ser = pd.Series(strat_dict['Sigma'], index=strat_dict.index)
@@ -141,13 +143,13 @@ for sta in sta_to_plot:
     for ssi in strat_ser.index:
         new_ind.append(datetime(ssi.year,ssi.month,1))
     strat_ser.index = new_ind
-    strat_ser = strat_ser.dropna() 
-    # this drops entries with duplicated indices   
+    strat_ser = strat_ser.dropna()
+    # this drops entries with duplicated indices
     strat_ser = strat_ser.groupby(strat_ser.index).first()
-    
+
     # rivers
     rn = s2r[sta]
-    riv_ser = riv_dict[rn]    
+    riv_ser = riv_dict[rn]
     riv_ser.index.name = 'date'
     # this gives Qr values averaged over the past month,
     # with the index at the first of the month
@@ -156,7 +158,7 @@ for sta in sta_to_plot:
     riv_ser.index = riv_ser.index + timedelta(1)
     riv_ser = riv_ser.dropna()
     riv_ser = riv_ser.groupby(riv_ser.index).first()
-    
+
     # combining indices
     joint_ind = riv_ser.index.intersection(strat_ser.index)
     #stix = strat_ser[joint_ind]
@@ -170,7 +172,7 @@ for sta in sta_to_plot:
         (rn, sta, len(joint_ind), len(stix), len(riix)))
     aligned_strat_ser[sta] = stix
     aligned_riv_ser[sta] = riix
-   
+
 #%% plotting
 plt.close('all')
 
@@ -198,10 +200,10 @@ for sta in sta_to_plot:
     ax1.plot((r.index.values - .5), rm/100, '-b', linewidth=3)
     ax0.set_xlim(0,12)
     ax1.set_xlim(0,12)
-    
+
     sv = aligned_strat_ser[sta].values
     rv = aligned_riv_ser[sta].values
-  
+
     lag_list = range(-2,5)
     cc_list = []
     #print('\n** River = ' + rn + '\n** Station = ' + sta)
@@ -209,16 +211,16 @@ for sta in sta_to_plot:
         cc = np.corrcoef(np.roll(rv,lag), sv)[0,1]
         cc_list.append(cc)
         #print(' lag = %s months: cc = %0.2f' % (lag, cc))
-    
+
     n_bestlag = np.argmax(cc_list)
-    bestlag = lag_list[n_bestlag]          
+    bestlag = lag_list[n_bestlag]
     ax2.plot(np.roll(rv,bestlag)/100, sv, '*r')
     ax2.text(.05,.8,'lag = %d mo\n cc = %0.2f' % (bestlag, cc_list[n_bestlag]),
         transform=ax2.transAxes)
     ax2.set_xlabel('Flow $(100 m^{3} s^{-1})$')
 
     counter += 1
-    
+
 #NR = 1
 #NC = len(sta_to_plot)
 #fig, axes = plt.subplots(nrows=NR, ncols=NC, figsize=(15,8), squeeze=False)
@@ -232,11 +234,10 @@ for sta in sta_to_plot:
 #    ax0.set_title(sta)
 #    cc = np.corrcoef(ariv.values, astr.values)[0,1]
 #    ax0.text(.05,.8,'cc = %0.2f' % (cc), transform=ax0.transAxes)
-#    
+#
 #    counter += 1
-    
+
 plt.show()
 
 
-    
-    
+
