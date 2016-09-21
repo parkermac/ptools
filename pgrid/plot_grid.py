@@ -54,7 +54,7 @@ elif LO==False:
     plon = ds.variables['lon_psi_ex'][:]
     plat = ds.variables['lat_psi_ex'][:]
 
-show_grids = True
+show_grids = False
 NC = 1
 if show_grids:
     NC = 2
@@ -86,6 +86,13 @@ pfun.add_coast(ax)
 pfun.dar(ax)
 ax.axis(pfun.get_aa(ds))
 ax.set_title(G['gridname'] + '/' + fn)
+
+(rowmax, colmax) = np.unravel_index(np.argmax(zm), zm.shape)
+zmax = zm[rowmax, colmax]
+print('Max z = ' + str(zmax))
+lon_rho = ds['lon_rho'][:]
+lat_rho = ds['lat_rho'][:]
+ax.plot(lon_rho[rowmax, colmax], lat_rho[rowmax, colmax], '*m', markersize=20)
 
 if show_grids:
     marker_dict = {'rho': 'ok',

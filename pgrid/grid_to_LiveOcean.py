@@ -15,7 +15,7 @@ from importlib import reload
 import gfun; reload(gfun)
 G = gfun.gstart()
 import Lfun
-Ldir = Lfun.Lstart()
+Ldir = Lfun.Lstart(gridname=G['gridname'])
 
 #%% select grid file
 
@@ -25,9 +25,9 @@ in_fn = G['gdir'] + fn
 #%% copy to LiveOcean_data/grids
 
 # make sure directories exist
-out_dir = Ldir['grid']
 Lfun.make_dir(Ldir['data'] + 'grids/', clean=False)
-Lfun.make_dir(out_dir, clean=False)
+out_dir = Ldir['grid']
+Lfun.make_dir(out_dir, clean=True)
 
 # copy files
 shutil.copyfile(in_fn, out_dir + 'grid.nc')

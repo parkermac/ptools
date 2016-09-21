@@ -57,6 +57,9 @@ Hnew = gfun.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 zn = -Hnew
 
+#%% enforce a minimum depth
+zn[zn > -5.] = -5.
+
 #%% Save the output file
 
 print('Creating ' + out_fn)
