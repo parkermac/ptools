@@ -47,7 +47,7 @@ z_dict = {0:0, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
 dt0 = datetime(2006,1,1)
 
 counter = 0
-for ndays in range(2, 363): # 209 is 2006.07.29
+for ndays in range(3, 363): # 209 is 2006.07.29
 
     # in /data1/parker/roms/output/salish_2006_4_lp
     # we have f2006.01.04 through 2016.12.29
