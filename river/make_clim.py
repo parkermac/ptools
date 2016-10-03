@@ -3,10 +3,8 @@
 Created on Mon Jul 18 13:50:31 2016
 
 @author: PM5
-"""
 
-"""
-Program to gather create climatological records for rivers.
+Program to create climatological records for rivers.
 """
 
 #%% imports

@@ -184,15 +184,12 @@ else:
         t_fn = t_dir + t_file
         print('\nOPENING BATHY FILE: ' + t_file)
         tlon_vec, tlat_vec, tz = load_bathy(t_fn)
-
         z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
                                              tlon_vec, tlat_vec, tz)
         z_part = z_flat.reshape((NR, NC))
-
         # put good values of z_part in z
         z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-
-    #%% Adjust zero of the bathymetry to account for the fact that mean sea level
+    # Adjust zero of the bathymetry to account for the fact that mean sea level
     # is somewhat higher than NAVD88.
     z = z - 1.06
 

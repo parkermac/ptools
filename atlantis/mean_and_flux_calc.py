@@ -20,11 +20,17 @@ import numpy as np
 from datetime import datetime, timedelta
 import pickle
 import netCDF4 as nc
+import time
+
+print_info = False
 
 #%% setup input locations
 
 in_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
 in_dir = in_dir0 + 'gridded_polygons/'
+
+out_dir = in_dir0 + 'means_and_fluxes/'
+Lfun.make_dir(out_dir, clean=True)
 
 R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
 
@@ -41,7 +47,13 @@ z_dict = {0:0, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
 dt0 = datetime(2006,1,1)
 
 counter = 0
-for ndays in [209]: # 209 is 2006.07.29
+for ndays in range(2, 363): # 209 is 2006.07.29
+
+    # in /data1/parker/roms/output/salish_2006_4_lp
+    # we have f2006.01.04 through 2016.12.29
+    # dt0 plus 3 to plus 362 days
+
+    tt0 = time.time()
 
     dt = dt0 + timedelta(days=ndays)
     f_string = 'f' + dt.strftime('%Y.%m.%d')
@@ -49,9 +61,17 @@ for ndays in [209]: # 209 is 2006.07.29
     R_fn = R_in_dir + 'low_passed.nc'
     ds = nc.Dataset(R_fn)
 
+    vv_dict = dict()
+    vv_list_full = ['salt', 'temp', 'u', 'v', 'w']
+    for vn in vv_list_full:
+        vv_dict[vn] = ds[vn][:].squeeze()
+
+    print('Working on day ' + f_string)
+
     if counter == 0:
         [G, S] = zrfun.get_basic_info(R_fn, getT=False)
-        z_rho, z_w =  zrfun.get_z(G['h'], 0*G['h'], S)
+        zeta = ds['zeta'][0,:,:]
+        z_rho, z_w =  zrfun.get_z(G['h'], zeta, S)
         DA = G['DX'] * G['DY']
         DZ = np.diff(z_w, axis=0)
 
@@ -67,7 +87,13 @@ for ndays in [209]: # 209 is 2006.07.29
         z_u = z_rho[:, :, :-1] + np.diff(z_rho, axis=2)/2
         z_v = z_rho[:, :-1, :] + np.diff(z_rho, axis=1)/2
 
-    for npoly in [1]:#gpoly_dict.keys():
+    # intitialize result dicts (key = polygon number)
+    trans_dict = dict()
+    stvwa_dict = dict()
+
+    for npoly in gpoly_dict.keys():
+
+        print('  npoly = ' + str(npoly))
 
         # we have two objects associated with a given polygon,
         #  * per_dict[iseg] has arrays of boundary information, and
@@ -91,10 +117,12 @@ for ndays in [209]: # 209 is 2006.07.29
         # masked outside of the polygon
 
         # find average values inside the volume
+        stvwa_arr = np.zeros((len(z_dict)-1, 5))
         vn_list = ['salt', 'temp']
         for vn in vn_list:
-            print('\n*** ' + vn + ' ***')
-            vv = ds[vn][:].squeeze()
+            if print_info:
+                print('\n*** ' + vn + ' ***')
+            vv = vv_dict[vn] #ds[vn][:].squeeze()
             # 3D array, masked where there is land
             for iz in range(len(z_dict.keys())-1):
                 z0 = z_dict[iz + 1] # lower z
@@ -125,14 +153,21 @@ for ndays in [209]: # 209 is 2006.07.29
                 else:
                     vol = 0.
                     vv_mean = np.nan
-                print('%d:%d mean = %0.3f, vol = %0.3f km3 (npts=%d)' %
-                    (z0, z1, vv_mean, vol/1e9, l1))
+                if print_info:
+                    print('%d:%d mean = %0.3f, vol = %0.3f km3 (npts=%d)' %
+                        (z0, z1, vv_mean, vol/1e9, l1))
+
+                if vn == 'salt':
+                    stvwa_arr[iz, 0] = vv_mean
+                elif vn == 'temp':
+                    stvwa_arr[iz, 1] = vv_mean
+                    stvwa_arr[iz, 2] = vol
 
         # find average w through the bottom of a volume
         vn = 'w'
-        print('\n*** ' + vn + ' ***')
-        w = ds['w'][:].squeeze()
-        w_trans_arr = np.zeros(len(z_dict)-1)
+        if print_info:
+            print('\n*** ' + vn + ' ***')
+        w = vv_dict['w'] #ds['w'][:].squeeze()
         for iz in range(len(z_dict.keys())-1):
             z0 = z_dict[iz + 1] # layer z
             zmask = (z_rho < z0)
@@ -168,18 +203,60 @@ for ndays in [209]: # 209 is 2006.07.29
                 area = 0.
                 w_mean = 0.
             w_trans = w_mean * area
-            w_trans_arr[iz] = w_trans
-#            print('%d: w*1e6 = %0.3f, area = %0.3f km2 (npts=%d)' %
-#                (z0, w_mean*1e6, area/1e6, l1))
-            print('%d: w_trans = %0.3f, area = %0.3f km2 (npts=%d)' %
-                (z0, w_trans, area/1e6, l1))
 
+            stvwa_arr[iz, 3] = w_mean
+            stvwa_arr[iz, 4] = area
+
+            if print_info:
+                print('%d: w_trans = %0.3f, area = %0.3f km2 (npts=%d)' %
+                    (z0, w_trans, area/1e6, l1))
+
+        stvwa_dict[npoly] = stvwa_arr
 
         # find fluxes through the faces
 
-        u = ds['u'][:].squeeze()
-        v = ds['v'][:].squeeze()
+        u = vv_dict['u']
+        v = vv_dict['v']
         # 3D arrays, masked where there is land
+
+        if False: # DEBUGGING
+            # test of volume conservation
+            wmm = .2
+            uda = (u * DYu * DZu).sum(axis=0)
+            vda = (v * DXv * DZv).sum(axis=0)
+            conv = -(np.diff(uda, axis=1)[1:-1,:] + np.diff(vda, axis=0)[:,1:-1])/DA[1:-1,1:-1]
+            w_mean_poly = conv[j_in-1, i_in-1].mean()
+            # conv should be the implied vertical velocity at the top of the
+            # water column due to lack of mass conservation
+            import matplotlib.pyplot as plt
+            plt.close('all')
+            pth = os.path.abspath('../../LiveOcean/plotting')
+            if pth not in sys.path:
+                sys.path.append(pth)
+            import pfun
+            fig = plt.figure(figsize=(18, 10))
+            ax = fig.add_subplot(121)
+            pfun.add_coast(ax)
+            ax.axis([-124, -122, 46.8, 49.2])
+            pfun.dar(ax)
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'], conv*1000, vmin=-wmm,
+                               vmax=wmm)
+            fig.colorbar(cs)
+            ax.set_title('Convergence w (mm/s)')
+
+            ax = fig.add_subplot(122)
+            pfun.add_coast(ax)
+            ax.axis([-124, -122, 46.8, 49.2])
+            pfun.dar(ax)
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'], w[-1,1:-1,1:-1]*1000,
+                               vmin=-wmm, vmax=wmm)
+            fig.colorbar(cs)
+            ax.set_title('Real w (mm/s)')
+            plt.show()
 
         trans_arr = np.zeros((len(z_dict)-1, len(per_dict)))
         for iz in range(len(z_dict.keys())-1):
@@ -192,7 +269,8 @@ for ndays in [209]: # 209 is 2006.07.29
             vm = np.ma.masked_where(~zmask_v, v)
             # velocity 3D arrays, masked under land,
             # AND outside of the vertical layer
-            print('\n***** TRANSPORT: z range = %d:%d m *****' % (z0, z1))
+            if print_info:
+                print('\n***** TRANSPORT: z range = %d:%d m *****' % (z0, z1))
 
             for iseg in per_dict.keys():
                 per = per_dict[iseg]
@@ -247,20 +325,36 @@ for ndays in [209]: # 209 is 2006.07.29
                 trans_arr[iz,iseg] = trans
                 area = area_u + area_v
 
-                print('---- iseg=%d: trans = %0.1f m3/s, area = %0.1f m2 (npts=%d)' %
-                    (iseg, trans, area, l1u+l1v))
+                # trans_arr is an numpy array with rows = z-levels
+                # and columns = transport (m3/s) through polygon faces
 
-        net_trans = trans_arr.sum(axis=1)
+                trans_dict[npoly] = trans_arr
 
-        # test volume conservation
-        # first pack transports bottom to top
-        w_trans_arr = w_trans_arr[::-1]
-        w_trans_arr = np.concatenate((w_trans_arr, np.zeros(1)))
-        net_trans = net_trans[::-1]
-        full_net_trans = np.cumsum(net_trans)
-        for ii in range(len(w_trans_arr)-1):
-            print('w_trans = %0.1f, full_net_trans = %0.1f' %
-                (w_trans_arr[ii+1], full_net_trans[ii]))
+                if print_info:
+                    print('---- iseg=%d: trans = %0.1f m3/s, area = %0.1f m2 (npts=%d)' %
+                        (iseg, trans, area, l1u+l1v))
 
-        ds.close()
-        counter += 1
+
+        if False: # DEBUGGING
+            # test volume conservation
+            # first pack transports bottom to top
+            net_trans = trans_arr.sum(axis=1)
+            w_trans_arr = stvwa_arr[:,3] * stvwa_arr[:,4]
+            w_trans_arr = w_trans_arr[::-1]
+            w_trans_arr = np.concatenate((w_trans_arr, np.zeros(1)))
+            net_trans = net_trans[::-1]
+            full_net_trans = np.cumsum(net_trans)
+            for ii in range(len(w_trans_arr)-1):
+                print('w_trans = %0.1f, full_net_trans = %0.1f' %
+                    (w_trans_arr[ii+1], full_net_trans[ii]))
+
+    ds.close()
+
+    # save the results for this day
+
+    pickle.dump(stvwa_dict, open(out_dir+f_string+'_stvwa.p', 'wb'))
+    pickle.dump(trans_dict, open(out_dir+f_string+'_trans.p', 'wb'))
+    counter += 1
+
+
+    print('  * took %0.1f seconds' % (time.time() - tt0))

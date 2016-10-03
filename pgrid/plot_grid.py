@@ -110,3 +110,4 @@ if show_grids:
 ds.close()
 
 plt.show()
+pfun.topfig()
