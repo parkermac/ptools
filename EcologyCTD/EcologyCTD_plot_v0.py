@@ -24,11 +24,12 @@ sta_to_plot = [
     #'PSB003_0', # edited by hand to remove bad cast 9/18/2002
                 # salinity spike 4 m Feb/Mar 1994
                 # 2007 many T, s spikes, especially deep
-    'DNA001_0', # deep T bad in July 2001
+    #'DNA001_0', # deep T bad in July 2001
                 # 2002 shallow S low value Feb, shallow T spike Oct
                 # 2006 lots of little T & s spikes all depths, many months
     'HCB003_0',
-    'BUD005_0'
+    #'HCB004_0',
+    #'BUD005_0'
     ]
 
 # choose which data fields to plot by commenting out parts of this list
@@ -38,7 +39,7 @@ data_to_plot = [
     #'Sigma',
     #'Chl',
     #'DO',
-    #'Trans',
+    'Trans',
     #'pH'
     ]
 
@@ -46,8 +47,8 @@ data_to_plot = [
 z_deep = -40 # positive up, zero at surface (m)
 
 # set depth limits for averages (time series plot)
-ztop = -5 # red curve will be average above this z (m)
-zbot = -5 # blue curve will be average below this z (m)
+ztop = -8 # red curve will be average above this z (m)
+zbot = -8 # blue curve will be average below this z (m)
 
 # decide whether or not to print a figure (should appear as a .png
 # in whatever directory you are keeping your data files)
@@ -58,7 +59,7 @@ do_csv = False
 
 # if this is multi_year data, you can choose to plot a single year
 # by making this true, and selecting the year
-focus_year = True
+focus_year = False
 fyear = 2013
 
 ## END USER INPUT ##

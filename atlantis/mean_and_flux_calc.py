@@ -22,7 +22,11 @@ import pickle
 import netCDF4 as nc
 import time
 
-print_info = False
+print_info = True
+print_more_info = False
+plot_w = False
+
+do_hourly = False
 
 #%% setup input locations
 
@@ -32,22 +36,24 @@ in_dir = in_dir0 + 'gridded_polygons/'
 out_dir = in_dir0 + 'means_and_fluxes/'
 Lfun.make_dir(out_dir, clean=True)
 
-R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+if do_hourly:
+    R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4/'
+else:
+    R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
 
 #%% load polygon results
 
 gpoly_dict = pickle.load(open(in_dir + 'gpoly_dict.p', 'rb'))
 
 # and specify z levels
-z_dict = {0:0, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
-
+z_dict = {0:5, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
 
 #%% find averages and fluxes
 
 dt0 = datetime(2006,1,1)
 
 counter = 0
-for ndays in range(3, 363): # 209 is 2006.07.29
+for ndays in [190]: #range(3, 363): # 209 is 2006.07.29, 200 is 2006.07.20
 
     # in /data1/parker/roms/output/salish_2006_4_lp
     # we have f2006.01.04 through 2016.12.29
@@ -55,10 +61,16 @@ for ndays in range(3, 363): # 209 is 2006.07.29
 
     tt0 = time.time()
 
-    dt = dt0 + timedelta(days=ndays)
-    f_string = 'f' + dt.strftime('%Y.%m.%d')
-    R_in_dir = R_in_dir0 + f_string + '/'
-    R_fn = R_in_dir + 'low_passed.nc'
+    if do_hourly:
+        R_fn = R_in_dir0 + 'ocean_his_4994.nc'
+        f_string = 'hourly_test'
+    else:
+        dt = dt0 + timedelta(days=ndays)
+        f_string = 'f' + dt.strftime('%Y.%m.%d')
+        R_in_dir = R_in_dir0 + f_string + '/'
+        R_fn = R_in_dir + 'low_passed.nc'
+    
+    
     ds = nc.Dataset(R_fn)
 
     vv_dict = dict()
@@ -75,8 +87,8 @@ for ndays in range(3, 363): # 209 is 2006.07.29
         DA = G['DX'] * G['DY']
         DZ = np.diff(z_w, axis=0)
 
-        DXv = G['DX'][:-1, :] + np.diff(G['DX'], axis=0)/2
         DYu = G['DY'][:, :-1]
+        DXv = G['DX'][:-1, :] + np.diff(G['DX'], axis=0)/2
 
         DZu = DZ[:, :, :-1] + np.diff(DZ, axis=2)/2
         DZv = DZ[:, :-1, :] + np.diff(DZ, axis=1)/2
@@ -91,7 +103,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
     trans_dict = dict()
     stvwa_dict = dict()
 
-    for npoly in gpoly_dict.keys():
+    for npoly in range(10): #gpoly_dict.keys():
 
         print('  npoly = ' + str(npoly))
 
@@ -100,6 +112,16 @@ for ndays in range(3, 363): # 209 is 2006.07.29
         #  * ji_rho_in is an array of indices of interior points
         per_dict = gpoly_dict[npoly]['per_dict']
         ji_rho_in = gpoly_dict[npoly]['ji_rho_in']
+        
+        # find a list of repeated locations in per_dict
+        all_ind = []
+        for iseg in per_dict.keys():
+            # first make a list of all locations
+            per = per_dict[iseg] # array
+            if len(per) > 0:
+                for ii in range(per.shape[0]):
+                    item = tuple(per[ii,:])
+                    all_ind.append(item)
 
         pmask = np.ones_like(DA) == 0
         # start with pmask False everywhere
@@ -120,7 +142,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
         stvwa_arr = np.zeros((len(z_dict)-1, 5))
         vn_list = ['salt', 'temp']
         for vn in vn_list:
-            if print_info:
+            if print_more_info:
                 print('\n*** ' + vn + ' ***')
             vv = vv_dict[vn] #ds[vn][:].squeeze()
             # 3D array, masked where there is land
@@ -153,7 +175,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
                 else:
                     vol = 0.
                     vv_mean = np.nan
-                if print_info:
+                if print_more_info:
                     print('%d:%d mean = %0.3f, vol = %0.3f km3 (npts=%d)' %
                         (z0, z1, vv_mean, vol/1e9, l1))
 
@@ -165,7 +187,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
 
         # find average w through the bottom of a volume
         vn = 'w'
-        if print_info:
+        if print_more_info:
             print('\n*** ' + vn + ' ***')
         w = vv_dict['w'] #ds['w'][:].squeeze()
         for iz in range(len(z_dict.keys())-1):
@@ -207,7 +229,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
             stvwa_arr[iz, 3] = w_mean
             stvwa_arr[iz, 4] = area
 
-            if print_info:
+            if print_more_info:
                 print('%d: w_trans = %0.3f, area = %0.3f km2 (npts=%d)' %
                     (z0, w_trans, area/1e6, l1))
 
@@ -219,8 +241,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
         v = vv_dict['v']
         # 3D arrays, masked where there is land
 
-        if False: # DEBUGGING
-            # test of volume conservation
+        if plot_w: # DEBUGGING looking at expected and actual vertical velocity at surface
             wmm = .2
             uda = (u * DYu * DZu).sum(axis=0)
             vda = (v * DXv * DZv).sum(axis=0)
@@ -258,6 +279,7 @@ for ndays in range(3, 363): # 209 is 2006.07.29
             ax.set_title('Real w (mm/s)')
             plt.show()
 
+        # calculate the fluxes
         trans_arr = np.zeros((len(z_dict)-1, len(per_dict)))
         for iz in range(len(z_dict.keys())-1):
             z0 = z_dict[iz + 1]
@@ -269,11 +291,23 @@ for ndays in range(3, 363): # 209 is 2006.07.29
             vm = np.ma.masked_where(~zmask_v, v)
             # velocity 3D arrays, masked under land,
             # AND outside of the vertical layer
-            if print_info:
+            if print_more_info:
                 print('\n***** TRANSPORT: z range = %d:%d m *****' % (z0, z1))
 
             for iseg in per_dict.keys():
-                per = per_dict[iseg]
+                
+                draft_per = per_dict[iseg]
+                per = np.array([], dtype=int).reshape((0,4))
+                # trim repeats out of per
+                for ii in range(draft_per.shape[0]):
+                    row = draft_per[ii,:]
+                    if all_ind.count(tuple(row)) == 1:
+                        per = np.concatenate((per,row.reshape(1,4)))
+                    else:
+                        pass
+                        #print('skipping repeat')
+                        #print(row)
+                #per = per_dict[iseg]
                 JJ = per[:,0]
                 II = per[:,1]
                 UV = per[:,2]
@@ -327,26 +361,106 @@ for ndays in range(3, 363): # 209 is 2006.07.29
 
                 # trans_arr is an numpy array with rows = z-levels
                 # and columns = transport (m3/s) through polygon faces
+                # (positive in, right?)
 
                 trans_dict[npoly] = trans_arr
 
-                if print_info:
+                if print_more_info:
                     print('---- iseg=%d: trans = %0.1f m3/s, area = %0.1f m2 (npts=%d)' %
                         (iseg, trans, area, l1u+l1v))
+                        
+        # # DEBUGGING calculate the fluxes for the full vertical integral
+        # # RESULT: it matches exactly with the net uppermost flux calculated as
+        # # the sum of all the layer fluxes.
+        # ftrans_arr = np.zeros(len(per_dict))
+        #
+        # for iseg in per_dict.keys():
+        #     per = per_dict[iseg]
+        #     JJ = per[:,0]
+        #     II = per[:,1]
+        #     UV = per[:,2]
+        #     PM = per[:,3]
+        #     # vectors of integers
+        #     JJu = JJ[UV==0]
+        #     IIu = II[UV==0]
+        #     PMu = PM[UV==0]
+        #     JJv = JJ[UV==1]
+        #     IIv = II[UV==1]
+        #     PMv = PM[UV==1]
+        #     # shorter vectors of integers, specific to the u- and v-grids
+        #
+        #     this_u = u[:, JJu, IIu]
+        #     this_v = v[:, JJv, IIv]
+        #
+        #     draft_DAHu = DAHu[:, JJu, IIu]
+        #     draft_DAHv = DAHv[:, JJv, IIv]
+        #     this_DAHu = np.ma.masked_where(this_u.mask, draft_DAHu)
+        #     this_DAHv = np.ma.masked_where(this_v.mask, draft_DAHv)
+        #
+        #      # check lengths
+        #     l1u = this_u.compressed().size
+        #     l2u = this_DAHu.compressed().size
+        #     if l1u != l2u:
+        #         print('Warning: U Result vectors are different lengths')
+        #
+        #     l1v = this_v.compressed().size
+        #     l2v = this_DAHv.compressed().size
+        #     if l1v != l2v:
+        #         print('Warning: V Result vectors are different lengths')
+        #
+        #     # do the integrals
+        #     if l1u>0:
+        #         area_u = this_DAHu.sum()
+        #         trans_u = (this_u * this_DAHu * PMu).sum()
+        #     else:
+        #         area_u = 0.
+        #         trans_u = 0.
+        #     #
+        #     if l1v>0:
+        #         area_v = this_DAHv.sum()
+        #         trans_v = (this_v * this_DAHv * PMv).sum()
+        #     else:
+        #         area_v = 0.
+        #         trans_v = 0.
+        #
+        #     ftrans = trans_u + trans_v
+        #     ftrans_arr[iseg] = ftrans
+        #     farea = area_u + area_v
+        #
+        #     if print_more_info:
+        #         print('---- iseg=%d: ftrans = %0.1f m3/s, area = %0.1f m2 (npts=%d)' %
+        #             (iseg, ftrans, farea, l1u+l1v))
 
-
-        if False: # DEBUGGING
-            # test volume conservation
-            # first pack transports bottom to top
+        if print_info: # test volume conservation
+            # note that arrays are packed top to bottom
+            print('\nTest Volume Conservation')
             net_trans = trans_arr.sum(axis=1)
-            w_trans_arr = stvwa_arr[:,3] * stvwa_arr[:,4]
-            w_trans_arr = w_trans_arr[::-1]
-            w_trans_arr = np.concatenate((w_trans_arr, np.zeros(1)))
-            net_trans = net_trans[::-1]
-            full_net_trans = np.cumsum(net_trans)
-            for ii in range(len(w_trans_arr)-1):
-                print('w_trans = %0.1f, full_net_trans = %0.1f' %
-                    (w_trans_arr[ii+1], full_net_trans[ii]))
+            # net transport into each layer
+            part_net_trans = np.cumsum(net_trans[::-1])[::-1]
+            full_net_trans = np.concatenate((part_net_trans, np.zeros(1)))
+            # this is transport through each layer in z_dict
+            #
+            # then compare to an independent estimate of transport
+            part_w_trans = stvwa_arr[:,3] * stvwa_arr[:,4]
+            # this should be transport through the bottom of each layer
+            # and finally sum up the transport at the surface
+            w_poly = (w[-1,:,:]*DA)[j_in,i_in].sum()
+            full_w_trans = np.concatenate((np.array([w_poly]), part_w_trans))
+            # and add an estimated zero transport through the free surface
+            #
+            for ii in range(len(z_dict)):
+                print('z = %4d, w_trans = %10d, net_trans = %10d' %
+                    (z_dict[ii], full_w_trans[ii], full_net_trans[ii]))
+            # and try a different calculation of the estiamted vertical transport
+            # at the free surface
+            uda = (u * DYu * DZu).sum(axis=0)
+            vda = (v * DXv * DZv).sum(axis=0)
+            conv = -(np.diff(uda, axis=1)[1:-1,:] + np.diff(vda, axis=0)[:,1:-1])
+            conv_poly = conv[j_in-1, i_in-1].sum()
+            
+            if print_info:
+                print('\nSurface flux by convergence = %10d, and by w = %10d' % (conv_poly, w_poly))
+            
 
     ds.close()
 

@@ -37,16 +37,26 @@ ds.close()
 plon_vec = plon[0,:]
 plat_vec = plat[:,0]
 
-#%% create a boolean mask array (True where masked = land)
+#%% USER CHOICES
 
+z_land = 5 # z position of initial dividing line (positive up)
+
+unmask_coast = False
+
+z_shallowest = -5
+enforce_z_shallowest = False
+
+remove_islands = True
+
+#%% processing
+
+# create a boolean mask array (True where masked = land)
+m = z > z_land
 # note that this is the opposite of the ROMS convention
 # where mask_rho = 1. over water, and 0. over land
 
-m = z > 0
-
-if G['gridname'] == 'aestus1':
-    pass
-else:
+# unmask the coast
+if unmask_coast:
     # This unmasks it in the places where the
     # coastline crosses a tile, to facilitate wetting-drying
     cx, cy = pfun.get_coast()
@@ -60,10 +70,40 @@ else:
     jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
     m[jj0, ii0] = False
 
-#%% enforce a minimum depth in unmasked cells
-# we will need to change this for truly wet-dry applications
-
-z[(~m) & (z>-5)] = -5
+# enforce a minimum depth in unmasked cells
+# (don't use with wet-dry applications)
+if enforce_z_shallowest:
+    z[(~m) & (z>z_shallowest)] = z_shallowest
+      
+# remove islands
+if remove_islands:
+    for ii in range(5):
+        NR, NC = m.shape
+        mm = m[1:-1, 1:-1]
+        mn = m[2:, 1:-1]
+        ms = m[:-2, 1:-1]
+        me = m[1:-1, 2:]
+        mw = m[1:-1, :-2]
+        # remove islands of ocean
+        MMo = ~mm & mn & ms & me
+        mm[MMo] = True
+        MMo = ~mm & mn & ms & mw
+        mm[MMo] = True
+        MMo = ~mm & mn & me & mw
+        mm[MMo] = True
+        MMo = ~mm & ms & me & mw
+        mm[MMo] = True
+        # remove islands of land
+        MMl = mm & ~mn & ~ms & ~me
+        mm[MMl] = False
+        MMl = mm & ~mn & ~ms & ~mw
+        mm[MMl] = False
+        MMl = mm & ~mn & ~me & ~mw
+        mm[MMl] = False
+        MMl = mm & ~ms & ~me & ~mw
+        mm[MMl] = False
+        m[1:-1, 1:-1] = mm
+       
 
 #%% Save the output file
 

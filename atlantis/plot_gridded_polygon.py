@@ -3,6 +3,12 @@
 Created on Wed Sep 21 08:57:08 2016
 
 @author: PM5
+
+Code to plot our polygons, and determine shared faces.
+
+We should move the shared faces code over to preprocessing
+in polygon_on_grid.py.
+
 """
 
 #%% Imports
@@ -25,14 +31,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 import pickle
+import numpy as np
+
+save_plots = False
+# set this to True to save plot png's to a folder
+# set to False to show on screen
 
 #%% setup input location
 in_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
 in_dir = in_dir0 + 'gridded_polygons/'
 
-out_dir = in_dir + 'plots/'
-Lfun.make_dir(out_dir, clean=True)
-
+if save_plots:
+    out_dir = in_dir + 'plots/'
+    Lfun.make_dir(out_dir, clean=True)
 
 #%% get ROMS history file
 
@@ -58,76 +69,79 @@ df = pd.read_excel(pfn, sheetname='BoxVertices')
 
 gpoly_dict = pickle.load(open(in_dir + 'gpoly_dict.p', 'rb'))
 
-
 #%% plotting
 
-plt.close('all')
+#plt.close('all')
 
-for npoly in gpoly_dict.keys():
+counter = 0
+for npoly in [4, 18]:#gpoly_dict.keys():
 
     this_poly = df[df.box_id==npoly]
     lon_poly = this_poly.Long.values
     lat_poly = this_poly.Lat.values
-
+    
     per_dict = gpoly_dict[npoly]['per_dict']
     ji_rho_in = gpoly_dict[npoly]['ji_rho_in']
 
     i_dict = gpoly_dict[npoly]['i_dict']
     j_dict = gpoly_dict[npoly]['j_dict']
 
-    fig = plt.figure(figsize=(16, 10))
+    if counter == 0:
+        fig = plt.figure(figsize=(16, 10))
 
-    # set up panel 1
-    ax = fig.add_subplot(121)
-    pfun.add_coast(ax)
-    ax.axis([-124, -122, 46.8, 49.2])
-    pfun.dar(ax)
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
+        # set up panel 1
+    
+        ax1 = fig.add_subplot(121)
+        pfun.add_coast(ax1)
+        ax1.axis([-124, -122, 46.8, 49.2])
+        pfun.dar(ax1)
+        ax1.set_xlabel('Longitude')
+        ax1.set_ylabel('Latitude')
     # plot the original polygon, with a star at the start and
     # a segment indicating direction
-    ax.plot(lon_poly, lat_poly,'-r')
-    ax.plot(lon_poly[0], lat_poly[0],'-*m', markersize=12)
-    ax.plot(lon_poly[:2], lat_poly[:2],'-m', linewidth=3)
+    ax1.plot(lon_poly, lat_poly,'-r')
+    ax1.plot(lon_poly[0], lat_poly[0],'-*m', markersize=12)
+    ax1.plot(lon_poly[:2], lat_poly[:2],'-m', linewidth=3)
 
-    ax.set_title('Polygon ' + str(npoly))
+    #ax1.set_title('Polygon ' + str(npoly))
 
     # set up panel 2
-    ax = fig.add_subplot(122)
-    pfun.add_coast(ax)
-    ax.axis([lon_poly.min() - .1, lon_poly.max() + .1,
-             lat_poly.min() - .05, lat_poly.max() + .05,])
-    pfun.dar(ax)
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
+    if counter == 0:
+        ax2 = fig.add_subplot(122)
+        pfun.add_coast(ax2)
+        ax2.axis([lon_poly.min() - .1, lon_poly.max() + .1,
+                 lat_poly.min() - .05, lat_poly.max() + .05,])
+        pfun.dar(ax2)
+        ax2.set_xlabel('Longitude')
+        ax2.set_ylabel('Latitude')
     # plot the original polygon, with a star at the start and
     # a segment indicating direction
-    ax.plot(lon_poly, lat_poly,'-r')
-    ax.plot(lon_poly[0], lat_poly[0],'-*m', markersize=12)
-    ax.plot(lon_poly[:2], lat_poly[:2],'-m', linewidth=3)
+    ax2.plot(lon_poly, lat_poly,'-r')
+    ax2.plot(lon_poly[0], lat_poly[0],'-*m', markersize=12)
+    ax2.plot(lon_poly[:2], lat_poly[:2],'-m', linewidth=3)
     # plot gridded perimeter
     for iseg in i_dict.keys():
         sLon = Lon[i_dict[iseg]]
         sLat = Lat[j_dict[iseg]]
         # plot the points on the psi grid for each segment (stairstep lines)
-        ax.plot(sLon, sLat, '-xb')
+        ax2.plot(sLon, sLat, '-xb')
         # starting points
-        ax.plot(sLon[0], sLat[0], '-*b', markersize=12)
+        ax2.plot(sLon[0], sLat[0], '-*b', markersize=12)
         # ending points
-        ax.plot(sLon[-1], sLat[-1], '-oy', markersize=12, alpha=.2)
+        ax2.plot(sLon[-1], sLat[-1], '-oy', markersize=12, alpha=.2)
     # plot sign of inflow at u- or v-grid points
     for iseg in per_dict.keys():
         seg = per_dict[iseg]
         if len(seg) > 0:
             for nn in range(seg.shape[0]):
                 if seg[nn,2] == 0: # u_grid
-                    ax.text(G['lon_u'][seg[nn,0],seg[nn,1]],
+                    ax2.text(G['lon_u'][seg[nn,0],seg[nn,1]],
                             G['lat_u'][seg[nn,0],seg[nn,1]],
                             str(seg[nn,3]),
                             horizontalalignment='center',
                             verticalalignment='center')
                 elif seg[nn,2] == 1: # v_grid
-                    ax.text(G['lon_v'][seg[nn,0],seg[nn,1]],
+                    ax2.text(G['lon_v'][seg[nn,0],seg[nn,1]],
                             G['lat_v'][seg[nn,0],seg[nn,1]],
                             str(seg[nn,3]),
                             horizontalalignment='center',
@@ -135,9 +149,13 @@ for npoly in gpoly_dict.keys():
         else:
             pass
     # plot points on the rho grid that are inside the polygon
-    ax.plot(G['lon_rho'][ji_rho_in[:,0], ji_rho_in[:,1]],
+    ax2.plot(G['lon_rho'][ji_rho_in[:,0], ji_rho_in[:,1]],
               G['lat_rho'][ji_rho_in[:,0], ji_rho_in[:,1]], 'go')
+              
+    counter += 1
 
-
-    plt.savefig(out_dir + 'poly_' + str(npoly) + '.png')
-    plt.close()
+    if save_plots:
+        plt.savefig(out_dir + 'poly_' + str(npoly) + '.png')
+        plt.close()
+    else:
+        plt.show()

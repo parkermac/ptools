@@ -24,25 +24,23 @@ The performance with a 300x600 grid gets a little slow, but is still OK.
 
 """
 
+import gfun
 from importlib import reload
-import gfun; reload(gfun)
+reload(gfun)
 G = gfun.gstart()
+# running gfun.gstart() sets the path to include pfun and zfun
 import pfun
+import zfun
 
 import numpy as np
 import shutil
 import os
 import pandas as pd
-
-import zfun
-
+import matplotlib.path as mpath
 import matplotlib.pyplot as plt
 import matplotlib.colors as pltc
-import sys
-alp = os.path.abspath(G['dir0'] + 'LiveOcean/alpha')
-if alp not in sys.path:
-    sys.path.append(alp)
-from importlib import reload
+from warnings import filterwarnings
+filterwarnings('ignore') # skip some warning messages
 
 flag_testing = False
 
@@ -74,16 +72,15 @@ if not flag_testing:
 
 elif flag_testing:
     # simple grid for testing
-    # grid corners
-    plon = np.linspace(0,10,9)
-    plat = np.linspace(0,10,11)
+    # grid corners (like the psi_ex grid)
+    plon = np.linspace(0,10,9) # 9
+    plat = np.linspace(0,10,11) # 11
     # grid centers
     x = plon[:-1] + np.diff(plon)/2
     y = plat[:-1] + np.diff(plat)/2
     # matrix versions of grids
     X, Y = np.meshgrid(x,y)
-    plon, plat = np.meshgrid(plon,plat)
-    # data
+    # synthetic topo data
     z = (X**2 + Y**2) - 50
     # mask
     m = z > 0 # True over land (positive Z)
@@ -99,15 +96,14 @@ mi = m.flatten()
 # size of the topo array
 [NR, NC] = z.shape
 
-# PLOTTING
-plt.close()
-
+#%% PLOTTING
 # set up the axes
-fig = plt.figure(figsize=(10,10))
-ax1 = plt.subplot2grid((1,3), (0,0), colspan=2)
-ax2 = plt.subplot2grid((1,3), (0,2), colspan=1)
+plt.close()
+fig = plt.figure(figsize=(14,14))
+ax1 = plt.subplot2grid((1,3), (0,0), colspan=2) # map
+ax2 = plt.subplot2grid((1,3), (0,2), colspan=1) # buttons
 
-# initialize the data plot
+#%% initialize the data plot
 cmap1 = plt.get_cmap(name='terrain')
 tvmin = -200
 tvmax = 200
@@ -115,12 +111,10 @@ cs = ax1.pcolormesh(plon,plat,z, vmin=tvmin, vmax=tvmax, cmap = cmap1)
 if do_coast:
     pfun.add_coast(ax1)
     pfun.dar(ax1)
-
 # add rivers
 if not flag_testing:
     in_rfn = G['gdir'] + 'river_info.csv'
     df = pd.read_csv(in_rfn, index_col='rname')
-
     for rn in df.index:
         fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
         df_tr = pd.read_csv(fn_tr, index_col='ind')
@@ -128,7 +122,6 @@ if not flag_testing:
         y = df_tr['lat'].values
         ax1.plot(x, y, '-r', linewidth=2)
         ax1.plot(x[-1], y[-1], '*r')
-
         if df.ix[rn, 'uv'] == 'u' and df.ix[rn, 'isign'] == 1:
             ax1.plot(lonu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
                     latu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '>r')
@@ -141,16 +134,20 @@ if not flag_testing:
         elif df.ix[rn, 'uv'] == 'v' and df.ix[rn, 'isign'] == -1:
             ax1.plot(lonv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
                     latv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], 'vb')
-
-xl0 = (plon.min(), plon.max())
-yl0 = (plat.min(), plat.max())
-ax1.set_xlim(xl0)
-ax1.set_ylim(yl0)
-
+# set limits and colorbar
+map_lims = [plon.min(), plon.max(), plat.min(), plat.max()]
+ax1.axis(map_lims)
 fig.colorbar(cs, ax=ax1, extend='both')
 
-# create control buttons
-NB = 5 # number of buttons
+#%% create control buttons
+
+# list is organized from bottom to top
+
+blist = ['start', 'pause', 'continueM', 'continueZ',
+         'polyToLand', 'polyToWater', 'startPoly',
+         'done']
+
+NB = len(blist) # number of buttons
 ybc = np.arange(NB+1)
 offset = 1e5 # kludgey way to distinguish buttons from topography
 xbc = np.arange(2) + offset
@@ -172,40 +169,87 @@ def addButtonLabel(ax, plon, plat, nb, lab, tcol='k'):
              horizontalalignment='center', verticalalignment='center',
              color=tcol)
 
-# label the buttons
-NBstart = 1
-NBpause = 2
-NBcontinueM = 3
-NBcontinueZ = 4
-NBdone = NB
+# label the buttons (numbered bottom to top, 1 to NB)
+
+bdict = dict(zip(range(1,NB+1), blist))
+
 active_color = 'k'
 inactive_color = 'w'
 mask_color = pltc.colorConverter.to_rgb('lightsalmon')
-addButtonLabel(ax2, xbc, ybc, NBpause, 'PAUSE', tcol=inactive_color)
-addButtonLabel(ax2, xbc, ybc, NBcontinueM, 'CONTINUE\nEdit Mask', tcol=inactive_color)
-addButtonLabel(ax2, xbc, ybc, NBcontinueZ, 'CONTINUE\nEdit Z', tcol=inactive_color)
-addButtonLabel(ax2, xbc, ybc, NBstart, 'START', tcol=active_color)
-addButtonLabel(ax2, xbc, ybc, NBdone, 'DONE', tcol=inactive_color)
+
+for bnum in bdict.keys():
+    if bdict[bnum] == 'start':
+        addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=active_color)
+    else:
+        addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=inactive_color)
 
 plt.show()
+pfun.topfig()
 
-# allow user to edit mask until done
+#%% polygon functions
+
+def get_indices_in_polygon(plon_poly, plat_poly, plon, plat):
+    # get indices of points inside a polygon
+    V = np.ones((len(plon_poly),2))
+    V[:,0] = plon_poly
+    V[:,1] = plat_poly
+    P = mpath.Path(V)
+
+    # grid centers
+    # (plon and plat are vectors)
+    x = plon[:-1] + np.diff(plon)/2
+    y = plat[:-1] + np.diff(plat)/2
+    # matrix versions of grids
+    X, Y = np.meshgrid(x,y)
+    M, L = X.shape
+
+    Rlon = X.flatten()
+    Rlat = Y.flatten()
+    R = np.ones((len(Rlon),2))
+    R[:,0] = Rlon
+    R[:,1] = Rlat
+
+    RR = P.contains_points(R) # boolean
+    # create arrays of i (column) and j (row) indices
+    i_rho = np.arange(L).reshape((1,L)).repeat(M, axis=0)
+    j_rho = np.arange(M).reshape((M,1)).repeat(L, axis=1)
+    # pack indices that are inside the polygon
+    # as a numpy int array, with two columns, packed in order j,i
+    ji_rho_in = np.array([j_rho.flatten()[RR], i_rho.flatten()[RR]],
+                         dtype=int).T
+    return ji_rho_in
+
+def remove_poly():    
+    try: # remove old polygon lines if they exist
+        pl = pline.pop(0)
+        pl.remove()
+    except (NameError, IndexError):
+        pass
+
+#%% allow user to edit mask until done
 flag_get_ginput = True # Make False to exit the ginput loop
 flag_continue = False # need to push START to make this True
 flag_start = True # to ensure we only push the start button once
-flag_mz = 'm' # 'm' to edit mask, 'z' to edit z
+flag_e = 'm' # 'm' to edit mask, 'z' to edit z, 'p' for polygon routines
+pline = []
+plon_poly = []
+plat_poly = []
 
 while flag_get_ginput:
 
-    # get ginput
-    a = plt.ginput(n=1) # returns a list of tuples - of length 1
+    # get ginput, note that you can click with any key
+    a = plt.ginput(n=1, timeout=-1)
+    # returns a list of tuples - of length 1
     b = np.array(a)
     if b.shape != (1,2):
         b = np.array([[-1000, -1000]])
 
+    # this code deals with button input
     if (b[0,0] >= offset):
         # were are in the buttons
-        if (np.ceil(b[:,1]).astype(int) == NBstart) and flag_start:
+        nb = np.ceil(b[:,1]).astype(int)[0] # button number
+        
+        if (bdict[nb]=='start') and flag_start:
             flag_start = False
             flag_continue = True
             col0 = ax1.collections[0]
@@ -216,37 +260,57 @@ while flag_get_ginput:
                 if mi[ii] == True:
                     fc[ii,:3] = mask_color
             ax1.set_title('Initial Mask')
-            # label the rest of the buttons
-            addButtonLabel(ax2, xbc, ybc, NBstart, 'START', tcol=inactive_color)
-            addButtonLabel(ax2, xbc, ybc, NBpause, 'PAUSE', tcol=active_color)
-            addButtonLabel(ax2, xbc, ybc, NBcontinueM, 'CONTINUE\nEdit Mask', tcol=active_color)
-            addButtonLabel(ax2, xbc, ybc, NBcontinueZ, 'CONTINUE\nEdit Z', tcol=active_color)
-            addButtonLabel(ax2, xbc, ybc, NBdone, 'DONE', tcol=active_color)
-            plt.draw()
-        elif (np.ceil(b[0,1]).astype(int) == NBpause) and not flag_start:
+            # reset button colors           
+            for bnum in bdict.keys():
+                if bdict[bnum] == 'start':
+                    addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=inactive_color)
+                else:
+                    addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=active_color)            
+        elif (bdict[nb]=='pause') and not flag_start:
             flag_continue = False
             ax1.set_title('PAUSED')
-            plt.draw()
-        elif (np.ceil(b[0,1]).astype(int) == NBcontinueM) and not flag_start:
+        elif (bdict[nb]=='continueM') and not flag_start:
             flag_continue = True
-            flag_mz = 'm'
+            flag_e = 'm'
             ax1.set_title('EDITING Mask')
-            plt.draw()
-        elif (np.ceil(b[0,1]).astype(int) == NBcontinueZ) and not flag_start:
+        elif (bdict[nb]=='continueZ') and not flag_start:
             flag_continue = True
-            flag_mz = 'z'
+            flag_e = 'z'
             ax1.set_title('EDITING Z')
-            plt.draw()
-        elif (np.ceil(b[0,1]).astype(int) == NBdone) and not flag_start:
+        elif (bdict[nb]=='startPoly') and not flag_start:
+            flag_continue = True
+            flag_e = 'p'
+            ax1.set_title('Click to Add Poly Points')
+            remove_poly()
+            pline = []
+            plon_poly = []
+            plat_poly = []
+        elif (bdict[nb]=='polyToLand') and not flag_start:
+            flag_continue = False
+            ax1.set_title('Changing Poly to Land')
+            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, plon, plat)
+            jj = ji_rho_in[:,0]*NC + ji_rho_in[:,1]
+            mi[jj] = True
+            fc[jj,:3] = mask_color
+            remove_poly()
+        elif (bdict[nb]=='polyToWater') and not flag_start:
+            flag_continue = False
+            ax1.set_title('Changing Poly to Water')
+            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, plon, plat)
+            jj = ji_rho_in[:,0]*NC + ji_rho_in[:,1]
+            mi[jj] = False
+            fc[jj,:3] = fc0[jj,:3]
+            remove_poly()
+        elif (bdict[nb]=='done') and not flag_start:
             flag_get_ginput = False
-            ax1.set_xlim(xl0)
-            ax1.set_ylim(yl0)
+            ax1.axis(map_lims)
             ax1.set_title('DONE')
-            plt.draw()
-            # now copy the .nc file to a new name and then replace its mask.
         else:
             pass
+        plt.draw()
 
+    # this code deals with map input, and only responds when
+    # we are clicking on the map
     elif flag_continue and not flag_start:
         # we are in the data field
         ix0, ix1, frx = zfun.get_interpolant(np.array(b[0,0]),plon)
@@ -254,7 +318,7 @@ while flag_get_ginput:
         iix = ix0[0]
         iiy = iy0[0]
         this_z = z[iiy, iix]
-        if flag_mz == 'm':
+        if flag_e == 'm':
             # this toggles the colors
             jj = iiy*NC + iix # index into the flattened array
             if mi[jj] == True:
@@ -265,7 +329,7 @@ while flag_get_ginput:
                 fc[jj,:3] = mask_color # 1 = white, 0 = black
             ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
                           + ' z=' + str(int(this_z)) + ' m')
-        elif flag_mz == 'z':
+        elif flag_e == 'z':
             # this carves to a specified depth, and removes the mask
             jj = iiy*NC + iix # index into the flattened array
             mi[jj] = False
@@ -278,9 +342,20 @@ while flag_get_ginput:
             this_z = z[iiy, iix]
             ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
                           + ' z=' + str(int(this_z)) + ' m')
+        elif flag_e == 'p':
+            # this draws a polygon as you click
+            plon_poly.append(b[0,0])
+            plat_poly.append(b[0,1])
+            remove_poly()
+            pline = ax1.plot(plon_poly, plat_poly,'*-r')
+            ax1.set_title('Adding to Polygon')
+                       
         plt.draw()
+        # somewhere I saw that the draw_idle command might be better for
+        # redrawing, but I haven't seen a real difference
+        #fig.canvas.draw_idle()
 
-#%% Save the output file
+#%% Save the output file: executes when you push done button
 
 if not flag_testing:
 

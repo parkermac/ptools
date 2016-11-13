@@ -78,8 +78,8 @@ for rn in df.index:
         # This unmasks it in the places where the
         # river crosses a tile
         for I in range(len(x)-1):
-            xx = np.linspace(x[I], x[I+1], 10)
-            yy = np.linspace(y[I], y[I+1], 10)
+            xx = np.linspace(x[I], x[I+1], 100)
+            yy = np.linspace(y[I], y[I+1], 100)
             ii0, ii1, ifr = zfun.get_interpolant(xx, plon_vec, extrap_nan=True)
             jj0, jj1, jfr = zfun.get_interpolant(yy, plat_vec, extrap_nan=True)
             # drop extrapolated points

@@ -8,7 +8,7 @@ Code to initialize the creation of a ROMS grid file.
 
 NOTE: the gridname is set in gfun.gstart().
 
-Throughout this code I try to use ROMS nameing conventions, except that
+Throughout this code I try to use ROMS naming conventions, except that
 when manipulating or plotting I refer to [lon,lat]_rho as [lon,lat],
 and [lon,lat]_psi_ex as [plon,plat].
 """
@@ -102,11 +102,12 @@ elif G['gridname'] == 'bigSalish1':
     aa = [-130, -122, 43, 51.5]
     res = 2000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
+    
 elif G['gridname'] == 'bigSalish2':
     lon_list = [-130, -127, -122]
-    x_res_list = [5000, 2000, 2000]
-    lat_list = [43, 44, 50, 51.5]
-    y_res_list = [5000, 2000, 2000, 5000]
+    x_res_list = [5000, 500, 500]
+    lat_list = [42, 44, 47, 51, 51.5]
+    y_res_list = [5000, 2000, 500, 500, 2000]
     plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
 elif G['gridname'] == 'aestus1':
@@ -123,7 +124,10 @@ ax_lims = (plon_vec[0], plon_vec[-1], plat_vec[0], plat_vec[-1])
 # specify topography files to use
 t_dir = G['dir0'] + 'tools_data/geo_data/topo/'
 # list of topo files: coarsest to finest
-t_list = ['smith_sandwell/pnw_smithsand.mat',
+#t_list = ['smith_sandwell/pnw_smithsand.mat',
+#          'cascadia/cascadia_gridded.mat',
+#         'psdem/PS_183m.mat']
+t_list = ['srtm15/topo15.grd',
           'cascadia/cascadia_gridded.mat',
          'psdem/PS_183m.mat']
 
@@ -167,6 +171,22 @@ def load_bathy(t_fn):
         tlat_vec = tmat['lat'][:].flatten()
         tz = tmat['z'][:]
     return tlon_vec, tlat_vec, tz
+    
+def load_bathy2(t_fn, lon_vec, lat_vec):
+    # load a section of the new NetCDF Smith-Sandwell bathy
+    ds = nc.Dataset(t_fn)
+    Lon = ds['lon'][:]
+    Lat = ds['lat'][:]
+    i0 = zfun.find_nearest_ind(Lon, lon_vec[0])
+    i1 = zfun.find_nearest_ind(Lon, lon_vec[-1])
+    j0 = zfun.find_nearest_ind(Lat, lat_vec[0])
+    j1 = zfun.find_nearest_ind(Lat, lat_vec[-1])
+    tlon_vec = Lon[i0-2:i1+3]
+    tlat_vec = Lat[j0-2:j1+3]
+    tz = ds['z'][j0-2:j1+3, i0-2:i1+3]
+    ds.close()
+    return tlon_vec, tlat_vec, tz
+
 
 if G['gridname'] == 'aestus1':
     # make grid and bathymetry by hand
@@ -183,7 +203,10 @@ else:
     for t_file in t_list:
         t_fn = t_dir + t_file
         print('\nOPENING BATHY FILE: ' + t_file)
-        tlon_vec, tlat_vec, tz = load_bathy(t_fn)
+        if t_file == 'srtm15/topo15.grd':
+            tlon_vec, tlat_vec, tz = load_bathy2(t_fn, lon_vec, lat_vec)
+        else:
+            tlon_vec, tlat_vec, tz = load_bathy(t_fn)
         z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
                                              tlon_vec, tlat_vec, tz)
         z_part = z_flat.reshape((NR, NC))

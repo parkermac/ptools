@@ -15,10 +15,6 @@ contained by the psi-grid segments.  Nice!
 It also makes a dict Shared_faces" that tells which face of which polygon
 each face of a given polygon is connected to.
 
-Reworked 11/12/2016 to omit clipping, and try a different way to determine
-the direction of "in" so that all polygons with shared faces have exactly
-matching info.
-
 """
 
 #%% Imports
@@ -102,6 +98,8 @@ def get_dist_normal(x1, x2, y1, y2, xp1, yp1):
     return dist
 
 #%% process one or more polygons
+
+# to iterate over all polygons in the DataFrame, go to df.box_id.max()
 
 gpoly_dict = dict()
 
@@ -202,6 +200,32 @@ for npoly in range(NPOLY):
                 # otherwise, we are done with this segment
                 do_next_segment = True
 
+    # Trim extra shared indices at the end or beginning of each segment
+    for iseg in i_dict.keys():
+        ii0 = i_dict[iseg]
+        jj0 = j_dict[iseg]
+        if iseg == len(i_dict.keys()) - 1:
+            iseg1 = 0
+        else:
+            iseg1 = iseg+1
+        ii1 = i_dict[iseg1]
+        jj1 = j_dict[iseg1]
+        keep_trimming = True
+        while keep_trimming and (len(ii0)>1) and (len(ii1)>1):
+            A0 = (ii0[-2], ii0[-1], jj0[-2], jj0[-1])
+            A1 = (ii1[1], ii1[0], jj1[1], jj1[0])
+            if A0 == A1:
+                ii0.pop()
+                jj0.pop()
+                ii1.pop(0)
+                jj1.pop(0)
+            else:
+                keep_trimming = False
+        i_dict[iseg] = ii0
+        j_dict[iseg] = jj0
+        i_dict[iseg1] = ii1
+        j_dict[iseg1] = jj1
+
     # find points on the rho grid that are inside the new polygon
     #
     # if we constructed V this way is gives almost the same results
@@ -244,13 +268,6 @@ for npoly in range(NPOLY):
     for iseg in i_dict.keys():
         iis = i_dict[iseg]
         jjs = j_dict[iseg]
-        
-        # determine the slope of the line defining this face
-        dx = iis[-1] - iis[0]
-        dy = jjs[-1] - jjs[0]
-        # and assume we are moving CCW around each polygon so that
-        # "in" is to the left.
-        
         per_dict[iseg] = np.zeros((len(iis)-1,4), dtype=int)
         # if the segment is a single psi point then we end up with
         # per_dict[iseg] = array([], shape=(0, 4), dtype=int64)
@@ -274,22 +291,18 @@ for npoly in range(NPOLY):
             # determine sign for flow into the polygon by looking for
             # points on the rho grid that are inside
             if uv == 0: # u-grid
-                if dy > 0:
-                    pm = -1
-                elif dy < 0:
-                    pm = 1
-                else:
-                    print('\nnpoly=%d nface=%d' % (npoly, iseg))
-                    print('found u-grid point where dy = 0')
+                this_ir_plus = this_i + 1
+                this_jr_plus = this_j
             elif uv == 1: # v-grid
-                if dx > 0:
-                    pm = 1
-                elif dx < 0:
-                    pm = -1
-                else:
-                    print('\nnpoly=%d nface=%d' % (npoly, iseg))
-                    print('found v-grid point where dx = 0')
-                
+                this_ir_plus = this_i
+                this_jr_plus = this_j + 1
+            else:
+                print('rho index error')
+            if sum((ji_rho_in[:,0]==this_jr_plus) &
+                (ji_rho_in[:,1]==this_ir_plus)) == 1:
+                pm = 1
+            else:
+                pm = -1
             per_dict[iseg][nn, :] = [this_j, this_i, uv, pm]
 
     # save output

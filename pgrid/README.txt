@@ -1,4 +1,4 @@
-Notes on the pgrid code.  7/21/2016 Parker MacCready
+Notes on the pgrid code.  10/24/2016 Parker MacCready
 
 First edit the gridname and a few directory location at the top of gfun.py.  This gridname will then be used by all subsequent code.
 
@@ -17,6 +17,8 @@ Suggested order to run the code:
 4. edit_mask.py
 
 5. smooth_grid.py
+
+5.5 maybe carve rivers again?
 
 6. make_extras.py
 

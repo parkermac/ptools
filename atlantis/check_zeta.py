@@ -21,6 +21,7 @@ import zfun
 
 from datetime import datetime, timedelta
 import netCDF4 as nc
+import matplotlib.pyplot as plt
 
 #%% get zeta time series
 
@@ -50,7 +51,6 @@ for ndays in range(31): # 209 is 2006.07.29
         ii = zfun.find_nearest_ind(lon,lon0)
         jj = zfun.find_nearest_ind(lat,lat0)
 
-
     [T] = zrfun.get_basic_info(R_fn, getG=False, getS=False)
     eta_list.append(ds['zeta'][0, jj, ii])
     dt_list.append(T['tm'])
@@ -65,3 +65,6 @@ import pandas as pd
 es = pd.Series(dict(zip(dt_list, eta_list)))
 
 es.plot()
+
+plt.show()
+

@@ -43,7 +43,7 @@ Lfun.make_dir(out_dir_T, clean=False)
 rn = 'creek1'
 
 # flow
-qtc = pd.Series(dict(zip(range(1,367), 500. * np.ones(366))))
+qtc = pd.Series(dict(zip(range(1,367), 1500. * np.ones(366))))
 qtc.to_csv(out_dir + rn + '.csv')
 
 # temperature

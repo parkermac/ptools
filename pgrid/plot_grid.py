@@ -67,7 +67,6 @@ if show_grids:
         lat_dict[tag] = ds.variables['lat_'+tag][:]
         mask_dict[tag] = ds.variables['mask_'+tag][:]
 
-
 #%% plotting
 
 ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
@@ -78,21 +77,22 @@ plt.close()
 fig = plt.figure(figsize=(10*NC,10))
 
 ax = fig.add_subplot(1,NC,1)
-cmap1 = plt.get_cmap(name='terrain')
+cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis
 cs = ax.pcolormesh(plon, plat, zm,
-                   vmin=-200, vmax=200, cmap = cmap1)
+                   vmin=-200, vmax=10, cmap = cmap1)
 fig.colorbar(cs, ax=ax, extend='both')
 pfun.add_coast(ax)
 pfun.dar(ax)
 ax.axis(pfun.get_aa(ds))
 ax.set_title(G['gridname'] + '/' + fn)
 
-(rowmax, colmax) = np.unravel_index(np.argmax(zm), zm.shape)
-zmax = zm[rowmax, colmax]
-print('Max z = ' + str(zmax))
-lon_rho = ds['lon_rho'][:]
-lat_rho = ds['lat_rho'][:]
-ax.plot(lon_rho[rowmax, colmax], lat_rho[rowmax, colmax], '*m', markersize=20)
+if False:
+    (rowmax, colmax) = np.unravel_index(np.argmax(zm), zm.shape)
+    zmax = zm[rowmax, colmax]
+    print('Max z = ' + str(zmax))
+    lon_rho = ds['lon_rho'][:]
+    lat_rho = ds['lat_rho'][:]
+    ax.plot(lon_rho[rowmax, colmax], lat_rho[rowmax, colmax], '*m', markersize=20)
 
 if show_grids:
     marker_dict = {'rho': 'ok',
