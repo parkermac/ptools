@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Code to plot different estimates of w at the free surface,
-and experiment with an algorithm to balance transports.
+Code to calculate convergence in all polygons
+and experiment with an algorithm to balance transports
+through the faces.
+
+This code is 2D, meaning we don't consider depth dependence and
+instead sum up evelything coming into a polygon.
 
 """
 
@@ -41,7 +45,8 @@ R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
 # load polygon results
 gpoly_dict = pickle.load(open(in_dir + 'gpoly_dict.p', 'rb'))
 shared_faces_dict = pickle.load(open(in_dir + 'shared_faces.p', 'rb'))
-# specify file to work on
+
+# specify ROMS file to work on
 dt0 = datetime(2006,1,1)
 ndays = 191
 # 209 is 2006.07.29, 200 is 2006.07.20
@@ -62,19 +67,21 @@ z_rho, z_w =  zrfun.get_z(G['h'], zeta, S)
 DA = G['DX'] * G['DY']
 DAm = np.ma.masked_where(zeta.mask, DA)
 DZ = np.diff(z_w, axis=0)
-
-DYu = G['DY'][:, :-1]
-DXv = G['DX'][:-1, :] + np.diff(G['DX'], axis=0)/2
-
+# DZ on u and v grids
 DZu = DZ[:, :, :-1] + np.diff(DZ, axis=2)/2
 DZv = DZ[:, :-1, :] + np.diff(DZ, axis=1)/2
-
+# DX and DY on u and v grids
+DYu = G['DY'][:, :-1]
+DXv = G['DX'][:-1, :] + np.diff(G['DX'], axis=0)/2
+# cell areas for u and v grid box faces
 DAHu = DZu * DYu
 DAHv = DZv * DXv
 
 if do_plot:
     # Setup for PLOTTING
-    wmm = .1 # color limits for w in mm/sec
+    wmm = .025 # color limits for w [mm/sec]
+    # the next three lines set up to plot points with
+    # colors related to w
     norm = mpl.colors.Normalize(vmin=-wmm, vmax=wmm)
     cmap = cm.jet
     m = cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -101,42 +108,13 @@ for npoly in range(NPOLY):#gpoly_dict.keys():
     j_in = ji_rho_in[:,0]
     i_in = ji_rho_in[:,1]
     
-    # # Find a list of repeated locations in per_dict, because
-    # # these represent places where the perimeter folded back
-    # # closely on itself and my algorithm gave overlapping points.
-    # # This would be OK except that my algorith cannot, in this case
-    # # correctly identify which direction is IN or OUT.  Since the
-    # # transports should cancel we can just omit these points from the
-    # # flux calculation.
-    # # Begin by making a list of all locations, then do (*).
-    # all_ind = []
-    # for nface in per_dict.keys():
-    #     per = per_dict[nface] # array for a given face
-    #     if len(per) > 0:
-    #         for ii in range(per.shape[0]):
-    #             item = tuple(per[ii,:])
-    #             all_ind.append(item)
-    # # all_ind is an array made of ALL the entries in per_dict. 
-
     # find fluxes through the faces
     NFACE = len(per_dict)                
     face_trans_arr = np.zeros(NFACE)
     face_area_arr = np.zeros(NFACE)
 
     for nface in range(NFACE):
-        per = per_dict[nface]
-        # draft_per = per_dict[nface]
-        # per = np.array([], dtype=int).reshape((0,4))
-        # # trim repeats out of per (*)
-        # for ii in range(draft_per.shape[0]):
-        #     row = draft_per[ii,:]
-        #     if all_ind.count(tuple(row)) == 1:
-        #         per = np.concatenate((per,row.reshape(1,4)))
-        #     else:
-        #         pass
-        #         #print('skipping repeat')
-        #         #print(row)
-                
+        per = per_dict[nface]                
         JJ = per[:,0]
         II = per[:,1]
         UV = per[:,2]
@@ -148,30 +126,24 @@ for npoly in range(NPOLY):#gpoly_dict.keys():
         JJv = JJ[UV==1]
         IIv = II[UV==1]
         PMv = PM[UV==1]
-        # shorter vectors of integers, specific to the u- and v-grids
-        
+        # shorter vectors of integers, specific to the u- and v-grids        
         PMu = PMu.reshape((1, len(PMu)))
         PMv = PMv.reshape((1, len(PMv)))
-
         this_u = u[:, JJu, IIu]
         this_v = v[:, JJv, IIv]
-
         draft_DAHu = DAHu[:, JJu, IIu]
         draft_DAHv = DAHv[:, JJv, IIv]
         this_DAHu = np.ma.masked_where(this_u.mask, draft_DAHu)
         this_DAHv = np.ma.masked_where(this_v.mask, draft_DAHv)
-
          # check lengths
         l1u = this_u.compressed().size
         l2u = this_DAHu.compressed().size
         if l1u != l2u:
             print('Warning: U Result vectors are different lengths')
-
         l1v = this_v.compressed().size
         l2v = this_DAHv.compressed().size
         if l1v != l2v:
             print('Warning: V Result vectors are different lengths')
-
         # do the integrals
         if l1u>0:
             area_u = this_DAHu.sum()
@@ -179,7 +151,6 @@ for npoly in range(NPOLY):#gpoly_dict.keys():
         else:
             area_u = 0.
             trans_u = 0.
-        #
         if l1v>0:
             area_v = this_DAHv.sum()
             trans_v = (this_v * this_DAHv * PMv).sum()
@@ -214,6 +185,7 @@ for npoly in range(NPOLY):#gpoly_dict.keys():
             # set up the plot   
             axp = fig.add_subplot(121)
             axp.axis(aa)
+            pfun.add_coast(axp)
             pfun.dar(axp)
             axp.set_title('Poly Conv w (mm/s)')    
         # plot markers for all points on the rho grid inside the polygon,
@@ -225,15 +197,20 @@ for npoly in range(NPOLY):#gpoly_dict.keys():
         # markersize=1 seems to show nothing
         # c=... sets the markercolor to an rgba color
         # and in some way this is different than markercolor=...        
-        axp.text(G['lon_rho'][j_in,i_in].mean(), G['lat_rho'][j_in,i_in].mean(),
-            str(npoly), color='k', fontsize=18, fontweight='bold')
+        # axp.text(G['lon_rho'][j_in,i_in].mean(), G['lat_rho'][j_in,i_in].mean(),
+        #     str(npoly), color='k', fontsize=18, fontweight='bold')
     
     counter += 1
-#NPOLY = counter
-   
-# next try balancing transports
+
+ds.close()
+
+if do_plot:
+    plt.show()
+                  
+# Next try balancing transports
 
 # First check to see that all the face transports match
+# RESULT: it works perfectly - all face fluxes match their counterparts
 for npoly in range(NPOLY):
     net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
     for nface in range(NFACE):
@@ -241,19 +218,103 @@ for npoly in range(NPOLY):
             face_trans, face_area = face_trans_dict[(npoly, nface)]
             ipoly, iface = shared_faces_dict[(npoly, nface)]
             facing_trans, facing_area = face_trans_dict[(ipoly, iface)]
-            
             if np.abs(face_trans + facing_trans) > .001:
                 print('(%2d,%3d):(%2d,%3d):' % (npoly, nface, ipoly, iface))
                 print('  delta trans = %10.5f' % (face_trans + facing_trans))
                 print('    face_trans=%10.2f facing_trans=%10.2f' % (face_trans, facing_trans))
                 print('  delta area = %10.2f' % (face_area - facing_area))
-        
         except KeyError:
             # presumably this face does not have a match on another polygon
             pass
 
-if do_plot:
-    pfun.add_coast(axp)
-    plt.show()
-                
-ds.close()
+# Next try to adjust all polygons to have conv = 0
+NITER = 20
+for iii in range(NITER):
+    
+    new_poly_conv_dict = poly_conv_dict.copy()
+    for npoly in range(NPOLY):
+        net_conv, poly_area, net_face_area, NFACE = new_poly_conv_dict[npoly]
+        new_poly_conv_dict[npoly] = (0.0, poly_area, net_face_area, NFACE)
+    
+    new_face_trans_dict = face_trans_dict.copy()
+
+    for npoly in range(NPOLY):
+        net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+        new_net_conv, poly_area, net_face_area, NFACE = new_poly_conv_dict[npoly]
+        dconv = new_net_conv - net_conv
+    
+        if net_face_area != 0.0:
+            dconv_a = dconv / net_face_area
+        else:
+            dconv_a = 0.0
+    
+        for nface in range(NFACE):
+            face_trans, face_area = face_trans_dict[(npoly, nface)]
+            if face_trans != 0.0 and face_area != 0.0:
+                new_face_trans_dict[(npoly, nface)] = (face_trans + dconv_a*face_area, face_area)
+            else:
+                pass # keep original values
+
+    new_face_trans_dict_copy = new_face_trans_dict.copy()
+    for npoly in range(NPOLY):
+        net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+        for nface in range(NFACE):
+            try:
+                new_face_trans, face_area = new_face_trans_dict[(npoly, nface)]
+                ipoly, iface = shared_faces_dict[(npoly, nface)]
+                new_facing_trans, facing_area = new_face_trans_dict_copy[(ipoly, iface)]
+                fact = (new_face_trans + new_facing_trans)/2
+                new_face_trans_dict[(npoly, nface)] = (new_face_trans - fact, face_area)
+            except KeyError:
+                # presumably this face does not have a match on another polygon
+                pass
+
+    counter = 0            
+    for npoly in range(NPOLY):
+        net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+        shelf = []
+        for nface in range(NFACE):
+            new_face_trans, face_area = new_face_trans_dict[(npoly, nface)]
+            shelf.append(new_face_trans)
+        new_conv = np.array(shelf).sum()
+        new_poly_conv_dict[npoly] = (new_conv, poly_area, net_face_area, NFACE)
+    
+        
+        if do_plot and iii == NITER - 1:
+        
+            if (poly_area > 0):
+                poly_mean_w = new_conv/poly_area
+            else:
+                poly_mean_w = 0.0
+        
+            per_dict = gpoly_dict[npoly]['per_dict']
+            ji_rho_in = gpoly_dict[npoly]['ji_rho_in']    
+            j_in = ji_rho_in[:,0]
+            i_in = ji_rho_in[:,1]
+        
+            if np.abs(poly_mean_w*1000) > wmm/2:
+                print('  ** poly_mean_w = %5.3f mm/s' % (poly_mean_w*1000))        
+            if counter == 0:
+                # set up the plot   
+                axp = fig.add_subplot(122)
+                axp.axis(aa)
+                pfun.add_coast(axp)
+                pfun.dar(axp)
+                axp.set_title('Poly Conv w (mm/s)')    
+            # plot markers for all points on the rho grid inside the polygon,
+            # colored by vertical velocity at the free surface based on the
+            # convergence into the polygon    
+            axp.plot(G['lon_rho'][j_in,i_in], G['lat_rho'][j_in,i_in], 'o',
+                c=m.to_rgba(poly_mean_w*1000), mew=0.0, markersize=2)
+            # mew=0.0 sets the markeredgewidth to 0.
+            # markersize=1 seems to show nothing
+            # c=... sets the markercolor to an rgba color
+            # and in some way this is different than markercolor=...        
+            # axp.text(G['lon_rho'][j_in,i_in].mean(), G['lat_rho'][j_in,i_in].mean(),
+            #     str(npoly), color='k', fontsize=18, fontweight='bold')
+            
+            counter += 1
+            
+    face_trans_dict = new_face_trans_dict.copy()
+    poly_conv_dict = new_poly_conv_dict.copy()
+    
