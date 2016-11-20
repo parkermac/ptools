@@ -32,16 +32,24 @@ from datetime import datetime, timedelta
 import pickle
 import netCDF4 as nc
 import time
+import pandas as pd
 
 import matplotlib as mpl
 import matplotlib.cm as cm
 
 do_plot = True
 
+#%% load Atlantis polygon info into a DataFrame
+pfn = (Ldir['parent'] + 'PROJECTS/LLTK/Atlantis/Puget_Sound_HydroAtlantis/' +
+        'AtlantisBoxInfo_toParker.xlsx')
+df = pd.read_excel(pfn, sheetname='BoxVertices')
+bi = pd.read_excel(pfn, sheetname='BoxInfo')
+
 #%% setup input locations
 in_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
 in_dir = in_dir0 + 'gridded_polygons/'
 R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+
 # load polygon results
 gpoly_dict = pickle.load(open(in_dir + 'gpoly_dict.p', 'rb'))
 shared_faces_dict = pickle.load(open(in_dir + 'shared_faces.p', 'rb'))
@@ -96,6 +104,14 @@ poly_conv_dict = dict()
 counter = 0
 NPOLY = len(gpoly_dict)
 for npoly in range(NPOLY):#gpoly_dict.keys():
+    
+    this_poly = df[df.box_id==npoly]
+    lon_poly = this_poly.Long.values
+    lat_poly = this_poly.Lat.values
+    
+    this_bi = bi[bi.box_id == npoly]
+    boundary = this_bi.Boundary_boxes.values
+    island = this_bi.Island_boxes.values
 
     #print('  npoly = ' + str(npoly))
 
@@ -188,11 +204,14 @@ for npoly in range(NPOLY):#gpoly_dict.keys():
             pfun.add_coast(axp)
             pfun.dar(axp)
             axp.set_title('Poly Conv w (mm/s)')    
-        # plot markers for all points on the rho grid inside the polygon,
+        # plot filled polygons,
         # colored by vertical velocity at the free surface based on the
         # convergence into the polygon    
-        axp.plot(G['lon_rho'][j_in,i_in], G['lat_rho'][j_in,i_in], 'o',
-            c=m.to_rgba(poly_mean_w*1000), mew=0.0, markersize=2)
+        # axp.plot(G['lon_rho'][j_in,i_in], G['lat_rho'][j_in,i_in], 'o',
+        #     c=m.to_rgba(poly_mean_w*1000), mew=0.0, markersize=2)
+        if island == 0:
+            axp.fill(lon_poly, lat_poly,
+                c=m.to_rgba(poly_mean_w*1000))
         # mew=0.0 sets the markeredgewidth to 0.
         # markersize=1 seems to show nothing
         # c=... sets the markercolor to an rgba color
@@ -227,8 +246,12 @@ for npoly in range(NPOLY):
             # presumably this face does not have a match on another polygon
             pass
 
+# save originals
+orig_poly_conv_dict = poly_conv_dict.copy()
+orig_face_trans_dict = face_trans_dict.copy()
+
 # Next try to adjust all polygons to have conv = 0
-NITER = 20
+NITER = 100
 for iii in range(NITER):
     
     new_poly_conv_dict = poly_conv_dict.copy()
@@ -281,17 +304,21 @@ for iii in range(NITER):
     
         
         if do_plot and iii == NITER - 1:
+            
+            this_poly = df[df.box_id==npoly]
+            lon_poly = this_poly.Long.values
+            lat_poly = this_poly.Lat.values
+            
+            this_bi = bi[bi.box_id == npoly]
+            boundary = this_bi.Boundary_boxes.values
+            island = this_bi.Island_boxes.values
+            
         
             if (poly_area > 0):
                 poly_mean_w = new_conv/poly_area
             else:
                 poly_mean_w = 0.0
-        
-            per_dict = gpoly_dict[npoly]['per_dict']
-            ji_rho_in = gpoly_dict[npoly]['ji_rho_in']    
-            j_in = ji_rho_in[:,0]
-            i_in = ji_rho_in[:,1]
-        
+                
             if np.abs(poly_mean_w*1000) > wmm/2:
                 print('  ** poly_mean_w = %5.3f mm/s' % (poly_mean_w*1000))        
             if counter == 0:
@@ -300,21 +327,23 @@ for iii in range(NITER):
                 axp.axis(aa)
                 pfun.add_coast(axp)
                 pfun.dar(axp)
-                axp.set_title('Poly Conv w (mm/s)')    
-            # plot markers for all points on the rho grid inside the polygon,
-            # colored by vertical velocity at the free surface based on the
-            # convergence into the polygon    
-            axp.plot(G['lon_rho'][j_in,i_in], G['lat_rho'][j_in,i_in], 'o',
-                c=m.to_rgba(poly_mean_w*1000), mew=0.0, markersize=2)
-            # mew=0.0 sets the markeredgewidth to 0.
-            # markersize=1 seems to show nothing
-            # c=... sets the markercolor to an rgba color
-            # and in some way this is different than markercolor=...        
-            # axp.text(G['lon_rho'][j_in,i_in].mean(), G['lat_rho'][j_in,i_in].mean(),
-            #     str(npoly), color='k', fontsize=18, fontweight='bold')
+                axp.set_title('After iteration')
+            if island == 0:   
+                axp.fill(lon_poly, lat_poly,
+                    c=m.to_rgba(poly_mean_w*1000))
             
             counter += 1
             
     face_trans_dict = new_face_trans_dict.copy()
     poly_conv_dict = new_poly_conv_dict.copy()
+    
+# look at detailed results
+for npoly in range(NPOLY):
+    net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+    for nface in range(NFACE):
+        face_trans, face_area = face_trans_dict[(npoly, nface)]
+        orig_face_trans, face_area = orig_face_trans_dict[(npoly, nface)]
+        print('(%2d,%3d):(%2d,%3d):' % (npoly, nface, ipoly, iface))
+        print('  delta trans = %10.5f' % (face_trans - orig_face_trans))
+    
     
