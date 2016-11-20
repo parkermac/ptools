@@ -40,6 +40,17 @@ from datetime import datetime
 import pickle
 
 #%% setup output location
+
+if Ldir['parent'] == '/Users/PM5/Documents/':
+    run_loc = 'mac'
+elif Ldir['parent'] == '/data1/parker/':
+    run_loc = 'fjord'
+
+if run_loc == 'mac':
+    R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+elif run_loc == 'fjord':
+    R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
+
 out_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
 Lfun.make_dir(out_dir0)
 out_dir = out_dir0 + 'gridded_polygons/'
@@ -47,7 +58,6 @@ Lfun.make_dir(out_dir, clean=True)
 
 #%% get ROMS history file
 
-R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
 dt = datetime(2006,7,29)
 f_string = 'f' + dt.strftime('%Y.%m.%d')
 R_in_dir = R_in_dir0 + f_string + '/'
