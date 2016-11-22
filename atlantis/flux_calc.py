@@ -93,6 +93,16 @@ for nday in day_list:
     DAm = np.ma.masked_where(zeta.mask, DA)
     DZ = np.diff(z_w, axis=0)
     
+    # make versions of DA masked for the z layers
+    zDAm = DAm * np.ones((NLAY, 1, 1))
+    for nlay in range(NLAY):
+        z_lower = z_dict[nlay + 1] # lower z
+        zmask = (-G['h'] >= z_lower)
+        draft_DA = DA.copy()
+        draft_DA[zmask] = 0.
+        this_DAm = np.ma.masked_where(zeta.mask, draft_DA)
+        zDAm[nlay,:,:] = this_DAm
+            
     # Z on u and v grids
     Zu = z_rho[:, :, :-1] + np.diff(z_rho, axis=2)/2
     Zv = z_rho[:, :-1, :] + np.diff(z_rho, axis=1)/2
@@ -244,6 +254,7 @@ for nday in day_list:
                 face_ztrans_arr[nface, nlay] = face_ztrans
                 face_zarea = area_zu + area_zv
                 face_zarea_arr[nface, nlay] = face_zarea
+                # Do we use the _arr fields?  I think not, but it doesn't matter.            
         
                 # store results for later
                 face_ztrans_dict[(npoly, nface, nlay)] = (face_ztrans, face_zarea)
@@ -263,8 +274,23 @@ for nday in day_list:
         if np.abs(fza - face_trans_dict[(npoly, nface)][1]) > .001:
             print('npoly=%d nface=%d area error' % (npoly, nface))
             print('fza=%0.5f fa=%0.5f' % (fza, face_trans_dict[(npoly, nface)][1]))
-    
+
+        poly_zarea = np.zeros(NLAY)
+        for nlay in range(NLAY):
+            this_zarea = zDAm[nlay,j_in,i_in].sum()
+            try:
+                if this_zarea.mask == True:
+                    this_zarea = 0.
+            except AttributeError:
+                pass            
+            poly_zarea[nlay] = this_zarea
+            
         poly_area = DAm[j_in,i_in].sum()
+        try:
+            if poly_area.mask == True:
+                poly_area = 0.
+        except AttributeError:
+            pass
         net_conv = face_trans_arr.sum()       
         if (poly_area > 0):
             poly_mean_w = net_conv/poly_area
@@ -273,7 +299,7 @@ for nday in day_list:
         
         # store results for later
         net_face_area = face_area_arr.sum() 
-        poly_conv_dict[npoly] = (net_conv, poly_area, net_face_area, NFACE)
+        poly_conv_dict[npoly] = (net_conv, poly_area, poly_zarea, net_face_area, NFACE)
     
         counter += 1
 
@@ -290,14 +316,14 @@ for nday in day_list:
     
         new_poly_conv_dict = poly_conv_dict.copy()
         for npoly in range(NPOLY):
-            net_conv, poly_area, net_face_area, NFACE = new_poly_conv_dict[npoly]
-            new_poly_conv_dict[npoly] = (0.0, poly_area, net_face_area, NFACE)
+            net_conv, poly_area, poly_zarea, net_face_area, NFACE = new_poly_conv_dict[npoly]
+            new_poly_conv_dict[npoly] = (0.0, poly_area, poly_zarea, net_face_area, NFACE)
     
         new_face_trans_dict = face_trans_dict.copy()
 
         for npoly in range(NPOLY):
-            net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
-            new_net_conv, poly_area, net_face_area, NFACE = new_poly_conv_dict[npoly]
+            net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
+            new_net_conv, poly_area, poly_zarea, net_face_area, NFACE = new_poly_conv_dict[npoly]
             dconv = new_net_conv - net_conv
     
             if net_face_area != 0.0:
@@ -314,7 +340,7 @@ for nday in day_list:
 
         new_face_trans_dict_copy = new_face_trans_dict.copy()
         for npoly in range(NPOLY):
-            net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+            net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
             for nface in range(NFACE):
                 try:
                     new_face_trans, face_area = new_face_trans_dict[(npoly, nface)]
@@ -327,13 +353,13 @@ for nday in day_list:
                     pass
 
         for npoly in range(NPOLY):
-            net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+            net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
             shelf = []
             for nface in range(NFACE):
                 new_face_trans, face_area = new_face_trans_dict[(npoly, nface)]
                 shelf.append(new_face_trans)
             new_conv = np.array(shelf).sum()
-            new_poly_conv_dict[npoly] = (new_conv, poly_area, net_face_area, NFACE)
+            new_poly_conv_dict[npoly] = (new_conv, poly_area, poly_zarea, net_face_area, NFACE)
             
         face_trans_dict = new_face_trans_dict.copy()
         poly_conv_dict = new_poly_conv_dict.copy()
@@ -341,7 +367,7 @@ for nday in day_list:
     # finally add the adjustments to the transports in z levels:
     face_ztrans_dict = dict()
     for npoly in range(NPOLY):
-        net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+        net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
         for nface in range(NFACE):
             face_trans, face_area = face_trans_dict[(npoly, nface)]
             orig_face_trans, face_area = orig_face_trans_dict[(npoly, nface)]
@@ -354,10 +380,52 @@ for nday in day_list:
                     adj = 0.
                 face_ztrans_dict[(npoly, nface, nlay)] = (face_ztrans + adj, face_zarea)
 
+    # calculate w at interfaces and check that they are reasonable
+    # RESULT: they seem good
+    wz_dict = dict()
+    # each entry in wz_dict is a tuple of (w, area) at the TOP of a layer
+    print_info = False
+    for npoly in range(NPOLY):
+        if print_info:
+            print('\nnpoly = %d' % (npoly))
+        cz = np.zeros(NLAY)
+        net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
+        for nface in range(NFACE):
+            face_trans, face_area = face_trans_dict[(npoly, nface)]
+            for nlay in range(NLAY):
+                (face_ztrans, face_zarea) = face_ztrans_dict[(npoly, nface, nlay)]
+                cz[nlay] += face_ztrans
+        czr = cz[::-1] # packed bottom to top
+        cczr = np.cumsum(czr)
+        ccz = cczr[::-1]
+        # ccz is the vertical transport through the UPPER boundary of each layer
+        # packed top to bottom like all other z-layer variables
+        for nlay in range(NLAY):
+            if nlay == 0: # get the associated horizontal area
+                this_zarea = poly_area
+            else:
+                this_zarea = poly_zarea[nlay-1]
+            try: # accout for the few cases where an area might be a masked constant
+                if this_zarea.mask == True:
+                    this_zarea = 0.
+            except AttributeError:
+                pass
+            # calculate the vertical velocity through the layer
+            # note that the transport throught the deepest level (-350 m) is ZERO
+            # and the uppermost w is also ~zero because of our iterative correction
+            if (this_zarea == 0.):
+                wz_dict[(npoly, nlay)] = (0., 0.)
+            else:
+                wz_dict[(npoly, nlay)] = (ccz[nlay] / this_zarea, this_zarea)
+            if print_info:
+                print(' z = %4d w = %10.1f (mm/hour)' %
+                    (z_dict[nlay], 3600*1000*wz_dict[(npoly, nlay)][0]))
+
     # save the results for this day
     pickle.dump(face_trans_dict, open(out_dir+f_string+'_face_trans.p', 'wb'))
     pickle.dump(face_ztrans_dict, open(out_dir+f_string+'_face_ztrans.p', 'wb'))
     pickle.dump(poly_conv_dict, open(out_dir+f_string+'_poly_conv.p', 'wb'))
+    pickle.dump(wz_dict, open(out_dir+f_string+'_wz.p', 'wb'))
 
     # check that the net convergence is still small
     # RESULT: it is very,very small
@@ -365,7 +433,7 @@ for nday in day_list:
     pconv = []
     for npoly in range(NPOLY):
         cc = 0.
-        net_conv, poly_area, net_face_area, NFACE = poly_conv_dict[npoly]
+        net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
         for nface in range(NFACE):
             face_trans, face_area = face_trans_dict[(npoly, nface)]
             for nlay in range(NLAY):
@@ -377,14 +445,14 @@ for nday in day_list:
                                 
     # check size of w at the free surface
     w_arr = np.zeros(NPOLY)
-    for k in poly_conv_dict.keys():
-        conv, poly_area, net_face_area, NFACE = poly_conv_dict[k]
+    for k in range(NPOLY):
+        conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[k]
         if poly_area > 0:
             w_arr[k] = conv / poly_area
         else:
             w_arr[k] = 0.
     print('  max w = %0.5f (mm/hour)' % (3600 * 1000 * np.abs(w_arr.max())))
-
+    
     # report on calculation time
     print('  Took %0.1f seconds' % (time.time() - tt0))
 

@@ -20,67 +20,85 @@ from datetime import datetime, timedelta
 import pickle
 
 # specify z levels
-z_dict = {0:0, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
-
+z_dict = {0:5, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
+NLAY = len(z_dict) - 1
 
 #%% setup input locations
-
 in_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
-
-in_dir = in_dir0 + 'means_and_fluxes/'
-
-dd = os.listdir(in_dir)
-
+in_dir_means = in_dir0 + 'means/'
+in_dir_fluxes = in_dir0 + 'fluxes/'
+dd = os.listdir(in_dir_means)
 # these should be sorted by date
-stvwa_list = [item for item in dd if 'stvwa' in item]
-trans_list = [item for item in dd if 'trans' in item]
+stv_list = [item for item in dd if 'stv' in item]
 
 dt0 = datetime(2006,1,1)
 
-fid1 = open(in_dir + 'salish_avg.dat', 'wt')
-fid1.write('%5s %5s %5s %15s %15s %15s %15s %15s\n' %
-    ('Time', 'nPoly', 'Depth', 'w', 'Temp', 'Salinity', 'Area', 'Volume'))
-fid1.write('%5s %5s %5s %15s %15s %15s %15s %15s\n' %
-    ('[12h]', '[#]', '[m]', '[1e-6 m/s]', '[degC]', '[psu]', '[km2]', '[km3]'))
-for item in stvwa_list:
-    dt = datetime.strptime(item[1:11], '%Y.%m.%d')
+# write averages
+fid1 = open(in_dir0 + 'salish_avg.dat', 'wt')    
+fid1.write('%s\n' % ('      Time Step        Polygon          Depth       Vertical        Average        Average'))
+fid1.write('%s\n' % ('         (12)hr         number          Layer       velocity    Temperature       Salinity'))
+fid1.write('%s\n\n' % ('                                          [m]    [10^-6*m/s]      [Celsius] [PartsPer1000]'))     
+for item in stv_list:
+    f_string = item[:11]
+    dt = datetime.strptime(f_string[1:], '%Y.%m.%d')
     nd = (dt - dt0).days
-    timestep = nd*2 + 1
     # The file at noon of 2006.01.01 has timestep = 1
     # and the file at noon the next day has timestep = 3
-    # because timesteps are in 12 hour increments.
-    stvwa_dict = pickle.load(open(in_dir + item, 'rb'))
-    for npoly in stvwa_dict.keys():
-        stvwa_arr = stvwa_dict[npoly]
-        for iz in range(stvwa_arr.shape[0]):
-            depth = -z_dict[iz+1]
-            salt = stvwa_arr[iz, 0]
-            temp = stvwa_arr[iz, 1]
-            vol = stvwa_arr[iz, 2]/1e9
-            w = stvwa_arr[iz, 3]*1e6
-            area = stvwa_arr[iz, 4]/1e6
-            fid1.write('%5d %5d %5d %15.7e %15.7e %15.7e %15.7e %15.7e\n' %
-                (timestep, npoly, depth, w, temp, salt, area, vol))
+    # because timesteps are in 12 hour increments.    
+    stv_dict = pickle.load(open(in_dir_means + item, 'rb'))    
+    face_trans_dict = pickle.load(open(in_dir_fluxes + f_string+'_face_trans.p', 'rb'))
+    face_ztrans_dict = pickle.load(open(in_dir_fluxes + f_string+'_face_ztrans.p', 'rb'))
+    poly_conv_dict = pickle.load(open(in_dir_fluxes + f_string+'_poly_conv.p', 'rb'))
+    wz_dict = pickle.load(open(in_dir_fluxes + f_string+'_wz.p', 'rb'))    
+    for timestep in [nd*2 + 1, nd*2 + 2]:    
+        NPOLY = len(stv_dict.keys())
+        for npoly in range(NPOLY):
+            stv_arr = stv_dict[npoly]
+            for nlay in range(NLAY):
+                depth = -z_dict[nlay+1]
+                salt = stv_arr[nlay, 0]
+                temp = stv_arr[nlay, 1]
+                vol = stv_arr[nlay, 2]/1e9
+                # get w and horizontal are the BOTTOM of each layer
+                if nlay < NLAY -1:
+                    w = wz_dict[npoly, nlay+1][0]*1e6 #
+                    area = wz_dict[npoly, nlay+1][1]/1e6 # km2
+                else:
+                    w = 0.
+                    area = 0.
+                if (not np.isnan(salt)) and (not np.isnan(temp)):
+                    fid1.write('%17.7e %17.7e %17.7e %17.7e %17.7e %17.7e\n' %
+                        (timestep, npoly, depth, w, temp, salt))
 fid1.close()
 
-fid2 = open(in_dir + 'salish_flux.dat', 'wt')
-fid2.write('%5s %5s %5s %5s %15s\n' %
-    ('Time', 'nPoly', 'Face', 'Depth', 'Flux'))
-fid2.write('%5s %5s %5s %5s %15s\n' %
-    ('[12h]', '[#]', '[#]', '[m]', '[m3/s]'))
-for item in trans_list:
-    dt = datetime.strptime(item[1:11], '%Y.%m.%d')
+# write fluxes
+fid2 = open(in_dir0 + 'salish_flux.dat', 'wt')
+fid2.write('%s\n' % ('        Polygon           Face      Time Step          Depth           Flux'))
+fid2.write('%s\n' % ('         number         number         (12)hr          Layer         [m3/s]'))   
+for item in stv_list:
+    f_string = item[:11]
+    dt = datetime.strptime(f_string[1:], '%Y.%m.%d')
     nd = (dt - dt0).days
-    timestep = nd*2 + 1
-    trans_dict = pickle.load(open(in_dir + item, 'rb'))
-    for npoly in trans_dict.keys():
-        trans_arr = trans_dict[npoly]
-        for iz in range(trans_arr.shape[0]):
-            depth = -z_dict[iz+1]
-            for face in range(trans_arr.shape[1]):
-                flux = trans_arr[iz, face]
-                fid2.write('%5d %5d %5d %5d %15.7e\n' %
-                    (timestep, npoly, face, depth, flux))
+    # The file at noon of 2006.01.01 has timestep = 1
+    # and the file at noon the next day has timestep = 3
+    # because timesteps are in 12 hour increments.    
+    stv_dict = pickle.load(open(in_dir_means + item, 'rb'))    
+    face_trans_dict = pickle.load(open(in_dir_fluxes + f_string+'_face_trans.p', 'rb'))
+    face_ztrans_dict = pickle.load(open(in_dir_fluxes + f_string+'_face_ztrans.p', 'rb'))
+    poly_conv_dict = pickle.load(open(in_dir_fluxes + f_string+'_poly_conv.p', 'rb'))
+    wz_dict = pickle.load(open(in_dir_fluxes + f_string+'_wz.p', 'rb'))
+    for timestep in [nd*2 + 1, nd*2 + 2]:        
+        NPOLY = len(stv_dict.keys())
+        stv_arr = stv_dict[npoly]        
+        for npoly in range(NPOLY):
+            net_conv, poly_area, poly_zarea, net_face_area, NFACE = poly_conv_dict[npoly]
+            for nface in range(NFACE):
+                for nlay in range(NLAY):
+                    (face_ztrans, face_zarea) = face_ztrans_dict[(npoly, nface, nlay)]                     
+                    depth = -z_dict[nlay + 1]
+                    flux = face_ztrans                
+                    fid2.write('%14d. %14d. %14d. %14d. %14.3f\n' %
+                        (npoly, nface + 1, timestep, nlay + 1, flux))
 fid2.close()
 
 
