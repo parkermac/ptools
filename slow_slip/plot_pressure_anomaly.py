@@ -86,7 +86,7 @@ cmap = plt.get_cmap(name='bwr')
 tt = 0
 
 vscale1 = 300
-vscale2 = 100
+vscale2 = 300
 
 for fn in fn_list:
     ds = nc.Dataset(fn)
@@ -119,8 +119,11 @@ for fn in fn_list:
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     f_string = 'f' + datetime.strftime(T['tm'],'%Y.%m.%d')
+    print('Working on ' + f_string)
     ax.set_title(' Bottom $P^{\prime\prime}$ [Pa]')
         
     plt.savefig(out_dir + f_string + '.png')
+    
+    plt.close()
     
     tt += 1
