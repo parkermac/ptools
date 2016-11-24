@@ -86,8 +86,8 @@ plt.close('all')
 cmap = plt.get_cmap(name='bwr')
 
 tt = 0
-vscale1 = 300
-vscale2 = 300
+vscale1 = 400
+vscale2 = 400
 for fn in fn_list:
     ds = nc.Dataset(fn)
     [T] = zrfun.get_basic_info(fn, getG=False, getS=False)
@@ -108,6 +108,7 @@ for fn in fn_list:
     ax.set_ylabel('Latitude')
     f_string = 'f' + datetime.strftime(T['tm'],'%Y.%m.%d')
     ax.set_title(f_string + ' Bottom $P^{\prime}$ [Pa]')
+    ax.text(.9,.1,str(dt.month), horizontalalignment='center', transform=ax.transAxes, fontsize=24, fontweight='bold')
     
     ax = fig.add_subplot(122)    
     cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'], bpaa[1:-1, 1:-1], vmin=-vscale2, vmax=vscale2, cmap='bwr')    
@@ -116,6 +117,7 @@ for fn in fn_list:
     pfun.add_coast(ax)
     ax.axis(pfun.get_aa(ds))
     pfun.dar(ax)
+    pfun.add_windstress_flower(ax, ds, t_scl=0.2, t_leglen=0.1)
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     f_string = 'f' + datetime.strftime(T['tm'],'%Y.%m.%d')
