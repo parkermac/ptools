@@ -34,14 +34,16 @@ Ldir['gtagex'] = Ldir['gtag'] + '_lobio1'
 if Ldir['parent'] == '/Users/PM5/Documents/':
     dt0 = datetime(2015,9,18)
     dt1 = datetime(2015,9,20)
+    out_tag = 'test'
 elif Ldir['parent'] == '/data1/parker/':
     dt0 = datetime(2015,1,1)
     dt1 = datetime(2015,12,31)
+    out_tag = 'full'
 
 # setup output location
 out_dir0 = Ldir['parent'] + '/ptools_output/slow_slip/'
 Lfun.make_dir(out_dir0, clean=False)
-out_dir = out_dir0 + Ldir['gtagex'] + '/'
+out_dir = out_dir0 + Ldir['gtagex'] + '_' + out_tag + '/'
 Lfun.make_dir(out_dir, clean=True)
 
 date_list = []
@@ -84,10 +86,8 @@ plt.close('all')
 cmap = plt.get_cmap(name='bwr')
 
 tt = 0
-
 vscale1 = 300
 vscale2 = 300
-
 for fn in fn_list:
     ds = nc.Dataset(fn)
     [T] = zrfun.get_basic_info(fn, getG=False, getS=False)
@@ -121,8 +121,9 @@ for fn in fn_list:
     f_string = 'f' + datetime.strftime(T['tm'],'%Y.%m.%d')
     print('Working on ' + f_string)
     ax.set_title(' Bottom $P^{\prime\prime}$ [Pa]')
-        
-    plt.savefig(out_dir + f_string + '.png')
+    
+    save_string = ('000' + str(tt))[-3:]    
+    plt.savefig(out_dir + 'p_prime_' + save_string + '.png')
     
     plt.close()
     
