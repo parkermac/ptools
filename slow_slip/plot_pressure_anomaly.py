@@ -108,7 +108,7 @@ for fn in fn_list:
     ax.set_ylabel('Latitude')
     f_string = 'f' + datetime.strftime(T['tm'],'%Y.%m.%d')
     ax.set_title(f_string + ' Bottom $P^{\prime}$ [Pa]')
-    ax.text(.9,.1,str(dt.month), horizontalalignment='center', transform=ax.transAxes, fontsize=24, fontweight='bold')
+    ax.text(.9,.1,str(T['tm'].month), horizontalalignment='center', transform=ax.transAxes, fontsize=24, fontweight='bold')
     
     ax = fig.add_subplot(122)    
     cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'], bpaa[1:-1, 1:-1], vmin=-vscale2, vmax=vscale2, cmap='bwr')    
