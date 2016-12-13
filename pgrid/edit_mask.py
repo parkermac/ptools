@@ -1,26 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr 20 17:14:12 2016
+Tool for editing the mask, and the depth, of a grid file.  During
+depth editing it sets the depth to a constant "dval" set early
+in the code.
 
-@author: PM5
-
-Code to edit a grid mask by hand.  We don't use masked arrays, but instead
-keep one matrix Z that is the full bathymetry, and another M, which is
-a boolean of the same size, True = masked.
-
-In the editing we actually manipulate a flattened version "mi" that consists
-of integer ones and zeros (1 for masked).  This is used to access an array
-of the facecolors of all the tiles in the pcolormesh rendering of the
-topography (NR*NC rows and 4 colums: each row is an RGBA color specification,
-where A is transparency 0-1, smaller = more transparent).
-
-When you edit the facecolor array it immediately updates the figure, and this
-makes the operation relatively fast.  This also avoids the use of ax1.clear().
-I tried an alternate version converting every thing to i,j indices and
-then using imshow().  It was fast for just the topography, but bogged down
-considerably when including the coast, which is essential.
-
-The performance with a 300x600 grid gets a little slow, but is still OK.
+By using imshow() this is MUCH faster than anything I achieved
+using pcolormesh().  E.g with an 800x500 grid it was still
+pleasant to use, whereas the old version was unworkable.
 
 """
 
@@ -31,124 +17,87 @@ G = gfun.gstart()
 # running gfun.gstart() sets the path to include pfun and zfun
 import pfun
 import zfun
+reload(zfun)
 
 import numpy as np
-import shutil
-import os
-import pandas as pd
-import matplotlib.path as mpath
+import netCDF4 as nc
 import matplotlib.pyplot as plt
-import matplotlib.colors as pltc
-from warnings import filterwarnings
-filterwarnings('ignore') # skip some warning messages
+import matplotlib.path as mpath
+import os
+import shutil
 
-flag_testing = False
+import Lfun
+Ldir = Lfun.Lstart()
+clon, clat = pfun.get_coast()
 
+# set the depth to impose during Depth Editing
+dval = 5. # m (positive down)
+
+flag_testing = True
 if not flag_testing:
-
     # select grid file
     fn = gfun.select_file(G)
     in_fn = G['gdir'] + fn
-    # create new file name
-    fn_new = gfun.increment_filename(fn, tag='_m')
-    out_fn = G['gdir'] + fn_new
-
-    # get the grid from NetCDF
-    import netCDF4 as nc
-    ds = nc.Dataset(in_fn)
-    plon = ds.variables['lon_psi_ex'][:]
-    plat = ds.variables['lat_psi_ex'][:]
-    lonu = ds.variables['lon_u'][:]
-    latu = ds.variables['lat_u'][:]
-    lonv = ds.variables['lon_v'][:]
-    latv = ds.variables['lat_v'][:]
-    z = -ds.variables['h'][:]
-    m = ds.variables['mask_rho'][:] == 0
-    ds.close()
-    plon = plon[0,:]
-    plat = plat[:,0]
-    # coastline
-    do_coast = True
-
 elif flag_testing:
-    # simple grid for testing
-    # grid corners (like the psi_ex grid)
-    plon = np.linspace(0,10,9) # 9
-    plat = np.linspace(0,10,11) # 11
-    # grid centers
-    x = plon[:-1] + np.diff(plon)/2
-    y = plat[:-1] + np.diff(plat)/2
-    # matrix versions of grids
-    X, Y = np.meshgrid(x,y)
-    # synthetic topo data
-    z = (X**2 + Y**2) - 50
-    # mask
-    m = z > 0 # True over land (positive Z)
-    # coastline
-    do_coast = False
+    fn = 'grid_m02_r01_s00_x00.nc'
+    in_fn = '/Users/PM5/Documents/ptools_output/pgrid/salish1/' + fn
 
-# mi a vector version of the mask (True = masked) that we
-# use when accessing the mesh colors
-mi = m.flatten()
-# this flattens by default in row-major (C-style) order, meaning it
-# gives a row, appended by the next row, etc.
+# create new file name
+fn_new = gfun.increment_filename(fn, tag='_m')
+out_fn = G['gdir'] + fn_new
 
-# size of the topo array
-[NR, NC] = z.shape
+# get fields
+ds = nc.Dataset(in_fn)
+H = ds.variables['h'][:]
+mask_rho = ds.variables['mask_rho'][:]
+plon = ds.variables['lon_psi_ex'][:]
+plat = ds.variables['lat_psi_ex'][:]
+lon = ds.variables['lon_rho'][:]
+lat = ds.variables['lat_rho'][:]
+ds.close()
+
+cx0, cx1, cxf = zfun.get_interpolant(clon, lon[0,:], extrap_nan=True)
+cy0, cy1, cyf = zfun.get_interpolant(clat, lat[:,0], extrap_nan=True)
+
+# flip to work with imshow
+h = np.flipud(H)
+m = np.flipud(mask_rho)
+# mask_rho:
+# 1 = water
+# 0 = land
+hh = h.copy()
+hh[m==0] = np.nan
+
+NR, NC = hh.shape
 
 #%% PLOTTING
 # set up the axes
-plt.close()
-fig = plt.figure(figsize=(14,14))
+plt.close('all')
+fig = plt.figure(figsize=(16,10)) # (16,10) is good for my laptop
 ax1 = plt.subplot2grid((1,3), (0,0), colspan=2) # map
 ax2 = plt.subplot2grid((1,3), (0,2), colspan=1) # buttons
 
 #%% initialize the data plot
-cmap1 = plt.get_cmap(name='terrain')
-tvmin = -200
+cmap1 = plt.get_cmap(name='rainbow_r') # terrain
+tvmin = -20
 tvmax = 200
-cs = ax1.pcolormesh(plon,plat,z, vmin=tvmin, vmax=tvmax, cmap = cmap1)
-if do_coast:
-    pfun.add_coast(ax1)
-    pfun.dar(ax1)
-# add rivers
-if not flag_testing:
-    in_rfn = G['gdir'] + 'river_info.csv'
-    df = pd.read_csv(in_rfn, index_col='rname')
-    for rn in df.index:
-        fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
-        df_tr = pd.read_csv(fn_tr, index_col='ind')
-        x = df_tr['lon'].values
-        y = df_tr['lat'].values
-        ax1.plot(x, y, '-r', linewidth=2)
-        ax1.plot(x[-1], y[-1], '*r')
-        if df.ix[rn, 'uv'] == 'u' and df.ix[rn, 'isign'] == 1:
-            ax1.plot(lonu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
-                    latu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '>r')
-        elif df.ix[rn, 'uv'] == 'u' and df.ix[rn, 'isign'] == -1:
-            ax1.plot(lonu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
-                    latu[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '<r')
-        elif df.ix[rn, 'uv'] == 'v' and df.ix[rn, 'isign'] == 1:
-            ax1.plot(lonv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
-                    latv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], '^b')
-        elif df.ix[rn, 'uv'] == 'v' and df.ix[rn, 'isign'] == -1:
-            ax1.plot(lonv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']],
-                    latv[df.ix[rn, 'row_py'], df.ix[rn, 'col_py']], 'vb')
-# set limits and colorbar
-map_lims = [plon.min(), plon.max(), plat.min(), plat.max()]
-ax1.axis(map_lims)
+cs = ax1.imshow(h, interpolation='nearest', vmin=tvmin, vmax=tvmax, cmap = cmap1)
+aa = ax1.axis()
+ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
+ax1.axis(aa)
 fig.colorbar(cs, ax=ax1, extend='both')
 
-#%% create control buttons
-
+# create control buttons
 # list is organized from bottom to top
-
 blist = ['start', 'pause', 'continueM', 'continueZ',
          'polyToLand', 'polyToWater', 'startPoly',
          'done']
-
+# nicer names
+Blist = ['Start', 'Pause', 'Edit Mask', 'Edit Depth (' + str(dval) + ' m)',
+         'Polygon to Land', 'Polygon to Water', 'Start Polygon',
+         'Done']
 NB = len(blist) # number of buttons
-ybc = np.arange(NB+1)
+ybc = np.arange(NB+1) - .5
 offset = 1e5 # kludgey way to distinguish buttons from topography
 xbc = np.arange(2) + offset
 XBC, YBC = np.meshgrid(xbc, ybc)
@@ -161,54 +110,46 @@ def addButtonLabel(ax, plon, plat, nb, lab, tcol='k'):
     # draw and label buttons
     pad = .1
     ax.add_patch(
-        plt.Rectangle((plon[0]+pad,plat[nb-1]+pad),
+        plt.Rectangle((plon[0]+pad,plat[nb]+pad),
                       np.diff(plon)[-1]-2*pad, np.diff(plat)[-1]-2*pad,
                       fill=True, facecolor=inactive_color,
                       edgecolor='w'))
-    ax.text(plon.mean(),plat[nb-1:nb+1].mean(), lab, fontsize=15,
+    ax.text(plon.mean(),nb, lab, fontsize=15,
              horizontalalignment='center', verticalalignment='center',
              color=tcol)
 
-# label the buttons (numbered bottom to top, 1 to NB)
-
-bdict = dict(zip(range(1,NB+1), blist))
-
+# label the buttons (numbered bottom to top, 0 to NB-1)
+bdict = dict(zip(range(NB), blist))
+Bdict = dict(zip(range(NB), Blist))
 active_color = 'k'
 inactive_color = 'w'
-mask_color = pltc.colorConverter.to_rgb('lightsalmon')
-
 for bnum in bdict.keys():
     if bdict[bnum] == 'start':
-        addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=active_color)
+        addButtonLabel(ax2, xbc, ybc, bnum, Bdict[bnum], tcol=active_color)
     else:
-        addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=inactive_color)
+        addButtonLabel(ax2, xbc, ybc, bnum, Bdict[bnum], tcol=inactive_color)
 
 plt.show()
 pfun.topfig()
 
-#%% polygon functions
-
-def get_indices_in_polygon(plon_poly, plat_poly, plon, plat):
+# polygon functions
+def get_indices_in_polygon(plon_poly, plat_poly, NR, NC):
     # get indices of points inside a polygon
     V = np.ones((len(plon_poly),2))
     V[:,0] = plon_poly
     V[:,1] = plat_poly
     P = mpath.Path(V)
-
     # grid centers
-    # (plon and plat are vectors)
-    x = plon[:-1] + np.diff(plon)/2
-    y = plat[:-1] + np.diff(plat)/2
+    x = np.arange(NC)
+    y = np.arange(NR)
     # matrix versions of grids
     X, Y = np.meshgrid(x,y)
     M, L = X.shape
-
     Rlon = X.flatten()
     Rlat = Y.flatten()
     R = np.ones((len(Rlon),2))
     R[:,0] = Rlon
     R[:,1] = Rlat
-
     RR = P.contains_points(R) # boolean
     # create arrays of i (column) and j (row) indices
     i_rho = np.arange(L).reshape((1,L)).repeat(M, axis=0)
@@ -218,7 +159,6 @@ def get_indices_in_polygon(plon_poly, plat_poly, plon, plat):
     ji_rho_in = np.array([j_rho.flatten()[RR], i_rho.flatten()[RR]],
                          dtype=int).T
     return ji_rho_in
-
 def remove_poly():    
     try: # remove old polygon lines if they exist
         pl = pline.pop(0)
@@ -226,7 +166,7 @@ def remove_poly():
     except (NameError, IndexError):
         pass
 
-#%% allow user to edit mask until done
+# allow user to edit mask until done
 flag_get_ginput = True # Make False to exit the ginput loop
 flag_continue = False # need to push START to make this True
 flag_start = True # to ensure we only push the start button once
@@ -241,31 +181,27 @@ while flag_get_ginput:
     a = plt.ginput(n=1, timeout=-1)
     # returns a list of tuples - of length 1
     b = np.array(a)
+    b = np.round(b).astype(int)
     if b.shape != (1,2):
         b = np.array([[-1000, -1000]])
+    ix = b[0, 0]
+    iy = b[0, 1]
 
     # this code deals with button input
-    if (b[0,0] >= offset):
+    if (ix >= offset):
         # were are in the buttons
-        nb = np.ceil(b[:,1]).astype(int)[0] # button number
-        
+        nb = iy # button number
         if (bdict[nb]=='start') and flag_start:
             flag_start = False
             flag_continue = True
-            col0 = ax1.collections[0]
-            fc = col0.get_facecolor()
-            fc0 = fc.copy() # store the original color
-            for ii in range(len(mi)):
-                # set flagged cells to mask_color
-                if mi[ii] == True:
-                    fc[ii,:3] = mask_color
+            cs.set_data(hh)
             ax1.set_title('Initial Mask')
-            # reset button colors           
+            # reset button colors
             for bnum in bdict.keys():
                 if bdict[bnum] == 'start':
-                    addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=inactive_color)
+                    addButtonLabel(ax2, xbc, ybc, bnum, Bdict[bnum], tcol=inactive_color)
                 else:
-                    addButtonLabel(ax2, xbc, ybc, bnum, bdict[bnum], tcol=active_color)            
+                    addButtonLabel(ax2, xbc, ybc, bnum, Bdict[bnum], tcol=active_color)
         elif (bdict[nb]=='pause') and not flag_start:
             flag_continue = False
             ax1.set_title('PAUSED')
@@ -276,7 +212,7 @@ while flag_get_ginput:
         elif (bdict[nb]=='continueZ') and not flag_start:
             flag_continue = True
             flag_e = 'z'
-            ax1.set_title('EDITING Z')
+            ax1.set_title('EDITING Depth')
         elif (bdict[nb]=='startPoly') and not flag_start:
             flag_continue = True
             flag_e = 'p'
@@ -287,23 +223,21 @@ while flag_get_ginput:
             plat_poly = []
         elif (bdict[nb]=='polyToLand') and not flag_start:
             flag_continue = False
-            ax1.set_title('Changing Poly to Land')
-            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, plon, plat)
-            jj = ji_rho_in[:,0]*NC + ji_rho_in[:,1]
-            mi[jj] = True
-            fc[jj,:3] = mask_color
+            ax1.set_title('Changed Poly to Land')
+            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
+            hh[ji_rho_in[:,0], ji_rho_in[:,1]] = np.nan
+            cs.set_data(hh)
             remove_poly()
         elif (bdict[nb]=='polyToWater') and not flag_start:
             flag_continue = False
-            ax1.set_title('Changing Poly to Water')
-            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, plon, plat)
-            jj = ji_rho_in[:,0]*NC + ji_rho_in[:,1]
-            mi[jj] = False
-            fc[jj,:3] = fc0[jj,:3]
+            ax1.set_title('Changed Poly to Water')
+            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
+            hh[ji_rho_in[:,0], ji_rho_in[:,1]] = h[ji_rho_in[:,0], ji_rho_in[:,1]]
+            cs.set_data(hh)
             remove_poly()
         elif (bdict[nb]=='done') and not flag_start:
             flag_get_ginput = False
-            ax1.axis(map_lims)
+            #ax1.axis(map_lims)
             ax1.set_title('DONE')
         else:
             pass
@@ -313,63 +247,42 @@ while flag_get_ginput:
     # we are clicking on the map
     elif flag_continue and not flag_start:
         # we are in the data field
-        ix0, ix1, frx = zfun.get_interpolant(np.array(b[0,0]),plon)
-        iy0, iy1, fry = zfun.get_interpolant(np.array(b[0,1]),plat)
-        iix = ix0[0]
-        iiy = iy0[0]
-        this_z = z[iiy, iix]
         if flag_e == 'm':
             # this toggles the colors
-            jj = iiy*NC + iix # index into the flattened array
-            if mi[jj] == True:
-                mi[jj] = False
-                fc[jj,:3] = fc0[jj,:3] # original color
-            elif mi[jj] == False:
-                mi[jj] = True
-                fc[jj,:3] = mask_color # 1 = white, 0 = black
-            ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
-                          + ' z=' + str(int(this_z)) + ' m')
+            if np.isnan(hh[iy, ix]):
+                hh[iy, ix] = h[iy, ix]
+            else:
+                hh[iy, ix] = np.nan
+            cs.set_data(hh)
+            ax1.set_title('EDITING: ix=' + str(ix) + ' iy=' + str(iy)
+                          + ' h=' + str(int(h[iy, ix])) + ' m')
         elif flag_e == 'z':
             # this carves to a specified depth, and removes the mask
-            jj = iiy*NC + iix # index into the flattened array
-            mi[jj] = False
-            i_newcolor = np.arange(cmap1.N)
-            z_newcolor = np.linspace(tvmin, tvmax, cmap1.N)
-            ii_newcolor = i_newcolor[z_newcolor >= -5][0]
-            fc_new = cmap1(ii_newcolor)[:3]
-            fc[jj,:3] = fc_new # new color
-            z[iiy, iix] = -5
-            this_z = z[iiy, iix]
-            ax1.set_title('EDITING: iix=' + str(iix) + ' iiy=' + str(iiy)
-                          + ' z=' + str(int(this_z)) + ' m')
+            hh[iy, ix] = dval
+            cs.set_data(hh)
+            ax1.set_title('EDITING: ix=' + str(ix) + ' iy=' + str(iy)
+                          + ' h=' + str(int(h[iy, ix])) + ' m')
         elif flag_e == 'p':
             # this draws a polygon as you click
-            plon_poly.append(b[0,0])
-            plat_poly.append(b[0,1])
+            plon_poly.append(ix)
+            plat_poly.append(iy)
             remove_poly()
+            aa = ax1.axis()
             pline = ax1.plot(plon_poly, plat_poly,'*-r')
+            ax1.axis(aa)
             ax1.set_title('Adding to Polygon')
-                       
         plt.draw()
-        # somewhere I saw that the draw_idle command might be better for
-        # redrawing, but I haven't seen a real difference
-        #fig.canvas.draw_idle()
 
-#%% Save the output file: executes when you push done button
-
-if not flag_testing:
-
-    # get the original mask
-    ds = nc.Dataset(in_fn)
-    mask_rho_orig = ds['mask_rho'][:]
-    ds.close()
-
-    # create the new mask
-    m = mi.reshape(NR, NC)
-    mask_rho = np.ones((NR,NC))
-    mask_rho[m == True] = 0.
-
-    if not np.all(mask_rho == mask_rho_orig):
+# Save the output file: executes when you push done button
+if True:
+    # update fields for output
+    h = np.flipud(h)
+    hh = np.flipud(hh)
+    newmask = np.ones((NR, NC), dtype=float)
+    newmask[np.isnan(hh)] = 0.
+    hh[np.isnan(hh)] = h[np.isnan(hh)]
+    # save new data and mask, if needed
+    if np.any(mask_rho != newmask) or np.any(h != hh):
         print('Creating ' + out_fn)
         try:
             os.remove(out_fn)
@@ -377,8 +290,8 @@ if not flag_testing:
             pass # assume error was because the file did not exist
         shutil.copyfile(in_fn, out_fn)
         ds = nc.Dataset(out_fn, 'a')
-        ds['mask_rho'][:] = mask_rho
-        ds['h'][:] = -z
+        ds['h'][:] = hh
+        ds['mask_rho'][:] = newmask
         ds.close()
     else:
         print('No change to mask')

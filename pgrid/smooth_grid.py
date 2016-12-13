@@ -45,6 +45,18 @@ MSK[z>=0] = 0.
 Hobs = -z.copy()
 rx0max = 0.15
 
+# make sure that anything not masked is
+# not shallower than min_depth
+min_depth = 0. # a negative number would be like on land
+Hobs_1 = -z.copy()
+Hobs = Hobs_1.copy()
+Hobs_1[Hobs_1 < min_depth] = min_depth
+Hobs[mask_rho==1] = Hobs_1[mask_rho==1]
+# and make it positive definite under water
+offset = 1
+Hobs = Hobs + offset
+# offset is removed later
+
 #%% create the area matrix
 
 AreaMatrix = dx * dy
@@ -54,13 +66,15 @@ AreaMatrix = dx * dy
 import time
 tt0 = time.time()
 Hnew = gfun.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
+Hnew = Hnew - offset
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 zn = -Hnew
 
-#%% enforce a minimum depth
-zn[zn > -5.] = -5.
+# enforce a minimum depth
+if False:
+    zn[zn > -5.] = -5.
 
-#%% Save the output file
+# Save the output file
 
 print('Creating ' + out_fn)
 try:
@@ -85,7 +99,7 @@ if True:
 
     plt.close()
 
-    fig = plt.figure(figsize=(18,12))
+    fig = plt.figure(figsize=(14,10))
 
     ax = fig.add_subplot(121)
     cmap1 = plt.get_cmap(name='terrain')

@@ -98,6 +98,13 @@ if G['gridname'] == 'cascadia2':
     aa = [-127.4, -122, 43, 50]
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
+    
+if G['gridname'] == 'salish1':
+    # focus on Puget Sound
+    aa = [-124, -122, 46.8, 49]
+    res = 300 # target resolution (m)
+    plon_vec, plat_vec = simple_grid(aa, res)
+    
 elif G['gridname'] == 'bigSalish1':
     aa = [-130, -122, 43, 51.5]
     res = 2000 # target resolution (m)
@@ -129,7 +136,8 @@ t_dir = G['dir0'] + 'tools_data/geo_data/topo/'
 #         'psdem/PS_183m.mat']
 t_list = ['srtm15/topo15.grd',
           'cascadia/cascadia_gridded.mat',
-         'psdem/PS_183m.mat']
+         'psdem/PS_183m.mat',
+         'ttp_patch/TTP_Regional_27m_patch.mat']
 
 # then make box centers
 lon_vec = plon_vec[:-1] + np.diff(plon_vec)/2
@@ -186,7 +194,6 @@ def load_bathy2(t_fn, lon_vec, lat_vec):
     tz = ds['z'][j0-2:j1+3, i0-2:i1+3]
     ds.close()
     return tlon_vec, tlat_vec, tz
-
 
 if G['gridname'] == 'aestus1':
     # make grid and bathymetry by hand

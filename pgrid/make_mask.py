@@ -39,7 +39,7 @@ plat_vec = plat[:,0]
 
 #%% USER CHOICES
 
-z_land = 5 # z position of initial dividing line (positive up)
+z_land = 0 # z position of initial dividing line (positive up)
 
 unmask_coast = False
 
@@ -51,7 +51,7 @@ remove_islands = True
 #%% processing
 
 # create a boolean mask array (True where masked = land)
-m = z > z_land
+m = z >= z_land
 # note that this is the opposite of the ROMS convention
 # where mask_rho = 1. over water, and 0. over land
 
@@ -108,6 +108,8 @@ if remove_islands:
 #%% Save the output file
 
 # create the new mask_rho
+# 1 = water
+# 0 = land
 mask_rho = np.ones_like(mask_rho_orig)
 mask_rho[m == True] = 0
 

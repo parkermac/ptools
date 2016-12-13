@@ -79,7 +79,7 @@ fig = plt.figure(figsize=(10*NC,10))
 ax = fig.add_subplot(1,NC,1)
 cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis
 cs = ax.pcolormesh(plon, plat, zm,
-                   vmin=-200, vmax=10, cmap = cmap1)
+                   vmin=-200, vmax=200, cmap = cmap1)
 fig.colorbar(cs, ax=ax, extend='both')
 pfun.add_coast(ax)
 pfun.dar(ax)
