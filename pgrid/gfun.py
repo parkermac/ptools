@@ -9,7 +9,7 @@ Utility function for pgrid.
 
 # USER EDIT
 
-gridname = 'salish1'
+gridname = 'cas3'
 
 dir0 = '/Users/PM5/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'

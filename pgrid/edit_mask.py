@@ -33,7 +33,7 @@ clon, clat = pfun.get_coast()
 # set the depth to impose during Depth Editing
 dval = 5. # m (positive down)
 
-flag_testing = True
+flag_testing = False
 if not flag_testing:
     # select grid file
     fn = gfun.select_file(G)
@@ -78,14 +78,29 @@ ax1 = plt.subplot2grid((1,3), (0,0), colspan=2) # map
 ax2 = plt.subplot2grid((1,3), (0,2), colspan=1) # buttons
 
 #%% initialize the data plot
-cmap1 = plt.get_cmap(name='rainbow_r') # terrain
-tvmin = -20
-tvmax = 200
-cs = ax1.imshow(h, interpolation='nearest', vmin=tvmin, vmax=tvmax, cmap = cmap1)
+
+if False:
+    cmap1 = plt.get_cmap(name='rainbow_r') # terrain
+    tvmin = -20
+    tvmax = 200
+    cs = ax1.imshow(h, interpolation='nearest', vmin=tvmin, vmax=tvmax, cmap = cmap1)
+    fig.colorbar(cs, ax=ax1, extend='both')
+else:
+    # try a segmented colormap
+    from matplotlib import colors
+    # make a color map of fixed colors
+    cmap = colors.ListedColormap(['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'violet', 'black'])
+    bounds=[-10, -5, 0, 5, 10, 20, 100, 200, 4000]
+    norm = colors.BoundaryNorm(bounds, cmap.N)
+    # tell imshow about color map so that only set colors are used
+    cs = ax1.imshow(h, interpolation='nearest',
+                        cmap=cmap, norm=norm)
+    # make a color bar
+    fig.colorbar(cs, cmap=cmap, norm=norm, boundaries=bounds, ticks=bounds)
+
 aa = ax1.axis()
 ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
 ax1.axis(aa)
-fig.colorbar(cs, ax=ax1, extend='both')
 
 # create control buttons
 # list is organized from bottom to top
@@ -237,7 +252,6 @@ while flag_get_ginput:
             remove_poly()
         elif (bdict[nb]=='done') and not flag_start:
             flag_get_ginput = False
-            #ax1.axis(map_lims)
             ax1.set_title('DONE')
         else:
             pass

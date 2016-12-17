@@ -98,13 +98,11 @@ if G['gridname'] == 'cascadia2':
     aa = [-127.4, -122, 43, 50]
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
-    
 if G['gridname'] == 'salish1':
     # focus on Puget Sound
     aa = [-124, -122, 46.8, 49]
     res = 300 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
-    
 elif G['gridname'] == 'bigSalish1':
     aa = [-130, -122, 43, 51.5]
     res = 2000 # target resolution (m)
@@ -115,6 +113,20 @@ elif G['gridname'] == 'bigSalish2':
     x_res_list = [5000, 500, 500]
     lat_list = [42, 44, 47, 51, 51.5]
     y_res_list = [5000, 2000, 500, 500, 2000]
+    plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+elif G['gridname'] == 'cas2':
+    lon_list = [-128, -126, -124, -122]
+    x_res_list = [4500, 1500, 500, 500]
+    lat_list = [42, 47, 49, 50]
+    y_res_list = [1500, 500, 500, 1500]
+    plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+elif G['gridname'] == 'cas3': # for testing of mask generation, etc.
+    lon_list = [-127.4, -126, -124, -122]
+    x_res_list = [9000, 3000, 1000, 1000]
+    lat_list = [42, 47, 49, 50]
+    y_res_list = [3000, 1000, 1000, 3000]
     plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
 elif G['gridname'] == 'aestus1':
@@ -204,7 +216,6 @@ if G['gridname'] == 'aestus1':
     z = zshelf
     mask = zestuary < z
     z[mask] = zestuary[mask]
-
 else:
     # add bathymetry automatically from files
     for t_file in t_list:
@@ -222,6 +233,45 @@ else:
     # Adjust zero of the bathymetry to account for the fact that mean sea level
     # is somewhat higher than NAVD88.
     z = z - 1.06
+    
+
+if True:
+    #and make an alternate version using averages
+    z_alt = np.nan * lon
+    for t_file in t_list:
+        t_fn = t_dir + t_file
+        print('\nOPENING BATHY FILE: ' + t_file)
+        if t_file == 'srtm15/topo15.grd':
+            tlon_vec, tlat_vec, tz = load_bathy2(t_fn, lon_vec, lat_vec)
+        else:
+            tlon_vec, tlat_vec, tz = load_bathy(t_fn)
+        if False:
+            z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
+                                                 tlon_vec, tlat_vec, tz)
+            z_part = z_flat.reshape((NR, NC))
+        else:
+            # average in grid cells
+            xi0, xi1, xf = zfun.get_interpolant(tlon_vec,plon_vec, extrap_nan=True)
+            yi0, yi1, yf = zfun.get_interpolant(tlat_vec,plat_vec, extrap_nan=True)
+            z_part = np.nan * np.ones((NR,NC))
+            tNR, tNC = tz.shape
+            itx = np.arange(tNC)
+            jty = np.arange(tNR)
+            for ii in range(NC):
+                for jj in range(NR):
+                    ix = itx[xi0==ii]
+                    jy = jty[yi0==jj]
+                    if ix.size>0 and jy.size>0:
+                        z_part[jj, ii] = np.nanmean(tz[jy[0]:jy[-1], ix[0]:ix[-1]])
+                    else:
+                        pass
+        # put good values of z_part in z
+        z_alt[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
+    # Adjust zero of the bathymetry to account for the fact that mean sea level
+    # is somewhat higher than NAVD88.
+    z_alt = z_alt - 1.06
+    z = z - z_alt # just save the difference
+    
 
 #%% save the output to NetCDF
 

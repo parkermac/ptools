@@ -39,13 +39,21 @@ plat_vec = plat[:,0]
 
 #%% USER CHOICES
 
-z_land = 0 # z position of initial dividing line (positive up)
+# z position of initial dividing line (positive up)
+z_land = 0
 
+# set to True to unmask all cells crossed by the coastline
 unmask_coast = False
 
 z_shallowest = -5
+# set to True to make all initially-unmasked cells
+# be no shalowed than z_shallowest
 enforce_z_shallowest = False
+# this can also be done later in the processing
+# e.g. during smoothing
 
+# set to True to automatically remove isloated patches of
+# land or ocean
 remove_islands = True
 
 #%% processing
