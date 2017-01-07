@@ -123,10 +123,11 @@ elif G['gridname'] == 'cas2':
     plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
 elif G['gridname'] == 'cas3': # for testing of mask generation, etc.
+    minres = 3000
     lon_list = [-127.4, -126, -124, -122]
-    x_res_list = [9000, 3000, 1000, 1000]
+    x_res_list = [9000, 3000, minres, minres]
     lat_list = [42, 47, 49, 50]
-    y_res_list = [3000, 1000, 1000, 3000]
+    y_res_list = [3000, minres, minres, 3000]
     plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
 elif G['gridname'] == 'aestus1':
@@ -207,6 +208,10 @@ def load_bathy2(t_fn, lon_vec, lat_vec):
     ds.close()
     return tlon_vec, tlat_vec, tz
 
+# Adjust zero of the bathymetry to account for the fact that mean sea level
+# is somewhat higher than NAVD88.
+z_offset = -1.06
+
 if G['gridname'] == 'aestus1':
     # make grid and bathymetry by hand
     z = np.zeros(lon.shape)
@@ -230,14 +235,14 @@ else:
         z_part = z_flat.reshape((NR, NC))
         # put good values of z_part in z
         z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-    # Adjust zero of the bathymetry to account for the fact that mean sea level
-    # is somewhat higher than NAVD88.
-    z = z - 1.06
+    z = z + z_offset
     
-
-if True:
+do_cell_ave = True
+if do_cell_ave:
     #and make an alternate version using averages
     z_alt = np.nan * lon
+    # mm is the start of a mask: 1=water, 0=land
+    m_alt = np.nan * lon
     for t_file in t_list:
         t_fn = t_dir + t_file
         print('\nOPENING BATHY FILE: ' + t_file)
@@ -245,34 +250,31 @@ if True:
             tlon_vec, tlat_vec, tz = load_bathy2(t_fn, lon_vec, lat_vec)
         else:
             tlon_vec, tlat_vec, tz = load_bathy(t_fn)
-        if False:
-            z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
-                                                 tlon_vec, tlat_vec, tz)
-            z_part = z_flat.reshape((NR, NC))
-        else:
-            # average in grid cells
-            xi0, xi1, xf = zfun.get_interpolant(tlon_vec,plon_vec, extrap_nan=True)
-            yi0, yi1, yf = zfun.get_interpolant(tlat_vec,plat_vec, extrap_nan=True)
-            z_part = np.nan * np.ones((NR,NC))
-            tNR, tNC = tz.shape
-            itx = np.arange(tNC)
-            jty = np.arange(tNR)
-            for ii in range(NC):
-                for jj in range(NR):
-                    ix = itx[xi0==ii]
-                    jy = jty[yi0==jj]
-                    if ix.size>0 and jy.size>0:
-                        z_part[jj, ii] = np.nanmean(tz[jy[0]:jy[-1], ix[0]:ix[-1]])
-                    else:
-                        pass
+        # apply the offset here instead of at the end
+        tz = tz + z_offset
+        tm = np.ones_like(tz)
+        tm[tz>0] = 0.
+        # average in grid cells
+        xi0, xi1, xf = zfun.get_interpolant(tlon_vec,plon_vec, extrap_nan=True)
+        yi0, yi1, yf = zfun.get_interpolant(tlat_vec,plat_vec, extrap_nan=True)
+        z_part = np.nan * np.ones((NR,NC))
+        m_part = np.nan * np.ones((NR,NC))
+        tNR, tNC = tz.shape
+        itx = np.arange(tNC)
+        jty = np.arange(tNR)
+        for ii in range(NC):
+            for jj in range(NR):
+                ix = itx[xi0==ii]
+                jy = jty[yi0==jj]
+                if ix.size>0 and jy.size>0:
+                    z_part[jj, ii] = np.nanmean(tz[jy[0]:jy[-1], ix[0]:ix[-1]])
+                    m_part[jj, ii] = np.nanmean(tm[jy[0]:jy[-1], ix[0]:ix[-1]])
+                else:
+                    pass
         # put good values of z_part in z
         z_alt[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-    # Adjust zero of the bathymetry to account for the fact that mean sea level
-    # is somewhat higher than NAVD88.
-    z_alt = z_alt - 1.06
-    z = z - z_alt # just save the difference
+        m_alt[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]
     
-
 #%% save the output to NetCDF
 
 # get rid of old version
@@ -304,7 +306,13 @@ for tag in tag_list:
     lat_var[tag] = foo.createVariable('lat_'+tag, float, ('eta_'+tag, 'xi_'+tag))
     lon_var[tag] = foo.createVariable('lon_'+tag, float, ('eta_'+tag, 'xi_'+tag))
     mask_var[tag] = foo.createVariable('mask_'+tag, float, ('eta_'+tag, 'xi_'+tag))
+# We store two versions of the dept, with h being the current official one,
+# and h_alt being something we want to be able to compare it to.
+# We do the same for mask_rho.
+# I expect that both can be replaced by different things as needed along the way
 h_var = foo.createVariable('h', float, ('eta_rho', 'xi_rho'))
+h_alt_var = foo.createVariable('h_alt', float, ('eta_rho', 'xi_rho'))
+mask_rho_alt_var = foo.createVariable('mask_rho_alt', float, ('eta_rho', 'xi_rho'))
 f_var = foo.createVariable('f', float, ('eta_rho', 'xi_rho'))
 pm_var = foo.createVariable('pm', float, ('eta_rho', 'xi_rho'))
 pn_var = foo.createVariable('pn', float, ('eta_rho', 'xi_rho'))
@@ -345,7 +353,9 @@ for tag in tag_list:
     # start with all ones (unmasked for ROMS)
     mask_var[tag][:] = np.ones_like(lon_dict[tag], dtype=int)
 
-h_var[:] = -z
+h_var[:] = -z_alt
+h_alt_var[:] = -z
+mask_rho_alt_var[:] = m_alt
 pm_var[:] = 1/dx
 pn_var[:] = 1/dy
 f_var[:] = sw.f(lat_dict['rho'])

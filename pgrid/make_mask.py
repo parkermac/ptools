@@ -45,10 +45,10 @@ z_land = 0
 # set to True to unmask all cells crossed by the coastline
 unmask_coast = False
 
-z_shallowest = -5
 # set to True to make all initially-unmasked cells
 # be no shalowed than z_shallowest
 enforce_z_shallowest = False
+z_shallowest = -5
 # this can also be done later in the processing
 # e.g. during smoothing
 
@@ -59,6 +59,7 @@ remove_islands = True
 #%% processing
 
 # create a boolean mask array (True where masked = land)
+# following the numpy masked array convention
 m = z >= z_land
 # note that this is the opposite of the ROMS convention
 # where mask_rho = 1. over water, and 0. over land

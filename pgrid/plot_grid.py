@@ -28,7 +28,10 @@ elif LO==False:
 
 ds = nc.Dataset(in_fn)
 z = -ds.variables['h'][:]
+z_alt = -ds.variables['h_alt'][:]
 mask_rho = ds.variables['mask_rho'][:]
+mask_rho_alt = ds.variables['mask_rho_alt'][:]
+
 if LO==True:
     # because older grids did not have lon,lat_psi_ex we create this
     # as an extension of lon,lat_psi
@@ -49,15 +52,15 @@ if LO==True:
     plat[-1,:] = plat0[-1,0] + dy
     plat[:,0] = plat[:,1]
     plat[:,-1] = plat[:,-2]
-
 elif LO==False:
     plon = ds.variables['lon_psi_ex'][:]
     plat = ds.variables['lat_psi_ex'][:]
 
+NC = 1 # first guess at number of columns for plot
+
 show_grids = False
-NC = 1
 if show_grids:
-    NC = 2
+    NC += 1
     lon_dict = dict()
     lat_dict = dict()
     mask_dict = dict()
@@ -66,25 +69,30 @@ if show_grids:
         lon_dict[tag] = ds.variables['lon_'+tag][:]
         lat_dict[tag] = ds.variables['lat_'+tag][:]
         mask_dict[tag] = ds.variables['mask_'+tag][:]
+        
+show_sections = True
+if show_sections:
+    NC += 1
 
 #%% plotting
 
 ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
-zm = np.ma.masked_where(mask_rho==0, z)
+
+zm = np.ma.masked_where(mask_rho_alt == 0, z_alt)
 
 plt.close()
 
 fig = plt.figure(figsize=(10*NC,10))
 
-ax = fig.add_subplot(1,NC,1)
+ax1 = fig.add_subplot(1,NC,1)
 cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis
-cs = ax.pcolormesh(plon, plat, zm,
-                   vmin=-50, vmax=50, cmap = cmap1)
-fig.colorbar(cs, ax=ax, extend='both')
-pfun.add_coast(ax)
-pfun.dar(ax)
-ax.axis(pfun.get_aa(ds))
-ax.set_title(G['gridname'] + '/' + fn)
+cs = ax1.pcolormesh(plon, plat, zm,
+                   vmin=-500, vmax=500, cmap = cmap1)
+fig.colorbar(cs, ax=ax1, extend='both')
+pfun.add_coast(ax1)
+pfun.dar(ax1)
+ax1.axis(pfun.get_aa(ds))
+ax1.set_title(G['gridname'] + '/' + fn)
 
 if False:
     (rowmax, colmax) = np.unravel_index(np.argmax(zm), zm.shape)
@@ -106,6 +114,28 @@ if show_grids:
     pfun.add_coast(ax)
     pfun.dar(ax)
     ax.axis(pfun.get_aa(ds))
+    
+if show_sections:
+    color_list = ['orange', 'gold', 'greenyellow', 'lightgreen',
+                    'aquamarine', 'cadetblue', 'royalblue', 'purple']
+    lon_rho = ds['lon_rho'][:]
+    lat_rho = ds['lat_rho'][:]
+    NS = 5 # number of sections
+    for ss in range(NS):
+        ax = fig.add_subplot(NS,NC,2*NS - 2*(ss+1) + 2)
+        x = lon_rho[0, :]
+        jj = int(lon_rho.shape[0]/(NS+1) * (ss+1))
+        y = z[jj, :]/100
+        y_alt = z_alt[jj, :]/100
+        ax.plot(x, y, '-k', x, y_alt, '-r')
+        ax.plot(x, 0*x, '-', color=color_list[ss], linewidth=2)
+        ax.set_xlim(x[0], x[-1])
+        ax.set_ylim(-3, 1)
+        if ss == NS-1:
+            ax.set_title('Z/100 (red = alt)')
+        
+        ax1.plot([x[0], x[-1]], [lat_rho[jj,0], lat_rho[jj, -1]], '-',
+            color=color_list[ss], linewidth=2)
 
 ds.close()
 
