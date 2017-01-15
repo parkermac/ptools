@@ -131,12 +131,17 @@ for rn in good_riv:
         JI = JI_E
     is_right = False
     while is_right == False:
+        # this while loop has the channel keep going until it
+        # hits a mask or hits a wall.
         ji = ji + JI
         try:
+            # this ensures a minumum depth in the channel
             z[ji[0], ji[1]] = np.min((z[ji[0], ji[1]], -depth))
         except IndexError:
             pass
+            
         try:
+            # we stepped into the masked region
             if m[ji[0],ji[1]] == True:
                 ji_dict[rn] = ji
                 print(rn)
@@ -200,7 +205,7 @@ cs = ax.pcolormesh(plon, plat,zm,
 fig.colorbar(cs, ax=ax, extend='both')
 pfun.add_coast(ax)
 pfun.dar(ax)
-ax.axis(pfun.get_aa(ds))
+#ax.axis(pfun.get_aa(ds))
 ax.set_title(G['gridname'])
 
 ds.close()
@@ -212,7 +217,7 @@ for rn in good_riv:
     y = df_tr['lat'].values
     ax.plot(x, y, '-r', linewidth=2)
     ax.plot(x[-1], y[-1], '*r')
-
+    
     if uv_dict[rn] == 'u' and isign_dict[rn] == 1:
         ax.plot(lonu[row_dict_py[rn], col_dict_py[rn]],
                 latu[row_dict_py[rn], col_dict_py[rn]], '>r')

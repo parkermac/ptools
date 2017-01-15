@@ -40,7 +40,7 @@ ax.plot(LL, c_dw, '-r', linewidth=3)
 ax.plot(L[~mask], c[~mask],'ob', markersize=10)
 ax.plot(L[~mask], c_sw[~mask],'oc', markersize=10)
 ax.legend(('Observations','Deep Water Theory',
-           'Maybe water too shallow', 'Shallow Water Theory'))
+           'Maybe water too shallow', 'Shallow Water Theory'), loc=2)
 ax.grid()
 ax.set_xlim(0, 4)
 ax.set_ylim(0,3)

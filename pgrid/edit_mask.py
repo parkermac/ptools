@@ -28,7 +28,6 @@ import shutil
 
 import Lfun
 Ldir = Lfun.Lstart()
-clon, clat = pfun.get_coast()
 
 # set the depth to impose during Depth Editing
 dval = 5. # m (positive down)
@@ -56,9 +55,6 @@ lon = ds.variables['lon_rho'][:]
 lat = ds.variables['lat_rho'][:]
 ds.close()
 
-cx0, cx1, cxf = zfun.get_interpolant(clon, lon[0,:], extrap_nan=True)
-cy0, cy1, cyf = zfun.get_interpolant(clat, lat[:,0], extrap_nan=True)
-
 # flip to work with imshow
 h = np.flipud(H)
 m = np.flipud(mask_rho)
@@ -70,7 +66,8 @@ hh[m==0] = np.nan
 
 NR, NC = hh.shape
 
-#%% PLOTTING
+# PLOTTING
+
 # set up the axes
 plt.close('all')
 fig = plt.figure(figsize=(16,10)) # (16,10) is good for my laptop
@@ -95,11 +92,40 @@ else:
     # tell imshow about color map so that only set colors are used
     cs = ax1.imshow(h, interpolation='nearest',
                         cmap=cmap, norm=norm)
-    # make a color bar
     fig.colorbar(cs, cmap=cmap, norm=norm, boundaries=bounds, ticks=bounds)
-
 aa = ax1.axis()
-ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
+
+# add the coastline
+clon, clat = pfun.get_coast()
+cx0, cx1, cxf = zfun.get_interpolant(clon, lon[0,:], extrap_nan=True)
+cy0, cy1, cyf = zfun.get_interpolant(clat, lat[:,0], extrap_nan=True)
+
+if False:
+    # this was an attempt to plot the coastline at lower resolution
+    # but it looked like crap and ran slower, 
+    inan = np.argwhere(np.isnan(cxf)) # indices of nans
+    for ii in range(len(inan) - 1):
+        cx00 = cx0[inan[ii]+1 : inan[ii+1]]
+        cx11 = cx1[inan[ii]+1 : inan[ii+1]]
+        cxff = cxf[inan[ii]+1 : inan[ii+1]]
+        cy00 = cy0[inan[ii]+1 : inan[ii+1]]
+        cy11 = cy1[inan[ii]+1 : inan[ii+1]]
+        cyff = cyf[inan[ii]+1 : inan[ii+1]]
+    
+        junk, icx00u = np.unique(cx00, return_index=True)
+        junk, icy00u = np.unique(cy00, return_index=True)
+        icxy = np.unique(np.concatenate((icx00u, icy00u)))
+        cx00u = cx00[icxy]
+        cxffu = cxff[icxy]
+        cy00u = cy00[icxy]
+        cyffu = cyff[icxy]
+        ax1.plot(cx00u + cxffu, NR - (cy00u + cyffu) - 1, '-k')
+else:
+    ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
+
+# add rivers
+gfun.edit_mask_river_tracks(G, NR, ax1)
+
 ax1.axis(aa)
 
 # create control buttons

@@ -8,114 +8,67 @@ Created on Thu Jun 16 13:07:01 2016
 from importlib import reload
 import gfun; reload(gfun)
 G = gfun.gstart()
-import pfun
+import pfun; reload(pfun)
 
 import matplotlib.pyplot as plt
 import netCDF4 as nc
-
+import pandas as pd
 import numpy as np
 
-#%% select grid file
-LO=False
-if LO==True:
-    fn = gfun.select_file(G, LO=True)
+# select grid file
+
+using_old_grid=False
+# Set this to True to look at grids we have already created,
+# e.g. ones currently in use for LiveOcean.
+# Set it to False when interacting with grids from pgrid_output.
+
+if using_old_grid==True:
+    fn = gfun.select_file(G, using_old_grid=True)
     in_fn = fn
-elif LO==False:
+elif using_old_grid==False:
     fn = gfun.select_file(G)
     in_fn = G['gdir'] + fn
 
-#%% load the data
-
+# load the data
 ds = nc.Dataset(in_fn)
 z = -ds.variables['h'][:]
-z_alt = -ds.variables['h_alt'][:]
 mask_rho = ds.variables['mask_rho'][:]
-mask_rho_alt = ds.variables['mask_rho_alt'][:]
 
-if LO==True:
-    # because older grids did not have lon,lat_psi_ex we create this
-    # as an extension of lon,lat_psi
-    plon0 = ds.variables['lon_psi'][:]
-    plat0 = ds.variables['lat_psi'][:]
-    dx = plon0[0,1] - plon0[0,0]
-    dy = plat0[1,0] - plat0[0,0]
-    ny0, nx0 = plon0.shape
-    plon = np.nan * np.ones((ny0+2, nx0+2))
-    plat = np.nan * np.ones((ny0+2, nx0+2))
-    plon[1:-1, 1:-1] = plon0
-    plat[1:-1, 1:-1] = plat0
-    plon[:,0] = plon0[0,0] - dx
-    plon[:,-1] = plon0[0,-1] + dx
-    plon[0,:] = plon[1,:]
-    plon[-1,:] = plon[-2,:]
-    plat[0,:] = plat0[0,0] - dy
-    plat[-1,:] = plat0[-1,0] + dy
-    plat[:,0] = plat[:,1]
-    plat[:,-1] = plat[:,-2]
-elif LO==False:
-    plon = ds.variables['lon_psi_ex'][:]
-    plat = ds.variables['lat_psi_ex'][:]
-
-NC = 1 # first guess at number of columns for plot
-
-show_grids = False
-if show_grids:
-    NC += 1
-    lon_dict = dict()
-    lat_dict = dict()
-    mask_dict = dict()
-    tag_list = ['rho', 'u', 'v', 'psi']
-    for tag in tag_list:
-        lon_dict[tag] = ds.variables['lon_'+tag][:]
-        lat_dict[tag] = ds.variables['lat_'+tag][:]
-        mask_dict[tag] = ds.variables['mask_'+tag][:]
-        
-show_sections = True
-if show_sections:
-    NC += 1
-
-#%% plotting
-
+plon, plat = gfun.get_plon_plat(using_old_grid, ds)
 ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
 
-zm = np.ma.masked_where(mask_rho_alt == 0, z_alt)
+NC = 1 # first guess at number of columns for plot
+   
+flag_show_grids = False
+if flag_show_grids:
+    NC += 1
+    ax_grids = fig.add_subplot(1,NC,2)
+        
+flag_show_sections = True
+if flag_show_sections:
+    NC += 1
+
+# plotting
+
+zm = np.ma.masked_where(mask_rho == 0, z)
 
 plt.close()
 
 fig = plt.figure(figsize=(10*NC,10))
 
 ax1 = fig.add_subplot(1,NC,1)
-cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis
+cmap1 = plt.get_cmap(name='viridis') # terrain, viridis
 cs = ax1.pcolormesh(plon, plat, zm,
-                   vmin=-500, vmax=500, cmap = cmap1)
+                   vmin=-200, vmax=10, cmap = cmap1)
 fig.colorbar(cs, ax=ax1, extend='both')
 pfun.add_coast(ax1)
 pfun.dar(ax1)
-ax1.axis(pfun.get_aa(ds))
+ax1.axis(ax_lims)
 ax1.set_title(G['gridname'] + '/' + fn)
-
-if False:
-    (rowmax, colmax) = np.unravel_index(np.argmax(zm), zm.shape)
-    zmax = zm[rowmax, colmax]
-    print('Max z = ' + str(zmax))
-    lon_rho = ds['lon_rho'][:]
-    lat_rho = ds['lat_rho'][:]
-    ax.plot(lon_rho[rowmax, colmax], lat_rho[rowmax, colmax], '*m', markersize=20)
-
-if show_grids:
-    marker_dict = {'rho': 'ok',
-                 'u': '>r',
-                 'v': '^b',
-                 'psi': 'xg'}
-    ax = fig.add_subplot(1,NC,2)
-    for tag in tag_list:
-        ax.plot(lon_dict[tag][mask_dict[tag]==1], lat_dict[tag][mask_dict[tag]==1],
-                marker_dict[tag])
-    pfun.add_coast(ax)
-    pfun.dar(ax)
-    ax.axis(pfun.get_aa(ds))
-    
-if show_sections:
+                    
+gfun.add_river_tracks(G, ds, ax1)
+   
+if flag_show_sections:
     color_list = ['orange', 'gold', 'greenyellow', 'lightgreen',
                     'aquamarine', 'cadetblue', 'royalblue', 'purple']
     lon_rho = ds['lon_rho'][:]
@@ -126,13 +79,12 @@ if show_sections:
         x = lon_rho[0, :]
         jj = int(lon_rho.shape[0]/(NS+1) * (ss+1))
         y = z[jj, :]/100
-        y_alt = z_alt[jj, :]/100
-        ax.plot(x, y, '-k', x, y_alt, '-r')
+        ax.plot(x, y, '-r', linewidth=2)
         ax.plot(x, 0*x, '-', color=color_list[ss], linewidth=2)
         ax.set_xlim(x[0], x[-1])
         ax.set_ylim(-3, 1)
         if ss == NS-1:
-            ax.set_title('Z/100 (red = alt)')
+            ax.set_title('Z/(100 m)')
         
         ax1.plot([x[0], x[-1]], [lat_rho[jj,0], lat_rho[jj, -1]], '-',
             color=color_list[ss], linewidth=2)

@@ -19,14 +19,14 @@ import os
 
 import zfun
 
-#%% select grid file
+#% select grid file
 fn = gfun.select_file(G)
 in_fn = G['gdir'] + fn
 # create new file name
 fn_new = gfun.increment_filename(fn, tag='_m')
 out_fn = G['gdir'] + fn_new
 
-#%% get the grid from NetCDF
+#% get the grid from NetCDF
 import netCDF4 as nc
 ds = nc.Dataset(in_fn)
 plon = ds.variables['lon_psi_ex'][:]
@@ -37,18 +37,15 @@ ds.close()
 plon_vec = plon[0,:]
 plat_vec = plat[:,0]
 
-#%% USER CHOICES
-
-# z position of initial dividing line (positive up)
-z_land = 0
+#% USER CHOICES
 
 # set to True to unmask all cells crossed by the coastline
 unmask_coast = False
 
 # set to True to make all initially-unmasked cells
-# be no shalowed than z_shallowest
-enforce_z_shallowest = False
+# be at least as deep as z_shallowest
 z_shallowest = -5
+enforce_z_shallowest = False
 # this can also be done later in the processing
 # e.g. during smoothing
 
@@ -56,13 +53,25 @@ z_shallowest = -5
 # land or ocean
 remove_islands = True
 
-#%% processing
+# PROCESSING
 
-# create a boolean mask array (True where masked = land)
-# following the numpy masked array convention
-m = z >= z_land
-# note that this is the opposite of the ROMS convention
-# where mask_rho = 1. over water, and 0. over land
+# Create a boolean mask array (True where masked = land)
+# following the numpy masked array convention.
+# Note that this is the opposite of the ROMS convention
+# where mask_rho = 1. over water, and 0. over land.
+if mask_rho_orig.all() == 1:    
+    print('Original mask all ones')
+    # set z position of initial dividing line (positive up)
+    z_land = 0    
+    m = z >= z_land
+else:
+    # This branch applies when we created the grid using
+    # do_cell_ave = True
+    print('Original mask not all ones')
+    #m = mask_rho_orig == 0 # seems OK (in low res)
+    #m = mask_rho_orig < 1 # gets rid of a lot of water (in low res)
+    #m = mask_rho_orig < .5 # OK but still removes a lot of PS
+    m = mask_rho_orig < .1 # Maybe best?
 
 # unmask the coast
 if unmask_coast:
@@ -84,8 +93,14 @@ if unmask_coast:
 if enforce_z_shallowest:
     z[(~m) & (z>z_shallowest)] = z_shallowest
       
-# remove islands
+# remove islands and lakes
 if remove_islands:
+    # What is does is mask any water point that has land on 3 sides
+    # or any land point that has water on three sides. By doing this repeatedly
+    # you get rid of stray channels or peninsulas.
+    # The number in range() determines how long of a feature is removed.
+    # What the algorithm will not do, for example, is get rid of
+    # a square lake of 4 cells.    
     for ii in range(5):
         NR, NC = m.shape
         mm = m[1:-1, 1:-1]
@@ -113,8 +128,7 @@ if remove_islands:
         mm[MMl] = False
         m[1:-1, 1:-1] = mm
        
-
-#%% Save the output file
+#% Save the output file
 
 # create the new mask_rho
 # 1 = water

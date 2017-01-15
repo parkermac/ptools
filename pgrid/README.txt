@@ -8,19 +8,21 @@ You can use plot_grid.py to look at any of the grids.
 
 Suggested order to run the code:
 
-1. make_grid.py
+* make_grid.py
 
-2. make_mask.py
+* make_mask.py
 
-3. carve_rivers.py
+* edit_mask.py to get rid of obvious issues like Lake Washington and river channels
 
-4. edit_mask.py
+* carve_rivers.py
 
-5. smooth_grid.py
+* edit_mask.py for real this time
 
-5.5 maybe carve rivers again?
+* smooth_grid.py
 
-6. make_extras.py
+* carve_rivers.py again to make sure we did not edit them away
 
-7. grid_to_LiveOcean.py
+* make_extras.py
+
+* grid_to_LiveOcean.py
 

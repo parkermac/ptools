@@ -40,39 +40,26 @@ ds.close()
 
 #%% Smoothing set up
 
-MSK = np.ones_like(lon).astype('float')
-MSK[z>=0] = 0.
+MSK = mask_rho
 Hobs = -z.copy()
+
 rx0max = 0.15
 
 # make sure that anything not masked is
 # not shallower than min_depth
-min_depth = 0. # a negative number would be like on land
-Hobs_1 = -z.copy()
-Hobs = Hobs_1.copy()
-Hobs_1[Hobs_1 < min_depth] = min_depth
-Hobs[mask_rho==1] = Hobs_1[mask_rho==1]
-# and make it positive definite under water
-offset = 1
-Hobs = Hobs + offset
-# offset is removed later
+min_depth = 3 # a negative number would be like on land
+Hobs[(MSK==1) & (Hobs < min_depth)] = min_depth
 
-#%% create the area matrix
-
+# create the area matrix
 AreaMatrix = dx * dy
 
-#%% create smoothed bathymetry
+# create smoothed bathymetry
 
 import time
 tt0 = time.time()
 Hnew = gfun.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
-Hnew = Hnew - offset
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 zn = -Hnew
-
-# enforce a minimum depth
-if True:
-    zn[zn > -5.] = -5.
 
 # Save the output file
 
