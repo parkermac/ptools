@@ -13,7 +13,7 @@ pleasant to use, whereas the old version was unworkable.
 import gfun
 from importlib import reload
 reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 # running gfun.gstart() sets the path to include pfun and zfun
 import pfun
 import zfun
@@ -35,15 +35,15 @@ dval = 5. # m (positive down)
 flag_testing = False
 if not flag_testing:
     # select grid file
-    fn = gfun.select_file(G)
-    in_fn = G['gdir'] + fn
+    fn = gfun.select_file(Gr)
+    in_fn = Gr['gdir'] + fn
 elif flag_testing:
     fn = 'grid_m02_r01_s00_x00.nc'
     in_fn = '/Users/PM5/Documents/ptools_output/pgrid/salish1/' + fn
 
 # create new file name
 fn_new = gfun.increment_filename(fn, tag='_m')
-out_fn = G['gdir'] + fn_new
+out_fn = Gr['gdir'] + fn_new
 
 # get fields
 ds = nc.Dataset(in_fn)
@@ -124,7 +124,7 @@ else:
     ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
 
 # add rivers
-gfun.edit_mask_river_tracks(G, NR, ax1)
+gfun.edit_mask_river_tracks(Gr, NR, ax1)
 
 ax1.axis(aa)
 
@@ -234,9 +234,9 @@ while flag_get_ginput:
         nb = iy # button number
         if (bdict[nb]=='start') and flag_start:
             flag_start = False
-            flag_continue = True
+            flag_continue = False
             cs.set_data(hh)
-            ax1.set_title('Initial Mask')
+            ax1.set_title('PAUSED: Initial Mask')
             # reset button colors
             for bnum in bdict.keys():
                 if bdict[bnum] == 'start':
@@ -264,14 +264,14 @@ while flag_get_ginput:
             plat_poly = []
         elif (bdict[nb]=='polyToLand') and not flag_start:
             flag_continue = False
-            ax1.set_title('Changed Poly to Land')
+            ax1.set_title('PAUSED: Changed Poly to Land')
             ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
             hh[ji_rho_in[:,0], ji_rho_in[:,1]] = np.nan
             cs.set_data(hh)
             remove_poly()
         elif (bdict[nb]=='polyToWater') and not flag_start:
             flag_continue = False
-            ax1.set_title('Changed Poly to Water')
+            ax1.set_title('PAUSED: Changed Poly to Water')
             ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
             hh[ji_rho_in[:,0], ji_rho_in[:,1]] = h[ji_rho_in[:,0], ji_rho_in[:,1]]
             cs.set_data(hh)

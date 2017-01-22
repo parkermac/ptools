@@ -13,14 +13,14 @@ import shutil
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 import Lfun
-Ldir = Lfun.Lstart(gridname=G['gridname'])
+Ldir = Lfun.Lstart(gridname=Gr['gridname'])
 
 #%% select grid file
 
-fn = gfun.select_file(G)
-in_fn = G['gdir'] + fn
+fn = gfun.select_file(Gr)
+in_fn = Gr['gdir'] + fn
 
 #%% copy to LiveOcean_data/grids
 
@@ -31,7 +31,7 @@ Lfun.make_dir(out_dir, clean=True)
 
 # copy files
 shutil.copyfile(in_fn, out_dir + 'grid.nc')
-shutil.copyfile(G['gdir'] + 'river_info.csv', out_dir + 'river_info.csv')
+shutil.copyfile(Gr['gdir'] + 'river_info.csv', out_dir + 'river_info.csv')
 
 #%% and put in the S coordinate info
 

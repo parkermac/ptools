@@ -38,11 +38,11 @@ import pandas as pd
 
 def gstart():
     gdir = pgdir + gridname + '/'
-    G = {'gridname': gridname, 'dir0': dir0, 'pgdir': pgdir, 'gdir': gdir,
+    Gr ={'gridname': gridname, 'dir0': dir0, 'pgdir': pgdir, 'gdir': gdir,
          'ri_dir': ri_dir}
-    return G
+    return Gr
 
-def select_file(G, using_old_grid=False):
+def select_file(Gr, using_old_grid=False):
     # interactive selection
     if using_old_grid==True:
         fn_list = []
@@ -51,8 +51,8 @@ def select_file(G, using_old_grid=False):
         for gn in gn_list:
             fn_list.append(dir0 + gn + '/grid.nc')
     elif using_old_grid==False:
-        print('\n** %s in <<%s>> **\n' % ('Choose file to edit', G['gridname']))
-        fn_list_raw = os.listdir(G['gdir'])
+        print('\n** %s in <<%s>> **\n' % ('Choose file to edit', Gr['gridname']))
+        fn_list_raw = os.listdir(Gr['gdir'])
         fn_list = []
         for item in fn_list_raw:
             if item[-3:] == '.nc':
@@ -75,7 +75,7 @@ def increment_filename(fn, tag='_m'):
 
 def GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix):
     """
-    This is a faster version of GRID_PlusMinusScheme_rx0_ORIG, with about 15x
+    This is a faster version of GRID_PlusMinusScheme_rx0_ORIGr, with about 15x
     speedup in the 100x200 test grid.  It is comparable to the Matlab version.
 
     ** The depth matrix Hobs MUST BE POSITIVE in non-masked cells **
@@ -215,9 +215,9 @@ def get_grids(ds):
         mask_dict[tag] = ds.variables['mask_'+tag][:]
     return (lon_dict, lat_dict, mask_dict)
     
-def add_river_tracks(G, ds, ax):
+def add_river_tracks(Gr, ds, ax):
     # add river tracks and endpoints
-    in_rfn = G['gdir'] + 'river_info.csv'
+    in_rfn = Gr['gdir'] + 'river_info.csv'
     try:
         df = pd.read_csv(in_rfn, index_col='rname')
     except FileNotFoundError:
@@ -235,7 +235,7 @@ def add_river_tracks(G, ds, ax):
     latv = lat_dict['v']
     # plot river tracks
     for rn in df.index:
-        fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
+        fn_tr = Gr['ri_dir'] + 'tracks/' + rn + '.csv'
         df_tr = pd.read_csv(fn_tr, index_col='ind')
         x = df_tr['lon'].values
         y = df_tr['lat'].values
@@ -254,9 +254,9 @@ def add_river_tracks(G, ds, ax):
             ax.plot(lonv[row_dict_py[rn], col_dict_py[rn]],
                     latv[row_dict_py[rn], col_dict_py[rn]], 'vb')
                     
-def edit_mask_river_tracks(G, NR, ax):
+def edit_mask_river_tracks(Gr, NR, ax):
     # add river tracks and endpoints for edit_mask.py
-    in_rfn = G['gdir'] + 'river_info.csv'
+    in_rfn = Gr['gdir'] + 'river_info.csv'
     try:
         df = pd.read_csv(in_rfn, index_col='rname')
     except FileNotFoundError:

@@ -10,7 +10,7 @@ Code to create an initial mask for a grid.
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 import pfun
 
 import numpy as np
@@ -20,11 +20,11 @@ import os
 import zfun
 
 #% select grid file
-fn = gfun.select_file(G)
-in_fn = G['gdir'] + fn
+fn = gfun.select_file(Gr)
+in_fn = Gr['gdir'] + fn
 # create new file name
 fn_new = gfun.increment_filename(fn, tag='_m')
-out_fn = G['gdir'] + fn_new
+out_fn = Gr['gdir'] + fn_new
 
 #% get the grid from NetCDF
 import netCDF4 as nc
@@ -41,13 +41,6 @@ plat_vec = plat[:,0]
 
 # set to True to unmask all cells crossed by the coastline
 unmask_coast = False
-
-# set to True to make all initially-unmasked cells
-# be at least as deep as z_shallowest
-z_shallowest = -5
-enforce_z_shallowest = False
-# this can also be done later in the processing
-# e.g. during smoothing
 
 # set to True to automatically remove isloated patches of
 # land or ocean
@@ -87,11 +80,6 @@ if unmask_coast:
     ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
     jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
     m[jj0, ii0] = False
-
-# enforce a minimum depth in unmasked cells
-# (don't use with wet-dry applications)
-if enforce_z_shallowest:
-    z[(~m) & (z>z_shallowest)] = z_shallowest
       
 # remove islands and lakes
 if remove_islands:

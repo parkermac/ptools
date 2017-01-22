@@ -15,7 +15,7 @@ and [lon,lat]_psi_ex as [plon,plat].
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 
 import numpy as np
 import h5py
@@ -29,10 +29,10 @@ import zfun
 import matfun
 
 #%%
-Lfun.make_dir(G['gdir'], clean=True)
+Lfun.make_dir(Gr['gdir'], clean=True)
 
 fn = 'grid_m00_r00_s00_x00.nc'
-out_fn = G['gdir'] + fn
+out_fn = Gr['gdir'] + fn
 print(50*'*')
 print(out_fn)
 
@@ -50,7 +50,7 @@ def simple_grid(aa, res):
     ny = int(np.ceil(dlatm/res))
     plon_vec = np.linspace(aa[0], aa[1], nx)
     plat_vec = np.linspace(aa[2], aa[3], ny)
-    print('<< ' + G['gridname'] + ' >>')
+    print('<< ' + Gr['gridname'] + ' >>')
     print('   nx = %d' % (nx))
     print('   ny = %d' % (ny))
     return plon_vec, plat_vec
@@ -95,22 +95,24 @@ def stretched_grid(lon_list, x_res_list, lat_list, y_res_list):
     
 # GRID DEFINITIONS
 
-if G['gridname'] == 'cascadia2':
+if Gr['gridname'] == 'cascadia2':
     # like cascadia1, but low resolution
     aa = [-127.4, -122, 43, 50]
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = simple_grid(aa, res)
                                         
-elif G['gridname'] == 'cas1': # for testing of mask generation, etc.
-    minres = 3000
+elif Gr['gridname'] == 'cas1': # for testing of mask generation, etc.
+    maxres = 5000
+    medres = 3000
+    minres = 1500
     lon_list = [-127.4, -126, -124, -122]
-    x_res_list = [9000, 3000, minres, minres]
+    x_res_list = [maxres, medres, minres, minres]
     lat_list = [42, 47, 49, 50]
-    y_res_list = [3000, minres, minres, 3000]
+    y_res_list = [medres, minres, minres, medres]
     plon_vec, plat_vec = stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
                                         
-elif G['gridname'] == 'aestus1': # idealized model
+elif Gr['gridname'] == 'aestus1': # idealized model
     lon_list = [-1, 0, 1, 2, 3]
     x_res_list = [5000, 1000, 1000, 5000, 5000]
     lat_list = [44, 44.9, 45.1, 46]
@@ -122,7 +124,7 @@ plon, plat = np.meshgrid(plon_vec, plat_vec)
 ax_lims = (plon_vec[0], plon_vec[-1], plat_vec[0], plat_vec[-1])
 
 # specify topography files to use
-t_dir = G['dir0'] + 'tools_data/geo_data/topo/'
+t_dir = Gr['dir0'] + 'tools_data/geo_data/topo/'
 # list of topo files: coarsest to finest
 t_list = ['srtm15/topo15.grd',
           'cascadia/cascadia_gridded.mat',
@@ -185,7 +187,7 @@ def load_bathy2(t_fn, lon_vec, lat_vec):
     ds.close()
     return tlon_vec, tlat_vec, tz
 
-if G['gridname'] == 'aestus1':
+if Gr['gridname'] == 'aestus1':
     # make grid and bathymetry by hand
     z = np.zeros(lon.shape)
     x, y = zfun.ll2xy(lon, lat, 0, 45)

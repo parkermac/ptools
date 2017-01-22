@@ -80,6 +80,10 @@ bp_mean = np.mean(bp_arr, axis=0)
 
 bp_anom = bp_arr - bp_mean
 
+# save raw results
+pickle.dump(bp_arr, open(out_dir + 'bottom_pressure_array.p', 'wb'))
+pickle.dump(G, open(out_dir + 'grid_info_dict.p', 'wb'))
+
 # plotting
 
 plt.close('all')

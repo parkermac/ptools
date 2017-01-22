@@ -7,7 +7,7 @@ Created on Thu Jun 16 13:07:01 2016
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 import pfun; reload(pfun)
 
 import matplotlib.pyplot as plt
@@ -23,11 +23,11 @@ using_old_grid=False
 # Set it to False when interacting with grids from pgrid_output.
 
 if using_old_grid==True:
-    fn = gfun.select_file(G, using_old_grid=True)
+    fn = gfun.select_file(Gr, using_old_grid=True)
     in_fn = fn
 elif using_old_grid==False:
-    fn = gfun.select_file(G)
-    in_fn = G['gdir'] + fn
+    fn = gfun.select_file(Gr)
+    in_fn = Gr['gdir'] + fn
 
 # load the data
 ds = nc.Dataset(in_fn)
@@ -64,9 +64,9 @@ fig.colorbar(cs, ax=ax1, extend='both')
 pfun.add_coast(ax1)
 pfun.dar(ax1)
 ax1.axis(ax_lims)
-ax1.set_title(G['gridname'] + '/' + fn)
+ax1.set_title(Gr['gridname'] + '/' + fn)
                     
-gfun.add_river_tracks(G, ds, ax1)
+gfun.add_river_tracks(Gr, ds, ax1)
    
 if flag_show_sections:
     color_list = ['orange', 'gold', 'greenyellow', 'lightgreen',

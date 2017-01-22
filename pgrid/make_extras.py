@@ -7,7 +7,7 @@ Created on Tue Jul  5 16:28:41 2016
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 
 import netCDF4 as nc
 import numpy as np
@@ -16,11 +16,11 @@ import shutil
 import os
 
 #%% select grid file
-fn = gfun.select_file(G)
-in_fn = G['gdir'] + fn
+fn = gfun.select_file(Gr)
+in_fn = Gr['gdir'] + fn
 # create new file name
 fn_new = gfun.increment_filename(fn, tag='_x')
-out_fn = G['gdir'] + fn_new
+out_fn = Gr['gdir'] + fn_new
 
 
 #%% load the data

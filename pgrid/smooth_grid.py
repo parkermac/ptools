@@ -10,7 +10,7 @@ Smooth the grid.
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 import pfun
 
 import netCDF4 as nc
@@ -19,11 +19,11 @@ import shutil
 import numpy as np
 
 #%% select grid file
-fn = gfun.select_file(G)
-in_fn = G['gdir'] + fn
+fn = gfun.select_file(Gr)
+in_fn = Gr['gdir'] + fn
 # create new file name
 fn_new = gfun.increment_filename(fn, tag='_s')
-out_fn = G['gdir'] + fn_new
+out_fn = Gr['gdir'] + fn_new
 
 #%% Test: retrieve the output
 
@@ -96,7 +96,7 @@ if True:
     pfun.add_coast(ax)
     pfun.dar(ax)
     ax.axis(pfun.get_aa(ds))
-    ax.set_title(G['gridname'] + '/' + fn_new)
+    ax.set_title(Gr['gridname'] + '/' + fn_new)
 
     ax = fig.add_subplot(122)
     cmap1 = plt.get_cmap(name='bwr')

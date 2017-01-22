@@ -9,7 +9,7 @@ This plots river tacks.
 
 from importlib import reload
 import gfun; reload(gfun)
-G = gfun.gstart()
+Gr =gfun.gstart()
 import pfun
 
 import zfun
@@ -24,15 +24,15 @@ import seawater as sw
 
 #%% get river info
 
-ri_fn = G['ri_dir'] + 'river_info.csv'
+ri_fn = Gr['ri_dir'] + 'river_info.csv'
 df = pd.read_csv(ri_fn, index_col='rname')
 
 #%% select grid file
-fn = gfun.select_file(G)
-in_fn = G['gdir'] + fn
+fn = gfun.select_file(Gr)
+in_fn = Gr['gdir'] + fn
 # create new file name
 fn_new = gfun.increment_filename(fn, tag='_r')
-out_fn = G['gdir'] + fn_new
+out_fn = Gr['gdir'] + fn_new
 
 #%% get the grid data
 
@@ -63,7 +63,7 @@ good_riv = []
 
 for rn in df.index:
     depth = df.ix[rn, 'depth']
-    fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
+    fn_tr = Gr['ri_dir'] + 'tracks/' + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
@@ -206,12 +206,12 @@ fig.colorbar(cs, ax=ax, extend='both')
 pfun.add_coast(ax)
 pfun.dar(ax)
 #ax.axis(pfun.get_aa(ds))
-ax.set_title(G['gridname'])
+ax.set_title(Gr['gridname'])
 
 ds.close()
 
 for rn in good_riv:
-    fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
+    fn_tr = Gr['ri_dir'] + 'tracks/' + rn + '.csv'
     df_tr = pd.read_csv(fn_tr, index_col='ind')
     x = df_tr['lon'].values
     y = df_tr['lat'].values
@@ -246,7 +246,7 @@ ds['mask_rho'][:] = mask_rho
 ds['h'][:] = -z
 ds.close()
 
-out_rfn = G['gdir'] + 'river_info.csv'
+out_rfn = Gr['gdir'] + 'river_info.csv'
 print('\nCreating ' + out_rfn)
 df.to_csv(out_rfn)
 
