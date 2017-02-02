@@ -36,7 +36,7 @@ if Ldir['parent'] == '/Users/PM5/Documents/':
     dt1 = datetime(2015,9,20)
     out_tag = 'test_' + str(yr)
 elif Ldir['parent'] == '/data1/parker/':
-    yr = 2014
+    yr = 2013
     dt0 = datetime(yr,1,1)
     dt1 = datetime(yr,12,31)
     out_tag = 'full_' + str(yr)
