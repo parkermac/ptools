@@ -11,17 +11,16 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart(gridname='cascadia1', tag='base')
 import zrfun
-import matfun
-import zfun
-import zrfun
 
+# this allows me to plot things on fjord without using an X term.
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 import numpy as np
 from datetime import datetime, timedelta
 import pickle
 import netCDF4 as nc
-import time
 
 pth = os.path.abspath('../../LiveOcean/plotting')
 if pth not in sys.path:
@@ -32,13 +31,15 @@ import pfun
 Ldir['gtagex'] = Ldir['gtag'] + '_lobio1'
 
 if Ldir['parent'] == '/Users/PM5/Documents/':
+    yr = 2015
     dt0 = datetime(2015,9,18)
     dt1 = datetime(2015,9,20)
-    out_tag = 'test'
+    out_tag = 'test_' + str(yr)
 elif Ldir['parent'] == '/data1/parker/':
-    dt0 = datetime(2015,1,1)
-    dt1 = datetime(2015,12,31)
-    out_tag = 'full'
+    yr = 2014
+    dt0 = datetime(yr,1,1)
+    dt1 = datetime(yr,12,31)
+    out_tag = 'full_' + str(yr)
 
 # setup output location
 out_dir0 = Ldir['parent'] + '/ptools_output/slow_slip/'
