@@ -148,23 +148,23 @@ strain2d = strainx2d_r[1:-1, :] + strainy2d_r[:, 1:-1]
 
 plt.close('all')
 
-fig = plt.figure(figsize=(18,10))
+fig = plt.figure(figsize=(7,10))
 
-ax = fig.add_subplot(121)
-vv = .005
-cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'],  strain2d,
-      vmin=-vv, vmax = vv,  cmap='bwr')
-ax.axis([x0, x1, y0, y1])
-fig.colorbar(cs)
-pfun.add_coast(ax)
-pfun.dar(ax)
-ax.set_xlabel('Longitude')
-ax.set_ylabel('Latitude')
-ax.set_title('Vertically Integrated Straining (psu^2 m s-1)')
+# ax = fig.add_subplot(121)
+# vv = .005
+# cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'],  strain2d,
+#       vmin=-vv, vmax = vv,  cmap='bwr')
+# ax.axis([x0, x1, y0, y1])
+# fig.colorbar(cs)
+# pfun.add_coast(ax)
+# pfun.dar(ax)
+# ax.set_xlabel('Longitude')
+# ax.set_ylabel('Latitude')
+# ax.set_title('Vertically Integrated Straining (psu^2 m s-1)')
 
-ax = fig.add_subplot(122)
+ax = fig.add_subplot(111)
 cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'],
-    np.log10(-mix2d[1:-1, 1:-1] + 1e-10), vmin=-6, vmax = -2, cmap='rainbow')
+    np.log10(-mix2d[1:-1, 1:-1] + 1e-10), vmin=-6, vmax = -2, cmap='jet')
 ax.axis([x0, x1, y0, y1])
 fig.colorbar(cs)
 pfun.add_coast(ax)

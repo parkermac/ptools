@@ -32,8 +32,10 @@ import numpy as np
 ri_fn = Ldir['parent'] + 'ptools_output/river/pnw_all_2016_07/river_info.csv'
 
 # decide which group to get
-get_usgs = True
-get_ec = False
+get_usgs = False
+get_ec = True
+# and decide whether or not to save the data
+save_data = False
 
 df = pd.read_csv(ri_fn, index_col='rname')
 
@@ -47,6 +49,7 @@ Lfun.make_dir(out_dir, clean=False)
 
 dt0 = datetime(1980,1,1)
 dt1 = datetime(2015,12,31)
+#dt1 = datetime(1985,12,31) # debugging
 days = (dt0, dt1)
 
 qt_dict = dict()
@@ -77,7 +80,7 @@ if get_ec:
 
         Qt = pd.Series() # initialize a Series to concatenate into
 
-        if pd.notnull(rs.ec):# and rn in ['clowhom']:
+        if pd.notnull(rs.ec) and rn in ['fraser']:
 
             #for year in range(1991, 1995): # debugging
             for year in range(dt0.year, dt1.year + 1):
@@ -103,11 +106,12 @@ if get_ec:
 
 #%% save output
 
-for rn in qt_dict.keys():
-
-    qt = qt_dict[rn]
-
-    qt.to_pickle(out_dir + rn + '.p')
+if save_data:
+    for rn in qt_dict.keys():
+        qt = qt_dict[rn]
+        qt.to_pickle(out_dir + rn + '.p')
+else:
+    print('Not saving any data.')
 
 #%% plotting
 

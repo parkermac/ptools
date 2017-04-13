@@ -17,7 +17,6 @@ import zfun
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 import numpy as np
 from datetime import datetime, timedelta
 import pickle
@@ -42,7 +41,7 @@ R_in_dir = R_in_dir0 + f_string + '/'
 R_fn = R_in_dir + 'low_passed.nc'
 ds = nc.Dataset(R_fn)
 
-in_dir0 = Ldir['parent'] + 'ptools_data/slow_slip/'
+in_dir0 = Ldir['parent'] + 'tools_data/slow_slip/'
 in_dir = in_dir0 + 'Fredrickson_Files_2016.11.03/'
 
 sta_fn = in_dir + 'year3stations.mat'
@@ -103,7 +102,8 @@ plt.close('all')
 fig = plt.figure(figsize=(10,6))
 axs = fig.add_subplot(111)
 ppf = zfun.filt_godin(pp)
-axs.plot(days_from_2013, zfun.filt_hanning(ppf, n=5*24), '-r', m_days_from_2013, m_p, '-b')
+#axs.plot(days_from_2013, zfun.filt_hanning(ppf, n=5*24), '-r', m_days_from_2013, m_p, '-b')
+axs.plot(days_from_2013, ppf, '-r', m_days_from_2013, m_p, '-b')
 #axs.plot(days_from_2013, pp, '-r', m_days_from_2013, m_p, '-b')
 
 plt.show()

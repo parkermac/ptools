@@ -1,4 +1,4 @@
-Notes on the pgrid code.  10/24/2016 Parker MacCready
+Notes on the pgrid code.  Parker MacCready
 
 First edit the gridname and a few directory location at the top of gfun.py.  This gridname will then be used by all subsequent code.
 

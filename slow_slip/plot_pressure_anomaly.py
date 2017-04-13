@@ -37,7 +37,7 @@ if Ldir['parent'] == '/Users/PM5/Documents/':
     out_tag = 'test_' + str(yr)
 elif Ldir['parent'] == '/data1/parker/':
     yr = 2013
-    dt0 = datetime(yr,1,2)
+    dt0 = datetime(yr,1,2) # missing low pass for 2013.01.01
     dt1 = datetime(yr,12,31)
     out_tag = 'full_' + str(yr)
 
@@ -95,7 +95,7 @@ vscale1 = 400
 vscale2 = 400
 for fn in fn_list:
     ds = nc.Dataset(fn)
-    [T] = zrfun.get_basic_info(fn, getG=False, getS=False)
+    T = zrfun.get_basic_info(fn, only_T=True)
     fig = plt.figure(figsize=(12,8))
     
     bpa = bp_anom[tt, :, :]    

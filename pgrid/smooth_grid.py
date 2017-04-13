@@ -9,8 +9,11 @@ Smooth the grid.
 """
 
 from importlib import reload
-import gfun; reload(gfun)
+import gfun
+reload(gfun)
 Gr =gfun.gstart()
+import gfun_utility as gfu
+reload(gfu)
 import pfun
 
 import netCDF4 as nc
@@ -57,7 +60,7 @@ AreaMatrix = dx * dy
 
 import time
 tt0 = time.time()
-Hnew = gfun.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
+Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 zn = -Hnew
 

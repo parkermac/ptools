@@ -69,7 +69,8 @@ u = ds['u'][:].squeeze()
 v = ds['v'][:].squeeze()
 w0 = ds['w'][0,-1,:,:].squeeze()
 
-[G, S] = zrfun.get_basic_info(R_fn, getT=False)
+G = zrfun.get_basic_info(R_fn, only_G=True)
+S = zrfun.get_basic_info(R_fn, only_S=True)
 zeta = ds['zeta'][0,:,:]
 z_rho, z_w =  zrfun.get_z(G['h'], zeta, S)
 DA = G['DX'] * G['DY']

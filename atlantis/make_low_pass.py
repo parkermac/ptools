@@ -61,7 +61,7 @@ for ii0 in range(26, 8666 + 1, 24):
 
     tm_list = []
     for fn in flist:
-        [T] = zrfun.get_basic_info(fn, getG=False, getS=False)
+        T = zrfun.get_basic_info(fn, only_T=True)
         tm_list.append(T['tm'])
     # find the mean time
     import matplotlib.dates as mdates

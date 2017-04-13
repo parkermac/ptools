@@ -52,7 +52,7 @@ dt = datetime(2006,7,29)
 f_string = 'f' + dt.strftime('%Y.%m.%d')
 R_in_dir = R_in_dir0 + f_string + '/'
 R_fn = R_in_dir + 'low_passed.nc'
-[G] = zrfun.get_basic_info(R_fn, getS=False, getT=False)
+G = zrfun.get_basic_info(R_fn, only_G=True)
 lon = G['lon_psi']
 lat = G['lat_psi']
 # get the vectors that describe the model plaid grid

@@ -45,13 +45,14 @@ for ndays in range(31): # 209 is 2006.07.29
     ds = nc.Dataset(R_fn)
 
     if counter == 0:
-        [G, S] = zrfun.get_basic_info(R_fn, getT=False)
+        G = zrfun.get_basic_info(R_fn, only_G=True)
+        S = zrfun.get_basic_info(R_fn, only_S=True)
         lon = G['lon_rho'][0,:]
         lat = G['lat_rho'][:,0]
         ii = zfun.find_nearest_ind(lon,lon0)
         jj = zfun.find_nearest_ind(lat,lat0)
 
-    [T] = zrfun.get_basic_info(R_fn, getG=False, getS=False)
+    T = zrfun.get_basic_info(R_fn, only_T=True)
     eta_list.append(ds['zeta'][0, jj, ii])
     dt_list.append(T['tm'])
 

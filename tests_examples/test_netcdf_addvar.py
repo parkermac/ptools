@@ -4,70 +4,59 @@ Created on Mon Aug  8 07:12:56 2016
 
 @author: PM5
 
-Code to experiment with adding a variable
-to an existing NetCDF file.
+Experiment with adding a variable to an existing NetCDF file.
 
 """
 
 import netCDF4 as nc
 import numpy as np
+import os
 
-#%% check results
-def check(fn):
-    foo = nc.Dataset(fn)
-    for vn in foo.variables:
-        print(foo[vn])
-        print(foo[vn][:])
-        print('\n')
-    foo.close()
+# function to check results
+def check(fn, hstr):
+    print('\n** ' + hstr + '\n' + 60*'=')
+    ds = nc.Dataset(fn)
+    for vn in ds.variables:
+        #print(ds[vn])
+        print(vn + str(ds[vn].dimensions) + ': ' + str(ds[vn][:]))
+    ds.close()
 
-fn1 = '/Users/PM5/Desktop/test1.nc'
-fn2 = '/Users/PM5/Desktop/test2.nc'
+# output file name        
+fn = '/Users/PM5/Desktop/test1.nc'
+os.remove(fn)
 
-ds1 = nc.Dataset(fn1, mode='w', format='NETCDF4')
-# NETCDF3_CLASSIC also works,
-ds1.createDimension('vec1', 4)
-v_var = ds1.createVariable('Vec1', float, ('vec1',))
-v_var[:] = [1,2,3,4]
-ds1.close()
-print('\nBefore')
-check(fn1)
+# size to use for data
+N = 4
 
-# open existing file.  Mode is 'a' for append.
-ds2 = nc.Dataset(fn1, 'a')
-# create new variable with dimensions of time (an existing dimension in the original file)
-newvar = ds2.createVariable('newvar', np.float64, ('vec1',) )
-# assign values
-newvar[:] = np.ones( (len(ds2.dimensions['vec1']),) )
-# close writes the file
-ds2.close()
+hstr = 'Create the original file.'
+ds = nc.Dataset(fn, 'w', format='NETCDF4')
+# NETCDF3_CLASSIC also works
+ds.createDimension('d1', None)
+vv = ds.createVariable('data1', float, 'd1')
+vv[:] = range(N)
+ds.close()
+check(fn, hstr)
 
-print('\nAfter')
-check(fn1)
+hstr = 'Add a new variable using an existing dimension.'
+ds = nc.Dataset(fn, 'a')
+vv = ds.createVariable('data2', float, 'd1')
+NN = len(ds.dimensions['d1'])
+vv[:] = np.ones(NN)
+ds.close()
+check(fn, hstr)
 
-#%% This copies dimensions and variables - but I'm not sure when
-# it would be useful.
+hstr = 'Append data to the end of an existing variable.'
+ds = nc.Dataset(fn, 'a')
+ds.variables['data2'][N: 2*N] = range(N)
+ds.close()
+check(fn, hstr)
 
-if False:
-    ds1 = nc.Dataset(fn1, mode='r')
-    ds2 = nc.Dataset(fn2, mode='w')
-    #Copy dimensions
-    for dname, the_dim in ds1.dimensions.items():
-        print(dname, len(the_dim))
-        ds2.createDimension(dname, len(the_dim) if not the_dim.isunlimited() else None)
-    # Copy variables
-    for v_name, varin in ds1.variables.items():
-        outVar = ds2.createVariable(v_name, varin.datatype, varin.dimensions)
-        print(varin.datatype)
-        # Copy variable attributes
-        outVar.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
-        outVar[:] = varin[:]
-    ds1.close()
-    # add a variable to ds2
-    ds2.createDimension('vec2', 3)
-    v_var = ds2.createVariable('Vec2', float, ('vec2'))
-    v_var[:] = [1,2,3]
-    ds2.close()
-    print('\nAfter')
-    check(fn2)
+hstr = 'Add a dimension and use it to create a new variable.'
+ds = nc.Dataset(fn, 'a')
+ds.createDimension('d3', N)
+vv = ds.createVariable('data3', float, 'd3')
+vv[:] = range(N)
+ds.close()
+check(fn, hstr)
+
 

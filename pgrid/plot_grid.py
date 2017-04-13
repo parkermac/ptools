@@ -6,18 +6,20 @@ Created on Thu Jun 16 13:07:01 2016
 """
 
 from importlib import reload
-import gfun; reload(gfun)
+import gfun
+reload(gfun)
 Gr =gfun.gstart()
-import pfun; reload(pfun)
+import pfun
+reload(pfun)
+import gfun_plotting as gfp
 
 import matplotlib.pyplot as plt
 import netCDF4 as nc
-import pandas as pd
 import numpy as np
 
 # select grid file
 
-using_old_grid=False
+using_old_grid = False
 # Set this to True to look at grids we have already created,
 # e.g. ones currently in use for LiveOcean.
 # Set it to False when interacting with grids from pgrid_output.
@@ -34,27 +36,27 @@ ds = nc.Dataset(in_fn)
 z = -ds.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 
-plon, plat = gfun.get_plon_plat(using_old_grid, ds)
+plon, plat = gfp.get_plon_plat(using_old_grid, ds)
 ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
-
-NC = 1 # first guess at number of columns for plot
-   
-flag_show_grids = False
-if flag_show_grids:
-    NC += 1
-    ax_grids = fig.add_subplot(1,NC,2)
-        
-flag_show_sections = True
-if flag_show_sections:
-    NC += 1
-
-# plotting
 
 zm = np.ma.masked_where(mask_rho == 0, z)
 
+# plotting
 plt.close()
 
+# set number of columns for plot 
+NC = 1 # first guess
+flag_show_grids = False
+if flag_show_grids:
+    NC += 1
+    icg = NC       
+flag_show_sections = True
+if flag_show_sections:
+    NC += 1
+    ics = NC
 fig = plt.figure(figsize=(10*NC,10))
+
+#ax_grids = fig.add_subplot(1,NC,2)
 
 ax1 = fig.add_subplot(1,NC,1)
 cmap1 = plt.get_cmap(name='viridis') # terrain, viridis
@@ -65,8 +67,9 @@ pfun.add_coast(ax1)
 pfun.dar(ax1)
 ax1.axis(ax_lims)
 ax1.set_title(Gr['gridname'] + '/' + fn)
-                    
-gfun.add_river_tracks(Gr, ds, ax1)
+ax1.text(.95, .05, str(mask_rho.shape), horizontalalignment='right',
+         transform=ax1.transAxes)                   
+gfp.add_river_tracks(Gr, ds, ax1)
    
 if flag_show_sections:
     color_list = ['orange', 'gold', 'greenyellow', 'lightgreen',
@@ -75,7 +78,7 @@ if flag_show_sections:
     lat_rho = ds['lat_rho'][:]
     NS = 5 # number of sections
     for ss in range(NS):
-        ax = fig.add_subplot(NS,NC,2*NS - 2*(ss+1) + 2)
+        ax = fig.add_subplot(NS,NC,ics*NS - ics*(ss+1) + ics)
         x = lon_rho[0, :]
         jj = int(lon_rho.shape[0]/(NS+1) * (ss+1))
         y = z[jj, :]/100
@@ -88,6 +91,35 @@ if flag_show_sections:
         
         ax1.plot([x[0], x[-1]], [lat_rho[jj,0], lat_rho[jj, -1]], '-',
             color=color_list[ss], linewidth=2)
+        
+if flag_show_grids:
+    # NOTE: you need to have run make_extras.py for this to work
+    lon_dict = dict()
+    lat_dict = dict()
+    mask_dict = dict()
+    tag_list = ['rho', 'u', 'v', 'psi']
+    for tag in tag_list:
+        lon_dict[tag] = ds.variables['lon_'+tag][:]
+        lat_dict[tag] = ds.variables['lat_'+tag][:]
+        mask_dict[tag] = ds.variables['mask_'+tag][:]
+    marker_dict = {'rho': 'ok',
+                 'u': '>r',
+                 'v': '^b',
+                 'psi': 'xg'}
+    
+    ax = fig.add_subplot(1,NC,icg)
+    for tag in tag_list:
+        ax.plot(lon_dict[tag][mask_dict[tag]==1], lat_dict[tag][mask_dict[tag]==1],
+                marker_dict[tag])
+        ax.plot(lon_dict[tag][mask_dict[tag]==0], lat_dict[tag][mask_dict[tag]==0],
+                marker_dict[tag], alpha = .2)
+    pfun.dar(ax)
+    ax.set_xlim(ax_lims[:2])
+    ax.set_ylim(ax_lims[-2:])
+    
+    pfun.add_coast(ax)
+    ax.axis(ax_lims)
+    gfp.add_river_tracks(Gr, ds, ax)
 
 ds.close()
 
