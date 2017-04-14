@@ -47,7 +47,13 @@ if Gr['gridname'] == 'cascadia2':
     aa = [-127.4, -122, 43, 50]
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = gfu.simple_grid(aa, res)
-                                        
+    
+elif Gr['gridname'] == 'sal0':
+    # start of a salish grid
+    aa = [-124, -122, 47, 49]
+    res = 1000 # target resolution (m)
+    plon_vec, plat_vec = gfu.simple_grid(aa, res)
+    
 elif Gr['gridname'] == 'cas1': # for testing of mask generation, etc.
     maxres = 5000
     medres = 3000
@@ -69,6 +75,7 @@ elif Gr['gridname'] == 'aestus1': # idealized model
                                         lat_list, y_res_list)
     dch['analytical'] = True
 
+# save the default choices for use by other code
 pickle.dump(dch, open(Gr['gdir'] + 'choices.p', 'wb'))
 
 plon, plat = np.meshgrid(plon_vec, plat_vec)
@@ -103,10 +110,7 @@ else:
         for t_file in dch['t_list']:
             t_fn = dch['t_dir'] + t_file
             print('\nOPENING BATHY FILE: ' + t_file)
-            if t_file == 'srtm15/topo15.grd':
-                tlon_vec, tlat_vec, tz = gfu.load_bathy2(t_fn, lon_vec, lat_vec)
-            else:
-                tlon_vec, tlat_vec, tz = gfu.load_bathy(t_fn)
+            tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
             # Apply the offset here instead of at the end because it matters
             # for the estimated mask field
             if dch['use_z_offset']:
@@ -135,17 +139,15 @@ else:
             m[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]
             
     else:
-    
+        # m is the start of a mask: 1=water, 0=land
+        m = np.ones_like(lon)
         for t_file in dch['t_list']:
             t_fn = dch['t_dir'] + t_file
             print('\nOPENING BATHY FILE: ' + t_file)
-            if t_file == 'srtm15/topo15.grd':
-                tlon_vec, tlat_vec, tz = gfu.load_bathy2(t_fn, lon_vec, lat_vec)
-            else:
-                tlon_vec, tlat_vec, tz = gfu.load_bathy(t_fn)
-            z_flat = zfun.interp_scattered_on_plaid(lon.flatten(), lat.flatten(),
-                                                 tlon_vec, tlat_vec, tz)
-            z_part = z_flat.reshape((NR, NC))
+            tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
+            tlon, tlat = np.meshgrid(tlon_vec, tlat_vec)
+            z_part = zfun.interp2(lon, lat, tlon, tlat, tz)
+            # need to deal with masking
             # put good values of z_part in z
             z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
         z = z + dch['z_offset']

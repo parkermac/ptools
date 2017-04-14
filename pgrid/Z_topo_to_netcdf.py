@@ -75,7 +75,7 @@ for k in tdict.keys():
         plt.show()
     
     # write the data to NetCDF
-    out_fn = tdir0 + k + '/' + tdict[k].strip('.mat') + '.nc'
+    out_fn = tdir0 + k + '/' + tdict[k][:-4] + '.nc'
     foo = nc.Dataset(out_fn, 'w')
     L = len(lon)
     M = len(lat)

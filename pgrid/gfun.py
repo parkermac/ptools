@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'cas1'
+gridname = 'sal0'
 
 dir0 = '/Users/PM5/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'
@@ -73,36 +73,45 @@ def increment_filename(fn, tag='_m'):
 def default_choices(Gr):
     # Default choices (can override in each case)    
     dch = dict()    
+    
     # Set analytical to true when we define the bathymetry analytically.
     dch['analytical'] = False    
+    
     # Adjustment to zero of the bathymetry to account for the fact
     # that mean sea level is somewhat higher than NAVD88.
     dch['use_z_offset'] = True
     dch['z_offset'] = -1.06    
+    
     # Set this to True for grids that are much coarser than the bathy files.
     # It means we average all data inside a rho grid cell to get depth there,
     # instead of using interpolation.
     # We also make a mask_rho that is the average of all values in a cell
     # using 1=water, 0=land.
     dch['do_cell_average'] = False    
+    
     # With fjord_cliff_edges=True the smoothing deviates from its
     # usual volume-conserving
     # nature when it is next to a masked region, and instead adjusts the slope
     # by preferentially deepening at the coast.  This does a much better job of
     # preserving thalweg depth in channels like Hood Canal
     dch['fjord_cliff_edges'] = True    
+    
     # Decide if the grid will allow wetting and drying
     dch['wet_dry'] = False    
+    
     # Set the minimum depth, and decide if it should be enforced.
     dch['use_min_depth'] = False
     dch['min_depth'] = 4 # meters, positive down    
+    
     # specify topography files to use
     dch['t_dir'] = Gr['dir0'] + 'tools_data/geo_data/topo/'
+    
     # list of topo files: coarsest to finest
-    dch['t_list'] = ['srtm15/topo15.grd',
-              'cascadia/cascadia_gridded.mat',
-             'psdem/PS_183m.mat',
-             'ttp_patch/TTP_Regional_27m_patch.mat']
+    dch['t_list'] = ['srtm15/topo15.nc',
+              'cascadia/cascadia_gridded.nc',
+             'psdem/PS_183m.nc',
+             'ttp_patch/TTP_Regional_27m_patch.nc']
+    
     return dch
 
 

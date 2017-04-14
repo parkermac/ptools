@@ -66,6 +66,14 @@ def stretched_grid(lon_list, x_res_list, lat_list, y_res_list):
         plat_list.append(lat)
     return np.array(plon_list), np.array(plat_list)
 
+def load_bathy_nc(t_fn):
+    ds = nc.Dataset(t_fn)
+    tlon_vec = ds['lon'][:]
+    tlat_vec = ds['lat'][:]
+    tz = ds['z'][:]
+    ds.close()
+    return tlon_vec, tlat_vec, tz
+
 def load_bathy(t_fn):
     try:
         a = h5py.File(t_fn)
