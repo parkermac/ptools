@@ -15,6 +15,10 @@ from importlib import reload
 reload(gfun)
 Gr =gfun.gstart()
 # running gfun.gstart() sets the path to include pfun and zfun
+import gfun_utility as gfu
+reload(gfu)
+import gfun_plotting as gfp
+reload(gfp)
 import pfun
 import zfun
 reload(zfun)
@@ -25,9 +29,13 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 import os
 import shutil
+import pickle
 
 import Lfun
 Ldir = Lfun.Lstart()
+
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # set the depth to impose during Depth Editing
 dval = 5. # m (positive down)
@@ -86,7 +94,7 @@ else:
     # try a segmented colormap
     from matplotlib import colors
     # make a color map of fixed colors
-    cmap = colors.ListedColormap(['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'violet', 'black'])
+    cmap = colors.ListedColormap(['red', 'orange', 'lightgreen', 'green', 'cyan', 'blue', 'violet', 'black'])
     bounds=[-10, -5, 0, 5, 10, 20, 100, 200, 4000]
     norm = colors.BoundaryNorm(bounds, cmap.N)
     # tell imshow about color map so that only set colors are used
@@ -99,43 +107,21 @@ aa = ax1.axis()
 clon, clat = pfun.get_coast()
 cx0, cx1, cxf = zfun.get_interpolant(clon, lon[0,:], extrap_nan=True)
 cy0, cy1, cyf = zfun.get_interpolant(clat, lat[:,0], extrap_nan=True)
-
-if False:
-    # this was an attempt to plot the coastline at lower resolution
-    # but it looked like crap and ran slower, 
-    inan = np.argwhere(np.isnan(cxf)) # indices of nans
-    for ii in range(len(inan) - 1):
-        cx00 = cx0[inan[ii]+1 : inan[ii+1]]
-        cx11 = cx1[inan[ii]+1 : inan[ii+1]]
-        cxff = cxf[inan[ii]+1 : inan[ii+1]]
-        cy00 = cy0[inan[ii]+1 : inan[ii+1]]
-        cy11 = cy1[inan[ii]+1 : inan[ii+1]]
-        cyff = cyf[inan[ii]+1 : inan[ii+1]]
-    
-        junk, icx00u = np.unique(cx00, return_index=True)
-        junk, icy00u = np.unique(cy00, return_index=True)
-        icxy = np.unique(np.concatenate((icx00u, icy00u)))
-        cx00u = cx00[icxy]
-        cxffu = cxff[icxy]
-        cy00u = cy00[icxy]
-        cyffu = cyff[icxy]
-        ax1.plot(cx00u + cxffu, NR - (cy00u + cyffu) - 1, '-k')
-else:
-    ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
+ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
 
 # add rivers
-gfun.edit_mask_river_tracks(Gr, NR, ax1)
+gfp.edit_mask_river_tracks(Gr, NR, ax1)
 
 ax1.axis(aa)
 
 # create control buttons
 # list is organized from bottom to top
 blist = ['start', 'pause', 'continueM', 'continueZ',
-         'polyToLand', 'polyToWater', 'startPoly',
+         'polyToLand', 'polyToWater', 'lineToWater', 'startPoly',
          'done']
 # nicer names
 Blist = ['Start', 'Pause', 'Edit Mask', 'Edit Depth (' + str(dval) + ' m)',
-         'Polygon to Land', 'Polygon to Water', 'Start Polygon',
+         'Polygon to Land', 'Polygon to Water', 'Line to Water', 'Start Polygon/Line',
          'Done']
 NB = len(blist) # number of buttons
 ybc = np.arange(NB+1) - .5
@@ -275,7 +261,32 @@ while flag_get_ginput:
             ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
             hh[ji_rho_in[:,0], ji_rho_in[:,1]] = h[ji_rho_in[:,0], ji_rho_in[:,1]]
             cs.set_data(hh)
-            remove_poly()
+            remove_poly()           
+        elif (bdict[nb]=='lineToWater') and not flag_start:
+            flag_continue = False
+            x = plon_poly
+            y = plat_poly
+            # This unmasks or carves depth in the places where the
+            # line crosses a tile
+            for I in range(len(x)-1):
+                xx = np.linspace(x[I], x[I+1], 100)
+                yy = np.linspace(y[I], y[I+1], 100)
+                ii0, ii1, ifr = zfun.get_interpolant(xx, np.arange(NC), extrap_nan=True)
+                jj0, jj1, jfr = zfun.get_interpolant(yy, np.arange(NR), extrap_nan=True)
+                # drop extrapolated points
+                ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
+                jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
+                if False:
+                    # this unmasks points crossed by the line
+                    ax1.set_title('PAUSED: Changed line to Water')
+                    hh[jj0, ii0] = h[jj0, ii0]
+                else:
+                    # this sets the depth of points crossed by the line to dval
+                    ax1.set_title('PAUSED: Changed line to Water of depth '
+                                  + str(dval) + ' m')
+                    hh[jj0, ii0] = dval
+            cs.set_data(hh)
+            remove_poly()            
         elif (bdict[nb]=='done') and not flag_start:
             flag_get_ginput = False
             ax1.set_title('DONE')

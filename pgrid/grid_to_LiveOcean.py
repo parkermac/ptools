@@ -10,12 +10,16 @@ populate LiveOcean_data/grids/[gridname]/.
 """
 
 import shutil
+import pickle
 
 from importlib import reload
 import gfun; reload(gfun)
 Gr =gfun.gstart()
 import Lfun
 Ldir = Lfun.Lstart(gridname=Gr['gridname'])
+
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 #%% select grid file
 
@@ -32,6 +36,10 @@ Lfun.make_dir(out_dir, clean=True)
 # copy files
 shutil.copyfile(in_fn, out_dir + 'grid.nc')
 shutil.copyfile(Gr['gdir'] + 'river_info.csv', out_dir + 'river_info.csv')
+
+# also save the dch dict
+dch_fn = out_dir + 'dch.csv'
+Lfun.dict_to_csv(dch, dch_fn)
 
 #%% and put in the S coordinate info
 

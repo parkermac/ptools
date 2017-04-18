@@ -16,6 +16,10 @@ import gfun_plotting as gfp
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
+import pickle
+
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # select grid file
 
@@ -50,11 +54,11 @@ flag_show_grids = False
 if flag_show_grids:
     NC += 1
     icg = NC       
-flag_show_sections = True
+flag_show_sections = False
 if flag_show_sections:
     NC += 1
     ics = NC
-fig = plt.figure(figsize=(10*NC,10))
+fig = plt.figure(figsize=(8*NC,8))
 
 #ax_grids = fig.add_subplot(1,NC,2)
 

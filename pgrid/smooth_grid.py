@@ -20,6 +20,10 @@ import netCDF4 as nc
 import os
 import shutil
 import numpy as np
+import pickle
+
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 #%% select grid file
 fn = gfun.select_file(Gr)
@@ -48,10 +52,11 @@ Hobs = -z.copy()
 
 rx0max = 0.15
 
-# make sure that anything not masked is
-# not shallower than min_depth
-min_depth = 3 # a negative number would be like on land
-Hobs[(MSK==1) & (Hobs < min_depth)] = min_depth
+if dch['use_min_depth']:
+    # make sure that anything not masked is
+    # not shallower than min_depth
+    min_depth = dch['min_depth'] # a negative number would be like on land
+    Hobs[(MSK==1) & (Hobs < min_depth)] = min_depth
 
 # create the area matrix
 AreaMatrix = dx * dy
@@ -60,7 +65,8 @@ AreaMatrix = dx * dy
 
 import time
 tt0 = time.time()
-Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix)
+Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix,
+            fjord_cliff_edges=dch['fjord_cliff_edges'])
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 zn = -Hnew
 

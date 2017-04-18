@@ -15,6 +15,7 @@ import pfun
 
 import numpy as np
 import shutil
+import pickle
 import os
 
 import zfun
@@ -37,14 +38,8 @@ ds.close()
 plon_vec = plon[0,:]
 plat_vec = plat[:,0]
 
-#% USER CHOICES
-
-# set to True to unmask all cells crossed by the coastline
-unmask_coast = False
-
-# set to True to automatically remove isloated patches of
-# land or ocean
-remove_islands = True
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # PROCESSING
 
@@ -55,19 +50,19 @@ remove_islands = True
 if mask_rho_orig.all() == 1:    
     print('Original mask all ones')
     # set z position of initial dividing line (positive up)
-    z_land = 0    
+    z_land = dch['z_land']
     m = z >= z_land
-else:
+elif dch['do_cell_average']:
     # This branch applies when we created the grid using
     # do_cell_ave = True
     print('Original mask not all ones')
     #m = mask_rho_orig == 0 # seems OK (in low res)
     #m = mask_rho_orig < 1 # gets rid of a lot of water (in low res)
     #m = mask_rho_orig < .5 # OK but still removes a lot of PS
-    m = mask_rho_orig < .1 # Maybe best?
+    m = mask_rho_orig < dch['z_land_alt'] # Maybe best?
 
 # unmask the coast
-if unmask_coast:
+if dch['unmask_coast']:
     # This unmasks it in the places where the
     # coastline crosses a tile, to facilitate wetting-drying
     cx, cy = pfun.get_coast()
@@ -82,7 +77,7 @@ if unmask_coast:
     m[jj0, ii0] = False
       
 # remove islands and lakes
-if remove_islands:
+if dch['remove_islands']:
     # What is does is mask any water point that has land on 3 sides
     # or any land point that has water on three sides. By doing this repeatedly
     # you get rid of stray channels or peninsulas.

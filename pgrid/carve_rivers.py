@@ -21,6 +21,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seawater as sw
+import pickle
+
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 #%% get river info
 
@@ -138,8 +142,7 @@ for rn in good_riv:
             # this ensures a minumum depth in the channel
             z[ji[0], ji[1]] = np.min((z[ji[0], ji[1]], -depth))
         except IndexError:
-            pass
-            
+            pass            
         try:
             # we stepped into the masked region
             if m[ji[0],ji[1]] == True:
@@ -205,7 +208,7 @@ cs = ax.pcolormesh(plon, plat,zm,
 fig.colorbar(cs, ax=ax, extend='both')
 pfun.add_coast(ax)
 pfun.dar(ax)
-#ax.axis(pfun.get_aa(ds))
+ax.axis(ax_lims)
 ax.set_title(Gr['gridname'])
 
 ds.close()

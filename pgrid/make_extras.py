@@ -14,6 +14,10 @@ import numpy as np
 import shutil
 
 import os
+import pickle
+
+# load the default choices
+dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 #%% select grid file
 fn = gfun.select_file(Gr)
@@ -29,12 +33,12 @@ ds = nc.Dataset(in_fn)
 
 mask_rho = ds.variables['mask_rho'][:]
 
-# prepare to enforce a minimum depth
-h = ds['h'][:]
-hm = np.ma.masked_where(mask_rho==0, h)
-hmin = hm.min()
-hnew = h.copy()
-hnew[mask_rho==0] = hmin
+## prepare to enforce a minimum depth
+#h = ds['h'][:]
+#hm = np.ma.masked_where(mask_rho==0, h)
+#hmin = hm.min()
+#hnew = h.copy()
+#hnew[mask_rho==0] = hmin
 
 ds.close()
 
@@ -73,6 +77,6 @@ mask_dict = {'u': mask_u, 'v': mask_v, 'psi': mask_psi}
 for tag in tag_list:
     ds['mask_'+tag][:] = mask_dict[tag]
 
-ds['h'][:] = hnew
+#ds['h'][:] = hnew
 
 ds.close()

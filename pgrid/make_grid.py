@@ -51,9 +51,13 @@ if Gr['gridname'] == 'cascadia2':
 elif Gr['gridname'] == 'sal0':
     # start of a salish grid
     aa = [-124, -122, 47, 49]
-    res = 1000 # target resolution (m)
+    res = 200 # target resolution (m)
     plon_vec, plat_vec = gfu.simple_grid(aa, res)
-    
+    dch['unmask_coast'] = True
+    dch['t_list'] = ['cascadia/cascadia_gridded.nc',
+             'psdem/PS_183m.nc',
+             'ttp_patch/TTP_Regional_27m_patch.nc']
+             
 elif Gr['gridname'] == 'cas1': # for testing of mask generation, etc.
     maxres = 5000
     medres = 3000
@@ -89,7 +93,6 @@ NR, NC = lon.shape
 
 # initialize the final bathymetry array
 z = np.nan * lon
-
 if dch['analytical']==True and Gr['gridname'] == 'aestus1':
     # make grid and bathymetry by hand
     z = np.zeros(lon.shape)
@@ -102,15 +105,17 @@ if dch['analytical']==True and Gr['gridname'] == 'aestus1':
     
 else:
     # add bathymetry automatically from files
-
     if dch['do_cell_average']:
-
         # m is the start of a mask: 1=water, 0=land
         m = np.nan * lon
         for t_file in dch['t_list']:
             t_fn = dch['t_dir'] + t_file
             print('\nOPENING BATHY FILE: ' + t_file)
             tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
+            if isinstance(tz, np.ma.masked_array):
+                tz1 = tz.data
+                tz1[tz.mask==True] = np.nan
+                tz = tz1
             # Apply the offset here instead of at the end because it matters
             # for the estimated mask field
             if dch['use_z_offset']:
@@ -145,15 +150,18 @@ else:
             t_fn = dch['t_dir'] + t_file
             print('\nOPENING BATHY FILE: ' + t_file)
             tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
+            if isinstance(tz, np.ma.masked_array):
+                tz1 = tz.data
+                tz1[tz.mask==True] = np.nan
+                tz = tz1
             tlon, tlat = np.meshgrid(tlon_vec, tlat_vec)
             z_part = zfun.interp2(lon, lat, tlon, tlat, tz)
             # need to deal with masking
             # put good values of z_part in z
             z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
         z = z + dch['z_offset']
-        
-#%% save the output to NetCDF
 
+#%% save the output to NetCDF
 gfu.make_nc(out_fn, plon, plat, lon, lat, z, m, dch)
 
 
