@@ -7,6 +7,8 @@ Created on Tue Jul 12 09:10:17 2016
 This is the last step in the process, where you create and
 populate LiveOcean_data/grids/[gridname]/.
 
+This also makes the nudging to climatology NetCDF file.
+
 """
 
 import shutil
@@ -14,6 +16,8 @@ import pickle
 
 from importlib import reload
 import gfun; reload(gfun)
+import gfun_utility as gfu
+reload(gfu)
 Gr =gfun.gstart()
 import Lfun
 Ldir = Lfun.Lstart(gridname=Gr['gridname'])
@@ -62,3 +66,6 @@ out, err = proc.communicate()
 # "out" is the screen output of the matlab code, and
 # "err" stores arror messages from subprocess (I think).
 #print(out.decode()) # will print "out" nicely
+
+#%% Make the nudging to climatology file
+gfu.make_nudgcoef(dch, out_dir)

@@ -23,13 +23,17 @@ def check(fn, hstr):
 
 # output file name        
 fn = '/Users/PM5/Desktop/test1.nc'
-os.remove(fn)
+try:
+    os.remove(fn)
+except FileNotFoundError:
+    pass
 
 # size to use for data
 N = 4
 
 hstr = 'Create the original file.'
 ds = nc.Dataset(fn, 'w', format='NETCDF4')
+#ds = nc.Dataset(fn, 'w', format='NETCDF3_CLASSIC')
 # NETCDF3_CLASSIC also works
 ds.createDimension('d1', None)
 vv = ds.createVariable('data1', float, 'd1')

@@ -50,8 +50,7 @@ dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 if mask_rho_orig.all() == 1:    
     print('Original mask all ones')
     # set z position of initial dividing line (positive up)
-    z_land = dch['z_land']
-    m = z >= z_land
+    m = z >= dch['z_land']
 elif dch['do_cell_average']:
     # This branch applies when we created the grid using
     # do_cell_ave = True
@@ -59,7 +58,7 @@ elif dch['do_cell_average']:
     #m = mask_rho_orig == 0 # seems OK (in low res)
     #m = mask_rho_orig < 1 # gets rid of a lot of water (in low res)
     #m = mask_rho_orig < .5 # OK but still removes a lot of PS
-    m = mask_rho_orig < dch['z_land_alt'] # Maybe best?
+    m = mask_rho_orig < dch['z_land_alt'] # 0.1 maybe best?
 
 # unmask the coast
 if dch['unmask_coast']:

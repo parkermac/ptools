@@ -52,11 +52,9 @@ Hobs = -z.copy()
 
 rx0max = 0.15
 
+# Make sure that anything not masked is not shallower than min_depth.
 if dch['use_min_depth']:
-    # make sure that anything not masked is
-    # not shallower than min_depth
-    min_depth = dch['min_depth'] # a negative number would be like on land
-    Hobs[(MSK==1) & (Hobs < min_depth)] = min_depth
+    Hobs[(MSK==1) & (Hobs < dch['min_depth'])] = dch['min_depth']
 
 # create the area matrix
 AreaMatrix = dx * dy
@@ -68,6 +66,11 @@ tt0 = time.time()
 Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix,
             fjord_cliff_edges=dch['fjord_cliff_edges'])
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
+
+# Again, make sure that anything not masked is not shallower than min_depth.
+if dch['use_min_depth']:
+    Hnew[(MSK==1) & (Hnew < dch['min_depth'])] = dch['min_depth']
+
 zn = -Hnew
 
 # Save the output file

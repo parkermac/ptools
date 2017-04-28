@@ -47,18 +47,19 @@ if Gr['gridname'] == 'cascadia2':
     aa = [-127.4, -122, 43, 50]
     res = 5000 # target resolution (m)
     plon_vec, plat_vec = gfu.simple_grid(aa, res)
+    dch['nudging_edges'] = ['south', 'west']
     
 elif Gr['gridname'] == 'sal0':
-    # start of a salish grid
+    # start of a salish nest grid
     aa = [-124, -122, 47, 49]
-    res = 200 # target resolution (m)
+    res = 300 # target resolution (m)
     plon_vec, plat_vec = gfu.simple_grid(aa, res)
-    dch['unmask_coast'] = True
     dch['t_list'] = ['cascadia/cascadia_gridded.nc',
              'psdem/PS_183m.nc',
              'ttp_patch/TTP_Regional_27m_patch.nc']
+    dch['nudging_edges'] = ['north', 'west']
              
-elif Gr['gridname'] == 'cas1': # for testing of mask generation, etc.
+elif Gr['gridname'] == 'cas1': # An extended version of cascadia1
     maxres = 5000
     medres = 3000
     minres = 1500
@@ -69,6 +70,7 @@ elif Gr['gridname'] == 'cas1': # for testing of mask generation, etc.
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
     dch['use_cell_average'] = True
+    dch['nudging_edges'] = ['south', 'west']
                                         
 elif Gr['gridname'] == 'aestus1': # idealized model
     lon_list = [-1, 0, 1, 2, 3]
@@ -78,6 +80,7 @@ elif Gr['gridname'] == 'aestus1': # idealized model
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
     dch['analytical'] = True
+    dch['nudging_edges'] = ['north', 'south', 'west']
 
 # save the default choices for use by other code
 pickle.dump(dch, open(Gr['gdir'] + 'choices.p', 'wb'))
@@ -93,16 +96,16 @@ NR, NC = lon.shape
 
 # initialize the final bathymetry array
 z = np.nan * lon
-if dch['analytical']==True and Gr['gridname'] == 'aestus1':
-    # make grid and bathymetry by hand
-    z = np.zeros(lon.shape)
-    x, y = zfun.ll2xy(lon, lat, 0, 45)
-    zshelf = x * 1e-3
-    zestuary = -20 + 20*x/1e5 + 20/(1e4)*np.abs(y)
-    z = zshelf
-    mask = zestuary < z
-    z[mask] = zestuary[mask]
-    
+if dch['analytical']==True:
+    if Gr['gridname'] == 'aestus1':
+        # make grid and bathymetry by hand
+        z = np.zeros(lon.shape)
+        x, y = zfun.ll2xy(lon, lat, 0, 45)
+        zshelf = x * 1e-3
+        zestuary = -20 + 20*x/1e5 + 20/(1e4)*np.abs(y)
+        z = zshelf
+        mask = zestuary < z
+        z[mask] = zestuary[mask]    
 else:
     # add bathymetry automatically from files
     if dch['do_cell_average']:
@@ -117,7 +120,7 @@ else:
                 tz1[tz.mask==True] = np.nan
                 tz = tz1
             # Apply the offset here instead of at the end because it matters
-            # for the estimated mask field
+            # for the estimated mask field.
             if dch['use_z_offset']:
                 tz = tz + dch['z_offset']
             tm = np.ones_like(tz)
@@ -141,8 +144,7 @@ else:
                         pass
             # put good values of z_part in z
             z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-            m[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]
-            
+            m[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]            
     else:
         # m is the start of a mask: 1=water, 0=land
         m = np.ones_like(lon)
@@ -156,10 +158,10 @@ else:
                 tz = tz1
             tlon, tlat = np.meshgrid(tlon_vec, tlat_vec)
             z_part = zfun.interp2(lon, lat, tlon, tlat, tz)
-            # need to deal with masking
             # put good values of z_part in z
             z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-        z = z + dch['z_offset']
+        if dch['use_z_offset']:
+            z = z + dch['z_offset']
 
 #%% save the output to NetCDF
 gfu.make_nc(out_fn, plon, plat, lon, lat, z, m, dch)

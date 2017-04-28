@@ -41,7 +41,8 @@ z = -ds.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 
 plon, plat = gfp.get_plon_plat(using_old_grid, ds)
-ax_lims = (plon[0,0], plon[0,-1], plat[0,0], plat[-1,0])
+buff = 0.1
+ax_lims = (plon[0,0]-buff, plon[0,-1]+buff, plat[0,0]-buff, plat[-1,0]+buff)
 
 zm = np.ma.masked_where(mask_rho == 0, z)
 

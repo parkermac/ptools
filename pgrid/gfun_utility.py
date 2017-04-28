@@ -12,8 +12,15 @@ import zfun
 import h5py
 import matfun
 import netCDF4 as nc
-import os
 import seawater as sw
+
+import os
+import sys
+pth = os.path.abspath('../../LiveOcean/alpha')
+if pth not in sys.path:
+    sys.path.append(pth)
+import zrfun
+import Lfun
 
 def simple_grid(aa, res):
     dlat = aa[3] - aa[2]
@@ -198,6 +205,85 @@ def make_nc(out_fn, plon, plat, lon, lat, z, m, dch):
     el_var[:] = dy[:,0].sum()
     sph_var[:] = 'T'
     
+    foo.close()
+    
+def make_nudgcoef(dch, out_dir):
+    # Using info from From https://www.myroms.org/projects/src/ticket/627
+   
+    gfn = out_dir + 'grid.nc'
+    sfn = out_dir + 'S_COORDINATE_INFO.csv'
+    
+    G = zrfun.get_basic_info(gfn, only_G=True)
+    S_info_dict = Lfun.csv_to_dict(sfn)
+    S = zrfun.get_S(S_info_dict)
+    
+    fn = out_dir + 'nudgcoef.nc'
+    # get rid of the old version, if it exists
+    try:
+        os.remove(fn)
+    except OSError:
+        pass # assume error was because the file did not exist
+    foo = nc.Dataset(fn, 'w', format='NETCDF3_CLASSIC')
+    
+    # create dimensions
+    foo.createDimension('s_rho', S['N'])
+    for tag in ['rho', 'u', 'v']:
+        foo.createDimension('eta_'+tag, G['lat_'+tag].shape[0])
+        foo.createDimension('xi_'+tag, G['lon_'+tag].shape[1])
+    
+    fld2 = np.zeros_like(G['lon_rho'])
+    nn = 6 # size of nudging band in gridpoints
+    days_short = dch['nudging_days'][0]
+    days_long = dch['nudging_days'][1]
+    # make inverse time scales (d-1)
+    t0 = 1/days_short
+    t1 = 1/days_long
+    
+    if 'north' in dch['nudging_edges']:            
+        for i in range(G['L']):
+            for j in range(G['M'] - nn, G['M']):
+                jj = j - G['M'] + nn + 1
+                tnud = t1 + jj*(t0-t1)/nn
+                fld2[j, i] = np.max([tnud, fld2[j, i]])
+    if 'south' in dch['nudging_edges']:            
+        for i in range(G['L']):
+            for j in range(nn):
+                tnud = t0 - j*(t0-t1)/nn
+                fld2[j, i] = np.max([tnud, fld2[j, i]])
+    if 'west' in dch['nudging_edges']:
+        for i in range(nn):
+            for j in range(G['M']):
+                tnud = t0 - i*(t0-t1)/nn
+                fld2[j, i] = np.max([tnud, fld2[j, i]])
+    if 'east' in dch['nudging_edges']:
+        for i in range(G['L'] - nn, G['L']):
+            for j in range(G['M']):
+                ii = i - G['L'] + nn + 1
+                tnud = t1 + ii*(t0-t1)/nn
+                fld2[j, i] = np.max([tnud, fld2[j, i]])
+
+        
+    fld3 = np.zeros((S['N'], G['M'], G['L']))
+    for i in range(S['N']):
+        fld3[i, :, :] = fld2.copy()
+    
+    # add 2D field data
+    vv = foo.createVariable('M2_NudgeCoef', float, ('eta_rho', 'xi_rho'))
+    vv.long_name = '2D momentum inverse nudging coefficients'
+    vv.units = 'day-1'
+    vv[:] = fld2
+    
+    # add 3D field data
+    vn_dict = {'M3_NudgeCoef': '3D momentum inverse nudging coefficients',
+               'tracer_NudgeCoef': 'generic tracer inverse nudging coefficients',
+               'temp_NudgeCoef': 'temp inverse nudging coefficients',
+               'salt_NudgeCoef': 'salt inverse nudging coefficients'}
+    for vn in vn_dict.keys():
+        vv = foo.createVariable(vn, float, ('s_rho', 'eta_rho', 'xi_rho'))
+        vv.long_name = vn_dict[vn]
+        vv.units = 'day-1'
+        vv[:] = fld3
+        
     foo.close()
 
 def GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix, fjord_cliff_edges = True):

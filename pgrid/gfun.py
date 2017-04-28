@@ -37,14 +37,19 @@ def default_choices(Gr):
     # Default choices (can override in each case)    
     dch = dict()    
 
-    # GRID CREATION    
+    # Decide if the grid will allow wetting and drying.
+    # We do this first becasue it affects several subsequent choices
+    dch['wet_dry'] = False        
+
+    # GRID CREATION     
     # Set analytical to true when we define the bathymetry analytically.
-    dch['analytical'] = False        
-    # Adjustment to zero of the bathymetry to account for the fact
-    # that mean sea level is somewhat higher than NAVD88.
+    dch['analytical'] = False      
+    # z_offset is an djustment to zero of the bathymetry to account for
+    # the fact that mean sea level is somewhat higher than NAVD88.
     dch['use_z_offset'] = True
     dch['z_offset'] = -1.06    
-    # Set this to True for grids that are much coarser than the bathy files.
+    # Set do_cell_average to True for grids that are much
+    # coarser than the bathy files.
     # It means we average all data inside a rho grid cell to get depth there,
     # instead of using interpolation.
     # We also make a mask_rho that is the average of all values in a cell
@@ -58,34 +63,42 @@ def default_choices(Gr):
              'psdem/PS_183m.nc',
              'ttp_patch/TTP_Regional_27m_patch.nc']
  
-    # MASKING    
+    # MASKING
     # set z position of initial dividing line (positive up)
     dch['z_land'] = 0        
-   # set alternate z position of initial dividing line (positive up)
-    # used for example when dch['do_cell_average'] = True
-    dch['z_land_alt'] = 0.1
-
-        
-    # Set the minimum depth, and decide if it should be enforced.
-    dch['use_min_depth'] = True
-    dch['min_depth'] = 4 # meters, positive down    
-                 
-    # set to True to unmask all cells crossed by the coastline
-    dch['unmask_coast'] = False
-    # set to True to automatically remove isloated patches of
-    # land or ocean
+    # Set alternate z position of initial dividing line; could be
+    # used for example when dch['do_cell_average'] = True.
+    dch['z_land_alt'] = 0.1                             
+    # Set unmask_coast to True to unmask all cells crossed by the coastline.
+    if dch['wet_dry'] == True:
+        dch['unmask_coast'] = True
+    else:
+        dch['unmask_coast'] = False
+    # Set remove_islands to True to automatically remove isloated patches of
+    # land or ocean.
     dch['remove_islands'] = True
 
     # SMOOTHING
-    # Decide if the grid will allow wetting and drying
-    dch['wet_dry'] = False        
-    # With fjord_cliff_edges=True the smoothing deviates from its
-    # usual volume-conserving
-    # nature when it is next to a masked region, and instead adjusts the slope
-    # by preferentially deepening at the coast.  This does a much better job of
-    # preserving thalweg depth in channels like Hood Canal
-    dch['fjord_cliff_edges'] = True    
-    
+    if dch['wet_dry'] == True:
+        dch['fjord_cliff_edges'] = False    
+        dch['use_min_depth'] = False # a placeholder
+    else:
+        # With fjord_cliff_edges True the smoothing deviates from its
+        # usual volume-conserving
+        # nature when it is next to a masked region, and instead adjusts the slope
+        # by preferentially deepening at the coast.  This does a much better job of
+        # preserving thalweg depth in channels like Hood Canal
+        dch['fjord_cliff_edges'] = True    
+        # Set the minimum depth.
+        dch['use_min_depth'] = True
+        dch['min_depth'] = 4 # meters (positive down)
+        
+    # NUDGING
+    # Use nudging edges to decide which edges to have nudging to climatology
+    # on. And the nudging_days are the the (short, long) timescales to use.
+    dch['nudging_edges'] = ['north', 'south', 'east', 'west']
+    dch['nudging_days'] = (3.0, 60.0)
+        
     return dch
 
 def gstart():
