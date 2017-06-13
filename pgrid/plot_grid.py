@@ -51,7 +51,7 @@ plt.close()
 
 # set number of columns for plot 
 NC = 1 # first guess
-flag_show_grids = False
+flag_show_grids = True
 if flag_show_grids:
     NC += 1
     icg = NC       

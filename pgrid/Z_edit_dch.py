@@ -36,6 +36,7 @@ def plot_nudgcoef(gridname, out_dir):
     fig.colorbar(cs, ax=ax, extend='both')
     ax.set_title(gridname + ' Nudging timescales (1/day)')
     ds.close()
+    plt.show()
     return nudc
     
 # load the default choices
@@ -60,5 +61,9 @@ if Gr['gridname'] == 'sal0':
 
 # save the default choices
 pickle.dump(dch, open(Gr['gdir'] + 'choices.p', 'wb'))
+
+# also save the dch dict
+dch_fn = out_dir + 'dch.csv'
+Lfun.dict_to_csv(dch, dch_fn)
 
 

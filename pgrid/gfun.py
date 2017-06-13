@@ -68,7 +68,7 @@ def default_choices(Gr):
     dch['z_land'] = 0        
     # Set alternate z position of initial dividing line; could be
     # used for example when dch['do_cell_average'] = True.
-    dch['z_land_alt'] = 0.1                             
+    dch['z_land_alt'] = 0.1
     # Set unmask_coast to True to unmask all cells crossed by the coastline.
     if dch['wet_dry'] == True:
         dch['unmask_coast'] = True
