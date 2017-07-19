@@ -78,7 +78,7 @@ NR, NC = hh.shape
 
 # set up the axes
 plt.close('all')
-fig = plt.figure(figsize=(16,10)) # (16,10) is good for my laptop
+fig = plt.figure(figsize=(13,8)) # (13,8) is good for my laptop
 ax1 = plt.subplot2grid((1,3), (0,0), colspan=2) # map
 ax2 = plt.subplot2grid((1,3), (0,2), colspan=1) # buttons
 

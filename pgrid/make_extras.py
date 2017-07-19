@@ -29,16 +29,16 @@ out_fn = Gr['gdir'] + fn_new
 
 #%% load the data
 
-ds = nc.Dataset(in_fn)
+ds = nc.Dataset(in_fn, 'a')
 
-mask_rho = ds.variables['mask_rho'][:]
+mask_rho = ds['mask_rho'][:]
 
-## prepare to enforce a minimum depth
-#h = ds['h'][:]
-#hm = np.ma.masked_where(mask_rho==0, h)
-#hmin = hm.min()
-#hnew = h.copy()
-#hnew[mask_rho==0] = hmin
+if dch['use_min_depth']:
+    # enforce a minimum depth
+    h = ds['h'][:]
+    hnew = h.copy()
+    hnew[ h <= dch['min_depth'] ] = dch['min_depth']
+    ds['h'][:] = hnew
 
 ds.close()
 
@@ -76,7 +76,5 @@ tag_list = ['u', 'v', 'psi']
 mask_dict = {'u': mask_u, 'v': mask_v, 'psi': mask_psi}
 for tag in tag_list:
     ds['mask_'+tag][:] = mask_dict[tag]
-
-#ds['h'][:] = hnew
 
 ds.close()

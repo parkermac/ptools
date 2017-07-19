@@ -16,10 +16,10 @@ import gfun_plotting as gfp
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
-import pickle
+# import pickle
 
 # load the default choices
-dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
+# dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # select grid file
 

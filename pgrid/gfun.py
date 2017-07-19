@@ -10,6 +10,7 @@ Organizational functions for pgrid.
 # USER EDIT
 
 gridname = 'sal0'
+#gridname = 'cas1'
 
 dir0 = '/Users/PM5/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'

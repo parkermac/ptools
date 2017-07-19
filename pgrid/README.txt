@@ -2,7 +2,7 @@ Notes on the pgrid code.  Parker MacCready
 
 This collection of programs is designed to make gridfiles for ROMS.  It works for analytical and realistic cases, and handles complex tasks like mask editing and smoothing.  It also creates other files associated with rivers, nudging to climatology, and vertical grid parameters, all in the form expected by LiveOcean/forcing and ROMS.
 
-First edit the gridname and a few directory location at the top of gfun.py.  This gridname will then be used by all subsequent code.
+First edit the gridname and a few directory locations at the top of gfun.py.  This gridname will then be used by all subsequent code.
 
 In order to keep track of several choices typically made about a grid, we use "dch," a dict of "default choices":
 - dch =  gfun.default_choices(Gr)
@@ -41,6 +41,9 @@ Suggested order to run the code, and what dch items are used:
 * carve_rivers.py (again to make sure we did not edit them away)
 
 * make_extras.py
+    min_depth (enforced for whole grid)
 
 * grid_to_LiveOcean.py
+    nudging_edges
+    nudging_days
 
