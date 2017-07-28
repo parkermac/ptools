@@ -29,13 +29,13 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 import os
 import shutil
-import pickle
+#import pickle
 
 import Lfun
 Ldir = Lfun.Lstart()
 
 # load the default choices
-dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
+#dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # set the depth to impose during Depth Editing
 dval = 5. # m (positive down)
@@ -61,10 +61,13 @@ plon = ds.variables['lon_psi_ex'][:]
 plat = ds.variables['lat_psi_ex'][:]
 lon = ds.variables['lon_rho'][:]
 lat = ds.variables['lat_rho'][:]
+DA = (1/ds['pm'][:]) * (1/ds['pn'][:])
+DA[mask_rho==0] = np.nan
 ds.close()
 
 # flip to work with imshow
 h = np.flipud(H)
+da = np.flipud(DA)
 m = np.flipud(mask_rho)
 # mask_rho:
 # 1 = water
@@ -94,7 +97,8 @@ else:
     # try a segmented colormap
     from matplotlib import colors
     # make a color map of fixed colors
-    cmap = colors.ListedColormap(['red', 'orange', 'lightgreen', 'green', 'cyan', 'blue', 'violet', 'black'])
+    cmap = colors.ListedColormap(['red', 'orange', 'lightgreen', 'green',
+                                  'cyan', 'blue', 'violet', 'black'])
     bounds=[-10, -5, 0, 5, 10, 20, 100, 200, 4000]
     norm = colors.BoundaryNorm(bounds, cmap.N)
     # tell imshow about color map so that only set colors are used
@@ -117,11 +121,12 @@ ax1.axis(aa)
 # create control buttons
 # list is organized from bottom to top
 blist = ['start', 'pause', 'continueM', 'continueZ',
-         'polyToLand', 'polyToWater', 'lineToWater', 'startPoly',
+         'polyToLand', 'polyToWater', 'polyInfo', 'lineToWater', 'startPoly',
          'done']
 # nicer names
 Blist = ['Start', 'Pause', 'Edit Mask', 'Edit Depth (' + str(dval) + ' m)',
-         'Polygon to Land', 'Polygon to Water', 'Line to Water', 'Start Polygon/Line',
+         'Polygon to Land', 'Polygon to Water', 'Polygon Info',
+         'Line to Water', 'Start Polygon/Line',
          'Done']
 NB = len(blist) # number of buttons
 ybc = np.arange(NB+1) - .5
@@ -261,7 +266,21 @@ while flag_get_ginput:
             ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
             hh[ji_rho_in[:,0], ji_rho_in[:,1]] = h[ji_rho_in[:,0], ji_rho_in[:,1]]
             cs.set_data(hh)
-            remove_poly()           
+            remove_poly()
+        elif (bdict[nb]=='polyInfo') and not flag_start:
+            flag_continue = False
+            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
+            dap = da[ji_rho_in[:,0], ji_rho_in[:,1]]
+            dvp = hh[ji_rho_in[:,0], ji_rho_in[:,1]] * da[ji_rho_in[:,0], ji_rho_in[:,1]]
+            ap = np.nansum(dap)
+            vp = np.nansum(dvp)
+            hp = vp/ap
+            print('Volume inside polygon = %0.1f km3' % (vp/1e9) )
+            print('Area inside polygon = %0.1f km2' % (ap/1e6) )
+            print('Mean Depth inside polygon = %0.1f m' % (hp) )
+            inp = input('Push Return to continue\n')
+            remove_poly()
+            ax1.set_title('PAUSED')
         elif (bdict[nb]=='lineToWater') and not flag_start:
             flag_continue = False
             x = plon_poly
