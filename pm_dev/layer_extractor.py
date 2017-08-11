@@ -40,7 +40,7 @@ if Ldir['env'] == 'pm_mac':
     dt1 = datetime(2017,8,9)    
 elif Ldir['env'] == 'fjord':
     dt0 = datetime(2013,1,2)
-    dt1 = datetime(2013,12,31)    
+    dt1 = datetime(2015,12,31)    
 
 # prepare a directory for results
 outdir0 = Ldir['parent'] + 'ptools_output/layer/'
