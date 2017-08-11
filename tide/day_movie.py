@@ -1,51 +1,43 @@
 """
 Code to plot tides from NOAA csv files.
 
+It makes a MOVIE where each frame is the tide height over a day,
+so you can see how low tide marches forward avery day.
+
 """
+import os
+import sys
+pth = os.path.abspath('../../LiveOcean/alpha')
+if pth not in sys.path:
+    sys.path.append(pth)
+import Lfun
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import numpy as np
 
-dir00 = '/Users/PM5/Documents/'
+home = os.environ.get('HOME')
+dir00 = home + '/Documents/'
 
-# red in tide date
-indir0 = dir00 + 'Classes/2017_Coastal_320/tide/'
+# prepare a directory for results
+outdir0 = dir00 + 'ptools_output/tide/'
+Lfun.make_dir(outdir0, clean=False)
+outdir = outdir0 + 'day_movie/'
+Lfun.make_dir(outdir, clean=True)
+
+# read in tide data (time is UTC)
+indir = dir00 + 'ptools_data/tide/'
 fn = 'CO-OPS__9447130__hr.csv'
 # Date Time, Water Level, Sigma, I, L
 # 2016-01-01 00:00,1.302,0.000,0,0
-# 2016-01-01 01:00,1.401,0.009,0,0
-# and I think the time is UTC
-df = pd.read_csv(indir0+fn, index_col='Date Time', parse_dates = True)
+df = pd.read_csv(indir+fn, index_col='Date Time', parse_dates = True)
 for k in df.keys():
     df = df.rename(columns={k: k.strip()})
 df = df.drop(['Sigma', 'I', 'L'], axis=1)
 df = df.rename(columns={'Water Level': 'SSH_obs'})
 
-def make_dir(dirname, clean=False):
-    # Make a directory if it does not exist.
-    # Use clean=True to clobber the existing directory.
-    import os
-    if clean == True:
-        import shutil
-        shutil.rmtree(dirname, ignore_errors=True)
-        os.mkdir(dirname)
-    else:
-        try:
-            os.mkdir(dirname)
-        except OSError:
-            pass
-            # assume OSError was raised because
-            #directory already exists
-            
-# prepare a directory for results
-outdir0 = dir00 + 'ptools_output/tide/'
-make_dir(outdir0, clean=False)
-outdir = outdir0 + 'dayplot/'
-make_dir(outdir, clean=True)
-    
-# plotting loop
+# PLOTTING LOOP
 
 # initializing
 plt.close('all')
@@ -54,27 +46,55 @@ d0 = datetime(2016,6,10,8,0,0) # start
 d1 = d0 + timedelta(days=1)
 d2 = d1 + timedelta(days=1)
 # we get data from two days in order to do the blending
-d_last = d0 + timedelta(days=(29.57 + 2)) # end
-# 29.57 days is two S-N cycles
-# but adding two days seems to get the ending phase back to
-# the beginning phase - although the amplitudes don't match perfectly
-# I assume because there are several other important constituents.
-i_plot = 0
+
+# set the number of days to plot
+if False:
+    # testing
+    d_last = d0 + timedelta(days=5)
+else:
+    # 29.57 days is two S-N cycles
+    d_last = d0 + timedelta(days=29)
+
+i_plot = 0 # plot name number
+
+# SET RC
+fs1 = 16
+fs2 = 20
+lw1 = 3
+lw2 = 5
+plt.rc('xtick', labelsize=fs1)
+plt.rc('ytick', labelsize=fs1)
+plt.rc('xtick.major', size=10, pad=5, width=lw1)
+plt.rc('ytick.major', size=10, pad=5, width=lw1)
+plt.rc('axes', lw=lw1)
+plt.rc('lines', lw=lw2)
+plt.rc('font', size=fs2)
+plt.rc('grid', color='g', ls='-', lw=lw1, alpha=.3)
 
 fig = plt.figure(figsize=(10,8))
 ax = fig.add_subplot(1,1,1)
 ax.grid()
 ax.set_xlabel('Hour of Day (PST)')
 ax.set_ylabel('Seattle Tide Height (m)')
+ax.set_xlim(0, 24)
+ax.set_ylim(-1, 5)
 
-while d2 <= d_last:    
+first = True # part of a scheme to make the looping smoother
+while d1 <= d_last:
     a = df.loc[d0:d1].values
-    b = df.loc[d1:d2].values
+    if first:
+        a0 = a.copy()
+        first = False
+    if d1 == d_last:
+        b = a0
+    else:
+        b = df.loc[d1:d2].values
     aa = np.array(a).flatten()
     bb = np.array(b).flatten()
     tt = np.arange(0,len(aa))
-    ndiv = 6
-    i_fr = 0
+    ndiv = 8 # number of divisions of the day
+        # we do this to make a smoother movie
+    i_fr = 0 # index into the divisions of the day
     while i_fr < ndiv:
         nouts = ('0000' + str(i_plot))[-4:]
         outname = 'plot_' + nouts + '.png'
@@ -83,10 +103,9 @@ while d2 <= d_last:
             print(outname)
         fr = i_fr/ndiv
         cc = (1-fr)*aa + fr*bb # blended signal
-        lh = ax.plot(tt, cc, '-b', linewidth=5)
-        ax.set_title(d0.strftime('%Y.%m.%d'))
-        ax.set_xlim(0, 24)
-        ax.set_ylim(-1, 5)
+        lh = ax.plot(tt, cc, '-b')
+        ax.set_title(d0.strftime('%m/%d/%Y'))
+        plt.tight_layout()
         plt.draw()
         plt.savefig(outfile)
         # remove the line
@@ -98,10 +117,13 @@ while d2 <= d_last:
     d1 = d0 + timedelta(days=1)
     d2 = d1 + timedelta(days=1)
 
+# RC CLEANUP
+plt.rcdefaults()
+
 # and make a movie
 import subprocess
 cmd = ['ffmpeg',
-    '-r', '24',
+    '-r', '24', # framerate fps
     '-i', outdir+'plot_%04d.png',
     '-vcodec', 'libx264',
     '-pix_fmt', 'yuv420p',
