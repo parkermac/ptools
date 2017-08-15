@@ -5,7 +5,7 @@ Created on Thu Aug  3 14:36:08 2017
 
 @author: PM5
 
-Tes of the new astral and ephem modules.
+Test of the new astral and ephem modules.
 """
 from datetime import datetime
 import pytz
