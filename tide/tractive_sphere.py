@@ -44,12 +44,14 @@ def get_tractive_scale():
     a = g*(M/E)*(r_e/r)**3
     return a
 
-def get_TF(a, l,d):
+def get_TF(a, l, d):
     # returns vectors of the components of the tractive force
     # over the course of a lunar day
     # at latitude l [rad], for lunar declination d [rad]
-    # longitude (as a way of telling time in lunar days)
-    Z = np.linspace(0, 2*np.pi, 360)
+    # longitude Z (as a way of telling time in lunar days)
+    # where Z=0 at the face away from the moon, and Z=pi
+    # at the face toward the moon.
+    Z = np.linspace(0, 2*np.pi, 37)
     TFx = (3/2)*a*( np.sin(l)*np.sin(2*d)*np.sin(Z)
                    - np.cos(l)*np.cos(d)**2*np.sin(2*Z) )
     TFy = (3/2)*a*( -(1/2)*np.sin(2*l)*(1 - 3*np.sin(d)**2)
@@ -59,7 +61,7 @@ def get_TF(a, l,d):
 
 
 #%% plotting
-plt.close()
+plt.close('all')
 
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(111, projection='3d')
@@ -68,37 +70,50 @@ r = 10
 lat = np.linspace(-np.pi/2, np.pi/2, 100)
 slice_rad = np.pi/6
 
+alpha_low = .2 # .3
+alpha_high = .3 # .5
+
+# first part of the background sphere
 lon = np.linspace(-np.pi, -slice_rad/2, 100)
 x, y, z = get_xyz_mesh(lon, lat, r)
 ax.plot_surface(x, y, z,
                 rstride=4, cstride=4,
                 color='y', linewidth=0, shade=True,
-                alpha=.3)
+                alpha=alpha_low)
 
+# colored slice on the sphere
 lon = np.linspace(-slice_rad/2, slice_rad/2, 100)
 x, y, z = get_xyz_mesh(lon, lat, r)
 ax.plot_surface(x, y, z,
                 rstride=4, cstride=4,
                 color='r', linewidth=0, shade=True,
-                alpha=.5)
+                alpha=alpha_high)
 
+# second part of the background sphere
 lon = np.linspace(slice_rad/2, np.pi, 100)
 x, y, z = get_xyz_mesh(lon, lat, r)
 ax.plot_surface(x, y, z,
                 rstride=4, cstride=4,
                 color='y', linewidth=0, shade=True,
-                alpha=.3)
+                alpha=alpha_low)
 
+# equator line
 lon = np.linspace(-np.pi, np.pi)
 lat = 0*lon
 X, Y, Z = get_xyz(lon, lat, r)
 ax.plot(X, Y, Z, '-g', alpha=.4)
 
 A = get_tractive_scale()
-tf_dec_deg = 0
+
+# set the lunar declination
+tf_dec_deg = 15
+
+# draw the patterns of tractive force over a lunar day
 tf_dec = tf_dec_deg*np.pi/180
 for tf_lat in np.pi*np.arange(-90,105,15)/180:
     TFx, TFy = get_TF(A, tf_lat, tf_dec)
+    # beta is an angle that is zero at the north pole
+    # and increases to the south (radians)
     beta = np.pi/2 - tf_lat
     dy = (TFx/A)
     dx = -np.cos(beta) * (TFy/A)
@@ -114,7 +129,7 @@ for tf_lat in np.pi*np.arange(-90,105,15)/180:
         ii = 0
         ax.scatter(X[ii], Y[ii], Z[ii], s=5, c='k')
 
-if False:
+if True:
     # for development
     ax.set_xlabel('x')
     ax.set_ylabel('y')
