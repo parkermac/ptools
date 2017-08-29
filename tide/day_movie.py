@@ -18,19 +18,24 @@ from datetime import datetime, timedelta
 import numpy as np
 
 from importlib import reload
-import transit
-reload(transit)
+import ephem_functions as efun
+reload(efun)
+
+# User choices
+season = 'summer' # summer, winter
+city = 'Seattle' # Seattle, Westport
+testing = False
 
 home = os.environ.get('HOME')
 dir00 = home + '/Documents/'
 
 # read in tide data (time is UTC)
 indir = dir00 + 'ptools_data/tide/'
-if False:
+if city == 'Seattle':
     fn = 'CO-OPS__9447130__hr.csv'
     city = 'Seattle'
     zone='US/Pacific'
-else:
+elif city == 'Westport':
     fn = 'CO-OPS__9441102__hr.csv'
     city = 'Westport'
     zone='US/Pacific'
@@ -48,22 +53,22 @@ df = df.rename(columns={'Water Level': 'SSH_obs'})
 
 # initializing
 plt.close('all')
-if False:
+if season == 'summer':
     d0 = datetime(2016,6,10,7,0,0) # Summer start (PDT)
-    tag = 'summer'
-else:
+    tag = season
+elif season == 'winter':
     d0 = datetime(2016,11,30,8,0,0) # Winter start (PST)
-    tag = 'winter'
+    tag = season
 # starting on hour 8 of UTC is midnight PST
 d1 = d0 + timedelta(days=1)
 d2 = d1 + timedelta(days=1)
 # we get data from two days in order to do the blending
 
 # set the number of days to plot
-if True:
+if testing == False:
     # 29.57 days is two S-N cycles
     d_last = d0 + timedelta(days=29)
-else:
+elif testing == True:
     # testing
     d_last = d0 + timedelta(days=5)
     
@@ -73,7 +78,7 @@ Lfun.make_dir(outdir0, clean=False)
 outdir = outdir0 + 'day_movie_' + city + '_' + tag + '/'
 Lfun.make_dir(outdir, clean=True)
 
-# RC SETUP
+# RC SETUP (plotting defaults)
 def set_rc(fs, lw, mks):
     fs_big = fs
     fs_small = fs-4
@@ -104,18 +109,18 @@ y0 = -1
 y1 = 5
 ax.set_ylim(y0, y1)
 
-tz_utc, tz_local, obs = transit.make_info(city=city, zone=zone)
+tz_utc, tz_local, obs = efun.make_info(city=city, zone=zone)
 
 i_plot = 0 # initialize plot name number
 while d1 <= d_last:
     # get sun and moon info
-    dt0_local = transit.make_dt_local(d0.year, d0.month, d0.day, tz_local)
-    S0, M0 = transit.get_times(dt0_local, tz_utc, tz_local, obs)
+    dt0_local = datetime(d0.year, d0.month, d0.day, tzinfo=tz_local)
+    S0, M0 = efun.get_times(dt0_local, tz_utc, tz_local, obs)
     mth0 = M0['transit'].hour + M0['transit'].minute/60
     srh0 = S0['rise'].hour + S0['rise'].minute/60
     ssh0 = S0['set'].hour + S0['set'].minute/60
-    dt1_local = transit.make_dt_local(d1.year, d1.month, d1.day, tz_local)
-    S1, M1 = transit.get_times(dt1_local, tz_utc, tz_local, obs)
+    dt1_local = datetime(d1.year, d1.month, d1.day, tzinfo=tz_local)
+    S1, M1 = efun.get_times(dt1_local, tz_utc, tz_local, obs)
     mth1 = M1['transit'].hour + M1['transit'].minute/60
     srh1 = S1['rise'].hour + S1['rise'].minute/60
     ssh1 = S1['set'].hour + S1['set'].minute/60
@@ -147,7 +152,7 @@ while d1 <= d_last:
         # hours of sun rise and set - blended
         srh = (1-fr)*srh0 + fr*srh1
         ssh = (1-fr)*ssh0 + fr*ssh1
-        # hour of moon transit - blended
+        # hour of moon efun - blended
         mth = (1-fr)*mth0 + fr*mth1
         # plot various things
         lh_night0 = ax.fill([0, srh, srh, 0], [y0, y0, y1, y1], 'k', alpha=.3)
@@ -179,7 +184,7 @@ while d1 <= d_last:
 # RC CLEANUP
 plt.rcdefaults()
 
-# and make a movie
+# and make a movie (does not work in Spyder)
 import subprocess
 cmd = ['ffmpeg',
     '-r', '24', # framerate fps
