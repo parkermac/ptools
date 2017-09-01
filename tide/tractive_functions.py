@@ -58,8 +58,8 @@ def new_xyz(X, Y, Z, R):
     Zr = make_arr(np.array(a[2,:]).squeeze())
     return Xr, Yr, Zr
     
-def get_tractive_scale():
-    r = 384000e3 # distance from center of earth to center of moon [m]
+def get_tractive_scale(r=384000e3):
+    # r = 384000e3 # distance from center of earth to center of moon [m]
     r_e = 6371e3 # radius of the earth [m]
     M = 7.35e22 # mass of the moon [kg]
     E = 5.972e24 # mass of the earth [kg]

@@ -8,9 +8,13 @@ Created on Tue Aug 29 13:29:04 2017
 Functions that make use of eht ephem module.
 
 """
-from datetime import datetime
+from datetime import datetime, timedelta
+import pandas as pd
+import numpy as np
 import pytz
 import ephem
+
+AU2km = 149597871 # convert AU (astronomcal units) to km
 
 def make_info(city='Seattle', zone='US/Pacific'):
     # get timezone and observer info
@@ -31,44 +35,106 @@ def get_sunmoon(dt_local, tz_utc, obs):
     # create sun and moon objects referenced to an observer
     # and a local datetime
     dt_utc = dt_local.astimezone(tz_utc)
-    eph_date = ephem.Date(dt_utc)
-    obs.date = eph_date
+    obs.date = ephem.Date(dt_utc)
     sun = ephem.Sun(obs)
     moon = ephem.Moon(obs)
     return sun, moon
     
-def epht_to_local(epht, tz_local):
-    # convert an ephem time to local datetime
+def epht_to_dt(epht, tz=pytz.timezone('UTC')):
+    # convert an ephem time to a datetime, including conversion
+    # to a specific timezone if tz is provided (default = UTC)
     dt_naive = epht.datetime()
     dt_utc = pytz.utc.localize(dt_naive)
-    dt_local = dt_utc.astimezone(tz_local)
-    return dt_local
+    dt = dt_utc.astimezone(tz)
+    return dt
     
-def get_times(dt_local, tz_utc, tz_local, obs):
+def get_times(dt_local, tz_utc, tz_local, obs, print_output=False):
+    # gets rise, transit, and set times for sun and moon
+    # in local timezone
     sun, moon = get_sunmoon(dt_local, tz_utc, obs)
     S = dict()
     M = dict()
-    S['rise'] = epht_to_local(obs.next_rising(sun), tz_local)
-    S['transit'] = epht_to_local(obs.next_transit(sun), tz_local)
-    S['set'] = epht_to_local(obs.next_setting(sun), tz_local)
-    M['rise'] = epht_to_local(obs.next_rising(moon), tz_local)
-    M['transit'] = epht_to_local(obs.next_transit(moon), tz_local)
-    M['set'] = epht_to_local(obs.next_setting(moon), tz_local)
-    return S, M
+    S['rise'] = epht_to_dt(obs.next_rising(sun), tz_local)
+    S['transit'] = epht_to_dt(obs.next_transit(sun), tz_local)
+    S['set'] = epht_to_dt(obs.next_setting(sun), tz_local)
+    M['rise'] = epht_to_dt(obs.next_rising(moon), tz_local)
+    M['transit'] = epht_to_dt(obs.next_transit(moon), tz_local)
+    M['set'] = epht_to_dt(obs.next_setting(moon), tz_local)
+    if print_output:
+        fmt = '%14s %25s %s'
+        tlist = ['rise', 'transit', 'set']
+        print(fmt % ('Date', dt_local.ctime(), tz_local.zone))
+        for tt in tlist:
+            print(fmt % (('* sun '+tt), S[tt].ctime(), tz_local.zone))
+        for tt in tlist:
+            print(fmt % (('o moon '+tt), M[tt].ctime(), tz_local.zone))
+    else:
+        return S, M
+        
+def get_moon_orbit(dt0, dt1, daystep=1):
+    # returns a pandas DataFrame with a time series of
+    # distance, phase, and declination
+    # from datetime dt0 to dt1 (assumed to be UTC)
+    moon = ephem.Moon()
+    dt_list = []
+    dist_list = []
+    phase_list = []
+    dec_list = []
+    dt = dt0
+    while dt <= dt1:
+        moon.compute(ephem.Date(dt))
+        dt_list.append(dt)
+        dist_list.append(moon.earth_distance * AU2km)
+        # distance in AU = astronomical units = 149597871 km
+        phase_list.append(moon.moon_phase)
+        # phase as fraction of the surface illuminated
+        dec_list.append(moon.dec * 180 / np.pi)
+        # declination in radians
+        dt = dt + timedelta(days=daystep)
+    ddict = {'Distance (km)':dist_list,
+            'Phase':phase_list,
+            'Declination (deg)':dec_list}
+    moon_orbit_df = pd.DataFrame(index=dt_list, data=ddict)
+    return moon_orbit_df
     
-def print_times(dt_local, S, M, tz_local):
-    # print results
-    fmt = '%14s %25s %s'
-    tlist = ['rise', 'transit', 'set']
-    print(fmt % ('Date', dt_local.ctime(), tz_local.zone))
-    for tt in tlist:
-        print(fmt % (('* sun '+tt), S[tt].ctime(), tz_local.zone))
-    for tt in tlist:
-        print(fmt % (('o moon '+tt), M[tt].ctime(), tz_local.zone))
-          
+def get_full_new(dt0, dt1):
+    # get pandas DataFrames of full and new moons, including distance (km)
+    # rounded to the nearest hour
+    # from datetime dt0 to dt1 (assumed to be UTC)
+    moon = ephem.Moon()
+    fm_list = []
+    dt = dt0
+    dist_list = []
+    while dt <= dt1:
+        epht = ephem.Date(dt)
+        epht = ephem.next_full_moon(epht)
+        moon.compute(epht)
+        dt = epht_to_dt(epht)
+        if dt <= dt1:
+            fm_list.append(dt)
+            dist_list.append(moon.earth_distance * AU2km)
+    full_df = pd.DataFrame(index=fm_list,
+        data={'Distance (km)':dist_list})
+    full_df.index = full_df.index.round('h')
+    #
+    nm_list = []
+    dt = dt0
+    dist_list = []
+    while dt <= dt1:
+        epht = ephem.Date(dt)
+        epht = ephem.next_new_moon(epht)
+        moon.compute(epht)
+        dt = epht_to_dt(epht)
+        if dt <= dt1:
+            nm_list.append(dt)
+            dist_list.append(moon.earth_distance * AU2km)
+    new_df = pd.DataFrame(index=nm_list,
+        data={'Distance (km)':dist_list})
+    new_df.index = new_df.index.round('h')
+    return full_df, new_df
+    
 if __name__ == '__main__':
     # example use of the functions
     tz_utc, tz_local, obs = make_info()
     dt_local = datetime(2016, 9, 19, tzinfo=tz_local)
-    S, M = get_times(dt_local, tz_utc, tz_local, obs)
-    print_times(dt_local, S, M, tz_local)
+    get_times(dt_local, tz_utc, tz_local, obs, print_output=True)
