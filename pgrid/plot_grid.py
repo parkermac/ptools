@@ -5,10 +5,20 @@ Created on Thu Jun 16 13:07:01 2016
 @author: PM5
 """
 
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-g', '--gridname', nargs='?', default='',
+        type=str)
+args = parser.parse_args()
+
 from importlib import reload
 import gfun
 reload(gfun)
-Gr =gfun.gstart()
+if len(args.gridname) > 0:
+    Gr = gfun.gstart(gridname=args.gridname)
+else:
+    Gr = gfun.gstart()
 import pfun
 reload(pfun)
 import gfun_plotting as gfp
@@ -16,10 +26,6 @@ import gfun_plotting as gfp
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
-# import pickle
-
-# load the default choices
-# dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # select grid file
 
@@ -41,7 +47,7 @@ z = -ds.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 
 plon, plat = gfp.get_plon_plat(using_old_grid, ds)
-buff = 0.1
+buff = 0.05*(plat[-1,0]-plat[0,0])
 ax_lims = (plon[0,0]-buff, plon[0,-1]+buff, plat[0,0]-buff, plat[-1,0]+buff)
 
 zm = np.ma.masked_where(mask_rho == 0, z)
@@ -51,7 +57,7 @@ plt.close()
 
 # set number of columns for plot 
 NC = 1 # first guess
-flag_show_grids = True
+flag_show_grids = False
 if flag_show_grids:
     NC += 1
     icg = NC       

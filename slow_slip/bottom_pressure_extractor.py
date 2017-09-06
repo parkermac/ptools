@@ -27,7 +27,6 @@ if pth not in sys.path:
 import pfun
 
 n_layer = 0 # 0 = deepest
-do_vel = False
 do_press = True
 
 #model_type = 'LiveOcean'
@@ -53,8 +52,8 @@ if model_type == 'LiveOcean':
     #
     if list_type == 'low_passed':
         fn_list = []
-        dt = dt0    
-        while dt <= dt1:        
+        dt = dt0
+        while dt <= dt1:
             date_string = dt.strftime(format='%Y.%m.%d')
             Ldir['date_string'] = date_string
             f_string = 'f' + Ldir['date_string']
@@ -75,15 +74,12 @@ if model_type == 'LiveOcean':
     ds.close()
     
 elif model_type == 'Kurapov':
-    folder_tag = 'kurapov'
-    import seawater
     Ldir = Lfun.Lstart()
     in_dir = Ldir['parent'] + 'ptools_data/Kurapov/'
+    folder_tag = 'kurapov'
     
     # get grid info
     fng = in_dir + 'grd_wcofs_large_visc200.nc'
-    
-    # testing
     dsg = nc.Dataset(fng)
     if False:
         print('\nGRID INFO')
@@ -95,11 +91,10 @@ elif model_type == 'Kurapov':
     # make file list
     fn_list = []
     if Ldir['env'] == 'pm_mac':
-        frange = range(1,20)
+        frange = range(1,5+1)
     elif Ldir['env'] == 'fjord':
         # we have 1-2276, so use range(1,2276+1)
         frange = range(1,2276+1)
-    
     for ii in frange: 
         nn = ('0000' + str(ii))[-4:]
         fn_list.append(in_dir + 'Exp_29_Files/zts_ORWA_Parker_Exp29_' + nn + '.nc')
@@ -118,12 +113,7 @@ elif model_type == 'Kurapov':
     z0 = z[n_layer,:,:].squeeze()
     ds.close()
     
-    # testing
-    if False:
-        ds1 = nc.MFDataset(fn_list)
-        print('\nDATA INFO')
-        zfun.ncd(ds1)
-        ds1.close()
+NT = len(fn_list)
 
 # prepare a directory for results
 outdir0 = Ldir['parent'] + 'ptools_output/slow_slip/'
@@ -134,64 +124,51 @@ Lfun.make_dir(outdir, clean=True)
 out_name = 'bottom_pressure.nc'
 out_fn = outdir + out_name
 
-#%% create the layer NetCDF file
-
-#%% Initialize the multi-file input dataset
-ds1 = nc.MFDataset(fn_list)
-
-#%% make layer velocity
-if do_vel:
-    u0 = ds1['u'][:, n_layer, :, :].squeeze()
-    v0 = ds1['v'][:, n_layer, :, :].squeeze()
-    u = np.nan * ds1['salt'][:, n_layer, :, :].squeeze()
-    v = u.copy()
-    u[:, :, 1:-1] = (u0[:, :, 1:] + u0[:, :, :-1])/2
-    v[:, 1:-1, :] = (v0[:, 1:, :] + v0[:, :-1, :])/2
-
 # make bottom pressure
 if do_press:
     g = 9.8
-    NT = len(fn_list)
     for tt in range(NT):
+        fn = fn_list[tt]
+        ds1 = nc.Dataset(fn)
         if np.mod(tt,10)==0:
             print('tt = ' + str(tt) + '/' + str(NT) + ' ' + str(datetime.now()))
         if model_type == 'LiveOcean':
-            zeta = ds1['zeta'][tt,:,:].squeeze()
+            zeta = ds1['zeta'][0,:,:].squeeze()
             if tt == 0:
                 bp_arr = (0*zeta) * np.ones((NT,1,1))
                 DA = G['DX'] * G['DY']
                 DAm = np.ma.masked_where(zeta.mask, DA)
-            rho = ds1['rho'][tt,:,:,:].squeeze() + 1000.
+            rho = ds1['rho'][0,:,:,:].squeeze() + 1000.
             # note that rho appears to be in situ density, not potential density 
             z_w = zrfun.get_z(G['h'], zeta, S, only_w=True)
             DZ = np.diff(z_w, axis=0)
             bp_arr[tt,:,:] = (g * rho * DZ).sum(axis=0)
         elif model_type == 'Kurapov':
-            zeta = ds1['zeta'][tt,:,:].squeeze()
+            import seawater
+            zeta = ds1['zeta'][0,:,:].squeeze()
             if tt == 0:
                 bp_arr = (0*zeta) * np.ones((NT,1,1))
                 DA = G['DX'] * G['DY']
                 DA = DA[1030-1:1521, 375-1:615]
                 DAm = np.ma.masked_where(zeta.mask, DA)
-            salt = ds1['salt'][tt,:,:,:].squeeze()
-            ptemp = ds1['temp'][tt,:,:,:].squeeze() # potential temperature
+            salt = ds1['salt'][0,:,:,:].squeeze()
+            ptemp = ds1['temp'][0,:,:,:].squeeze() # potential temperature
             z_r = zrfun.get_z(G['h'][1030-1:1521, 375-1:615], 0* zeta, S, only_rho=True)
             z_w = zrfun.get_z(G['h'][1030-1:1521, 375-1:615], zeta, S, only_w=True)
             p = seawater.pres(-z_r, G['lat_rho'][0,0])
-            temp = seawater.ptmp(salt, ptemp, 0*p, pr=p)
-            if True:
-                sd = salt.data
-                td = temp.data
-                pd = p.data
-                sd[salt.mask] = np.nan
-                td[salt.mask] = np.nan
-                pd[salt.mask] = np.nan
-                rho = seawater.dens(sd, td, pd)
-                rho = np.ma.masked_where(salt.mask, rho)
-            else:
-                rho = seawater.dens(salt, temp, p)
+            temp = seawater.ptmp(salt, ptemp, 0*p, pr=p) # in situ temperature
+            # for some reason seawater.dens throws errors if we don't do this
+            sd = salt.data
+            td = temp.data
+            pd = p.data
+            sd[salt.mask] = np.nan
+            td[salt.mask] = np.nan
+            pd[salt.mask] = np.nan
+            rho = seawater.dens(sd, td, pd)
+            rho = np.ma.masked_where(salt.mask, rho)
             DZ = np.diff(z_w, axis=0)
             bp_arr[tt,:,:] = (g * rho * DZ).sum(axis=0)
+        ds1.close()
     bp_mean = np.mean(bp_arr, axis=0)
     bp_anom = bp_arr - bp_mean
 
@@ -199,12 +176,16 @@ if do_press:
 ds2 = nc.Dataset(out_fn, 'w')
 
 # lists of variables to process
-# dlist = ['xi_rho', 'eta_rho', 'xi_psi', 'eta_psi', 'ocean_time']
-# vn_list2 = [ 'lon_rho', 'lat_rho', 'lon_psi', 'lat_psi', 'mask_rho', 'h']
-dlist = ['xi_rho', 'eta_rho', 'ocean_time']
-vn_list2 = [ 'lon_rho', 'lat_rho', 'mask_rho', 'h']
+if model_type == 'LiveOcean':
+    dlist = ['xi_rho', 'eta_rho', 'xi_psi', 'eta_psi', 'ocean_time']
+    vn_list2 = [ 'lon_rho', 'lat_rho', 'lon_psi', 'lat_psi', 'mask_rho', 'h']
+elif model_type == 'Kurapov':
+    dlist = ['xi_rho', 'eta_rho', 'ocean_time']
+    vn_list2 = [ 'lon_rho', 'lat_rho', 'mask_rho', 'h']
 vn_list2t = ['zeta', 'ocean_time']
 vn_list3t = ['salt', 'temp']
+
+ds1 = nc.Dataset(fn_list[0])
 
 # Copy dimensions
 for dname, the_dim in ds1.dimensions.items():
@@ -212,11 +193,12 @@ for dname, the_dim in ds1.dimensions.items():
         ds2.createDimension(dname, len(the_dim) if not the_dim.isunlimited() else None)
 
 # Copy variables
+if model_type == 'Kurapov':
+    dsg = nc.Dataset(fng)
 for vn in vn_list2:
     if model_type == 'LiveOcean':
         varin = ds1[vn]
     elif model_type == 'Kurapov':
-        dsg = nc.Dataset(fng)
         varin = dsg[vn]
     vv = ds2.createVariable(vn, varin.dtype, varin.dimensions)
     vv.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
@@ -224,6 +206,8 @@ for vn in vn_list2:
         vv[:] = ds1[vn][:]
     elif model_type == 'Kurapov':
         vv[:] = dsg[vn][1030-1:1521, 375-1:615]
+if model_type == 'Kurapov':
+    dsg.close()
 #
 for vn in vn_list2t:
     varin = ds1[vn]
@@ -236,7 +220,6 @@ for vn in vn_list2t:
         # ocean_time has no time
         pass
     vv[:] = ds1[vn][:]
-
 #
 for vn in vn_list3t:
     do_var = True
@@ -257,7 +240,11 @@ for vn in vn_list3t:
             # salt has no units
             pass
         vv.time = varin.time
-        vv[:] = ds1[vn][:, n_layer, :, :].squeeze()
+        for tt in range(NT):
+            fn = fn_list[tt]
+            ds = nc.Dataset(fn)
+            vv[tt,:,:] = ds[vn][0, n_layer, :, :].squeeze()
+            ds.close()
 
 # Add derived variables
 vv = ds2.createVariable('z', float, ('eta_rho', 'xi_rho'))
@@ -265,19 +252,6 @@ vv.long_name = 'z position closest to free surface for 3D variables '
 vv.units = 'meter'
 vv[:] = z0
 #
-if do_vel:
-    vv = ds2.createVariable('u', float, ('ocean_time', 'eta_rho', 'xi_rho'))
-    vv.long_name = 'eastward near-surface velocity'
-    vv.units = 'meter second-1'
-    vv.time = 'ocean_time'
-    vv[:] = u
-    #
-    vv = ds2.createVariable('v', float, ('ocean_time', 'eta_rho', 'xi_rho'))
-    vv.long_name = 'northward near-surface velocity'
-    vv.units = 'meter second-1'
-    vv.time = 'ocean_time'
-    vv[:] = v
-
 if do_press:
     vv = ds2.createVariable('bp', float, ('ocean_time', 'eta_rho', 'xi_rho'))
     vv.long_name = 'bottom pressure'

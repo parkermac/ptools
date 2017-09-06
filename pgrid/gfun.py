@@ -103,7 +103,7 @@ def default_choices(Gr):
         
     return dch
 
-def gstart():
+def gstart(gridname=gridname):
     gdir = pgdir + gridname + '/'
     Gr ={'gridname': gridname, 'dir0': dir0, 'pgdir': pgdir, 'gdir': gdir,
          'ri_dir': ri_dir}
