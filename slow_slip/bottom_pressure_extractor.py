@@ -98,7 +98,7 @@ elif model_type == 'Kurapov':
         frange = range(1,20)
     elif Ldir['env'] == 'fjord':
         # we have 1-2276, so use range(1,2276+1)
-        frange = range(1,20)#range((1,2276+1))
+        frange = range(1,2276+1)
     
     for ii in frange: 
         nn = ('0000' + str(ii))[-4:]
