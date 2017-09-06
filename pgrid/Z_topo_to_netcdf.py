@@ -12,7 +12,8 @@ import netCDF4 as nc
 import matplotlib.pyplot as plt
 import numpy as np
 
-dir0 = '/Users/PM5/Documents/'
+import os
+dir0 = os.environ.get('HOME') + '/Documents/'
 
 import os
 import sys
@@ -32,12 +33,13 @@ reload(gfu)
 
 tdir0 = dir0 + 'tools_data/geo_data/topo/'
 
-tdict = {'srtm15': 'topo15.grd',
-         'cascadia': 'cascadia_gridded.mat',
-         'psdem': 'PS_183m.mat',
-         'ttp_patch': 'TTP_Regional_27m_patch.mat'}
+# tdict = {'srtm15': 'topo15.grd',
+#          'cascadia': 'cascadia_gridded.mat',
+#          'psdem': 'PS_183m.mat',
+#          'ttp_patch': 'TTP_Regional_27m_patch.mat'}
 
-#tdict = {'psdem': 'PS_183m.mat'}
+tdict = {'psdem': 'PS_91m.mat'}
+#tdict = {'psdem': 'PS_27m.mat'}
 
 plt.close('all')
 

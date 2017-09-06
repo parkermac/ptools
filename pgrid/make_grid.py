@@ -57,6 +57,14 @@ elif Gr['gridname'] == 'sal0':
              'psdem/PS_183m.nc',
              'ttp_patch/TTP_Regional_27m_patch.nc']
     dch['nudging_edges'] = ['north', 'west']
+    
+elif Gr['gridname'] == 'hc0':
+    # mid Hood Canal nest
+    aa = [-123, -122.55, 47.5, 47.9]
+    res = 50 # target resolution (m)
+    plon_vec, plat_vec = gfu.simple_grid(aa, res)
+    dch['t_list'] = ['psdem/PS_27m.nc']
+    dch['nudging_edges'] = ['north', 'west']
              
 elif Gr['gridname'] == 'cas1': # An extended version of cascadia1
     maxres = 5000
@@ -64,7 +72,7 @@ elif Gr['gridname'] == 'cas1': # An extended version of cascadia1
     minres = 1500
     lon_list = [-127.4, -126, -124, -122]
     x_res_list = [maxres, medres, minres, minres]
-    lat_list = [42, 47, 49, 50]
+    lat_list = [42, 47.9, 49, 50]
     y_res_list = [medres, minres, minres, medres]
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)

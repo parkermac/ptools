@@ -9,10 +9,11 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'sal0'
+gridname = 'hc0'
 #gridname = 'cas1'
 
-dir0 = '/Users/PM5/Documents/'
+import os
+dir0 = os.environ.get('HOME') + '/Documents/'
 pgdir = dir0 + 'ptools_output/pgrid/'
 
 if 'aestus' in gridname:

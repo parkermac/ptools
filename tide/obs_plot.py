@@ -112,24 +112,16 @@ pred_df['SunDec'] = sun_moon_fac *pred_df['K1'] + pred_df['P1']
 pred_df['MoonDec'] = (1-sun_moon_fac)*pred_df['K1'] + pred_df['O1']
 pred_df['Partial Sum'] = pred_df['SNE'] + pred_df['SunDec'] + pred_df['MoonDec']
 
-# add some orbital information
+# get some orbital information
 moon_orbit_df = efun.get_moon_orbit(dt0, dt1)
 moon_orbit_df['Declination/20'] = moon_orbit_df['Declination (deg)']/20
-# and full-new moon info
+
+# get full-new moon info
 fm_df, nm_df = efun.get_full_new(dt0, dt1)
+# add normalizedtractive force
+fm_df = tfun.add_tf(fm_df)
+nm_df = tfun.add_tf(nm_df)
 
-def add_tf(df):
-    # add the (normalized) tractive force
-    r = 1000 * df['Distance (km)'].values # distance in m
-    tf = tfun.get_tractive_scale(r)
-    tfn = tf/tf.mean() # normalize tractive force by its mean
-    df['Tractive Force'] = tfn
-    return df
-    
-fm_df = add_tf(fm_df)
-nm_df = add_tf(nm_df)
-
-    
 # make a low passed signal
 eta = np.array(obs_df['Tide Obs'].tolist())
 etalp = zfun.filt_godin(eta)

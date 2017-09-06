@@ -66,6 +66,15 @@ def get_tractive_scale(r=384000e3):
     g = 9.8 # acceleration of gravity [m s-2]
     a = g*(M/E)*(r_e/r)**3 # scale of the tractive force [m s-2]
     return a
+    
+def add_tf(df):
+    # add the (normalized) tractive force
+    # assumes the input is a DataFrame with column 'Distance (km)'
+    r = 1000 * df['Distance (km)'].values # distance in m
+    tf = get_tractive_scale(r)
+    tfn = tf/tf.mean() # normalize tractive force by its mean
+    df['Tractive Force'] = tfn
+    return df
 
 def get_TF(a, l, d, mlon_rad):
     # returns vectors of the components of the tractive force

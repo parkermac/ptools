@@ -78,7 +78,6 @@ for fn in fn_list:
     bp_arr[tt,:,:] = (g * rho * DZ).sum(axis=0) 
     tt += 1
 bp_mean = np.mean(bp_arr, axis=0)
-
 bp_anom = bp_arr - bp_mean
 
 # save raw results
