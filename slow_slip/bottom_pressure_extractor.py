@@ -94,8 +94,8 @@ elif model_type == 'Kurapov':
         frange = range(1,5+1)
     elif Ldir['env'] == 'fjord':
         # we have 1-2276, so use range(1,2276+1)
-        #frange = range(1,2276+1)
-        frange = range(1,20+1)
+        frange = range(1,2276+1)
+        #frange = range(1,20+1)
     for ii in frange: 
         nn = ('0000' + str(ii))[-4:]
         fn_list.append(in_dir + 'Exp_29_Files/zts_ORWA_Parker_Exp29_' + nn + '.nc')
