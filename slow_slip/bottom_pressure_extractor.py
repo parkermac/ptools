@@ -94,7 +94,8 @@ elif model_type == 'Kurapov':
         frange = range(1,5+1)
     elif Ldir['env'] == 'fjord':
         # we have 1-2276, so use range(1,2276+1)
-        frange = range(1,2276+1)
+        #frange = range(1,2276+1)
+        frange = range(1,20+1)
     for ii in frange: 
         nn = ('0000' + str(ii))[-4:]
         fn_list.append(in_dir + 'Exp_29_Files/zts_ORWA_Parker_Exp29_' + nn + '.nc')
@@ -132,6 +133,7 @@ if do_press:
         ds1 = nc.Dataset(fn)
         if np.mod(tt,10)==0:
             print('tt = ' + str(tt) + '/' + str(NT) + ' ' + str(datetime.now()))
+            sys.stdout.flush()
         if model_type == 'LiveOcean':
             zeta = ds1['zeta'][0,:,:].squeeze()
             if tt == 0:
