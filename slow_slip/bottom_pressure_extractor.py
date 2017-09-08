@@ -29,8 +29,8 @@ import pfun
 n_layer = 0 # 0 = deepest
 do_press = True
 
-#model_type = 'LiveOcean'
-model_type = 'Kurapov'
+model_type = 'LiveOcean'
+#model_type = 'Kurapov'
 
 if model_type == 'LiveOcean':
     gridname = 'cascadia1'
