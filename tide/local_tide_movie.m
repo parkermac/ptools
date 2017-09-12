@@ -14,12 +14,13 @@ end
 phome = '/Users/pm7/Documents/';
 indir = 'LiveOcean_roms/output/cascadia1_base_lobio1/f2017.08.05/';
 infile = [phome,indir,'ocean_his_0002.nc'];
-lon = nc_varget(infile,'lon_rho');
-lat = nc_varget(infile,'lat_rho');
-
+lon = nc_varget(infile,'lon_psi');
+lat = nc_varget(infile,'lat_psi');
+%%
 figure;
 set(gcf,'position',[100 100 1000.5 600]);
 
+[NR, NC] = size(lon);
 ttt = 0;
 for tt = 2:ntt
     disp(['working on tt = ',num2str(tt)])
@@ -27,20 +28,33 @@ for tt = 2:ntt
     infile = [phome,indir,'ocean_his_',tts(end-3:end),'.nc'];
     % plot ssh
     eta = squeeze(nc_varget(infile,'zeta'));
-    surfl(lon,lat,eta);
+    etaa = NaN * ones(4, NR, NC);
+    eata(1,:,:) = eta(1:end-1, 1:end-1);
+    etaa(2,:,:) = eta(2:end, 1:end-1);
+    etaa(3,:,:) = eta(2:end, 2:end);
+    etaa(4,:,:) = eta(1:end-1, 2:end);
+    etap = squeeze(nanmean(etaa, 1));
+    
+    h = surfl(lon,lat,etap);
     aa = axis;
-    axis([aa(1:4) -3 3])
-    %shading flat
+    %axis([aa(1:4) -3 3])
+    axis([-127.5 -122 43 50 -3 3])
+    shading flat
     colormap copper
     lighting phong
-    set(gca,'DataAspectRatio',[1.46628 1 15]);
+    %set(gca,'DataAspectRatio',[1.46628 1 15]);
+    set(gca,'DataAspectRatio',[1.46628 1 5]);
     %set(gca,'view',[-209 34]);
     set(gca,'view',[55 34]);
+    set(gca,'fontsize',14);
+    %set(gca,'view',[55 40]);
+    
+    %light('Position',[-125, -65, 10000],'Style','local')
 
     % add labels
-    title('Sea Surface Height (m)','fontweight','bold')
-    xlabel('Longitude (deg)')
-    ylabel('Latitude (deg)')
+    title('Sea Surface Height (m)','fontweight','bold','fontsize',20)
+    %xlabel('Longitude (deg)')
+    %ylabel('Latitude (deg)')
     
     if make_movie % make a folder of jpegs for a movie
         if ttt==0

@@ -32,7 +32,7 @@ def read_tide(in_fn):
     df = df.rename(columns={'Water Level': 'Tide Obs'})
     # remove the mean water level
     eta0 = df['Tide Obs'].mean()
-    df['Tide Obs'] = df['Tide Obs'] - eta0
+    #df['Tide Obs'] = df['Tide Obs'] - eta0
     # Assumes time is UTC
     df.index.name = 'Date UTC'
     df = df.tz_localize('UTC')
@@ -134,35 +134,73 @@ obs_df['Obs-Pred Low Passed'] = oplp # appears identical to etalp
 # PLOTTING
 plt.close('all')
 lw = .5
-fs = (14,8)
+figsize = (18,10)
+figsize2 = (18,8)
+
+# RC SETUP (plotting defaults)
+def set_rc(fs, lw, mks):
+    fs_big = fs
+    fs_small = fs-4
+    lw_big = lw
+    lw_small = lw+1
+    plt.rc('xtick', labelsize=fs_small)
+    plt.rc('ytick', labelsize=fs_small)
+    plt.rc('xtick.major', size=10, pad=5, width=lw_small)
+    plt.rc('ytick.major', size=10, pad=5, width=lw_small)
+    plt.rc('axes', lw=lw_small)
+    plt.rc('lines', lw=lw_big, markersize=mks)
+    plt.rc('font', size=fs_big)
+    plt.rc('grid', color='g', ls='-', lw=lw_small, alpha=.3)
+fs = 16
+lw = .5
+mks = 25
+set_rc(fs, lw, mks)
 
 if True:
-    fig = plt.figure(figsize=fs)
+    fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(211)
-    obs_df.plot(y='Tide Obs', ax=ax, lw=lw)
-    pred_df.plot(y='Tide Pred',ax=ax, lw=lw)
+    obs_df.plot(y='Tide Obs', title=('Observed Tide Height (m) ' + city),
+            legend=False, style='-b', ax=ax, lw=lw, grid=True)
+    obs_df.plot(y='Obs Low Passed', legend=False,
+            style='-k', ax=ax, grid=True, lw=3)
+    ax.set_xlabel('')
     ax = fig.add_subplot(212)
-    obs_df.plot(y='Obs Low Passed', ax=ax, grid=True)
+    obs_df.plot(y='Obs Low Passed', label='Tidally Averaged Sea Level (m)',
+            style='-k', ax=ax, grid=True, lw=3)
 
 if True:
-    fig = plt.figure(figsize=fs)
-    ax = fig.add_subplot(111)
-    obs_df.plot(y='Tide Obs', ax=ax, lw=lw)
-    pred_df.plot(y='SNE', ax=ax, lw=lw)
-    pred_df.plot(y='SunDec', ax=ax, lw=lw)
-    pred_df.plot(y='MoonDec', ax=ax, lw=lw)
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot(211)
+    obs_df.plot(y='Tide Obs', title=('Observed Tide Height (m) ' + city),
+            legend=False, style='-b', ax=ax, lw=lw, grid=True)
+    ax.set_xlabel('')
+    ax = fig.add_subplot(212)
+    pred_df.plot(y='SNE', label='Semi-Diurnal: Spring-Neap + Ellipticity',
+            style='-', color='orange', ax=ax, lw=lw)
+    pred_df.plot(y='SunDec', label='Diurnal: Sun Declination',
+            style='-g', ax=ax, lw=lw)
+    pred_df.plot(y='MoonDec', label='Diurnal: Moon Declination',
+            style='-r', ax=ax, lw=lw, grid=True)
     
 if True:
-    fig = plt.figure(figsize=fs)
+    fig = plt.figure(figsize=figsize2)
     ax = fig.add_subplot(111)
-    pred_df.plot(y='MoonDec', ax=ax, lw=lw)
-    moon_orbit_df.plot(y='Declination/20', ax=ax)
+    pred_df.plot(y='MoonDec', title='Diurnal Tide Height (m) Due to Lunar Declination',
+            style='-r', ax=ax, lw=lw, grid=True, legend = False)
+    moon_orbit_df.plot(y='Declination/20', label='Lunar Declination (deg/20)',
+             style='-c', lw=3, ax=ax, grid=True, ylim=(-1.5, 1.5))
 
 if True:
-    fig = plt.figure(figsize=fs)
+    fig = plt.figure(figsize=figsize2)
     ax = fig.add_subplot(111)
-    pred_df.plot(y='SNE', ax=ax, lw=lw)
-    fm_df.plot(y='Tractive Force', style='or', ax=ax)
-    nm_df.plot(y='Tractive Force', style='ok', ax=ax)
+    nm_df.plot(y='Tractive Force', label='Lunar Tractive Force at New Moon',
+            style='-o', color='gray', ax=ax, grid=True, lw=3)
+    fm_df.plot(y='Tractive Force', label='Lunar Tractive Force at Full Moon',
+            style='-o', color='orange', ax=ax, grid=True, lw=3)
+    pred_df.plot(y='SNE', title='Semi-Diurnal Tide Height (m) Due to Spring-Neap + Ellipticity',
+            style='-', color='orange', ax=ax, lw=lw, legend=False, alpha=.5, grid=True, ylim=(-2.0,2.5))
 
 plt.show()
+
+# RC CLEANUP
+plt.rcdefaults()

@@ -36,10 +36,10 @@ plt.close('all')
 
 moon_orbit_df.loc[:,['Declination (deg)', 'Tractive Force']].plot(subplots=True, grid=True)
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-fm_df.plot(y='Distance (km)', label='Full Moon Distance (km)', style='-or', ax=ax)
-nm_df.plot(y='Distance (km)', label='New Moon Distance (km)', style='-ob', ax=ax)
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# fm_df.plot(y='Distance (km)', label='Full Moon Distance (km)', style='-or', ax=ax)
+# nm_df.plot(y='Distance (km)', label='New Moon Distance (km)', style='-ob', ax=ax)
 
 plt.show()
 

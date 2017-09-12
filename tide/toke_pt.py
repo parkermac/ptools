@@ -60,6 +60,7 @@ met_fn = indir + fnm
 met_df = read_met(met_fn)
 
 
+
 # make a low passed signal
 eta = np.array(obs_df['Tide Obs'].tolist())
 etalp = zfun.filt_godin(eta)
@@ -68,6 +69,32 @@ obs_df['Obs Low Passed'] = etalp
 
 # merge the two
 df = pd.concat([obs_df, met_df], axis=1)
+
+# create wind stress time series
+# WINDSPEED is in m/s and DIR is the compass direction
+# that the wind is coming FROM [MAYBE]
+#
+# First: create 10m standard WSPD
+P = 0.11
+z_stnd = 10
+z_meas = 5
+df['WSPD_10'] = df['WINDSPEED'] * (z_stnd/z_meas)**P
+wspd = df.WSPD_10.values
+wdir = df.DIR.values
+theta = 1.5*np.pi - np.pi*wdir/180.
+Cd = 0.0013
+rho_air = 1.22
+tau = Cd * rho_air * wspd**2
+taux = tau * np.cos(theta)
+tauy = tau * np.sin(theta)
+df['taux'] = taux
+df['tauy'] = tauy
+#
+df['tauyF'] = df['tauy'].fillna(method='ffill')
+tauy = np.array(df['tauyF'].tolist())
+tauy8 = zfun.filt_AB8d(tauy)
+df['NS Windstress (8-day filter)'] = tauy8
+
 
 # make corrected ssh
 # this is supposed to be sea level with the effect of atm pressure REMOVED
@@ -93,7 +120,8 @@ if True:
     df.plot(y='Obs Low Passed Adj', ax=ax, grid=True)
     
     ax = fig.add_subplot(313)
-    df.plot(y='BARO', ax=ax, grid=True)
+    #df.plot(y='BARO', ax=ax, grid=True)
+    df.plot(y='NS Windstress (8-day filter)', ax=ax, grid=True)
     
 
 plt.show()

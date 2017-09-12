@@ -70,7 +70,7 @@ fig = plt.figure(figsize=(8*NC,8))
 #ax_grids = fig.add_subplot(1,NC,2)
 
 ax1 = fig.add_subplot(1,NC,1)
-cmap1 = plt.get_cmap(name='viridis') # terrain, viridis
+cmap1 = plt.get_cmap(name='terrain') # terrain, viridis
 cs = ax1.pcolormesh(plon, plat, zm,
                    vmin=-200, vmax=10, cmap = cmap1)
 fig.colorbar(cs, ax=ax1, extend='both')
