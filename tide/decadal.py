@@ -21,9 +21,12 @@ if alp not in sys.path:
     sys.path.append(alp)
 import zfun
 
+# conversion factors
+m2f = 3.28
+f2m = 1/3.28
+
 indir = os.environ.get('HOME') + '/Documents/ptools_data/tide/'
 city = 'Seattle'
-
 
 def make_tide(year, city):
     # MAKE A SYNTHETIC TIDE
@@ -66,12 +69,13 @@ def make_tide(year, city):
         vu = (np.pi/180) * vu_ser[cons]
         G = (np.pi/180) * cons_df.loc[cons, 'Phase']
         this_eta = f * H * np.cos(om * pred_df['tsec'] + vu - G)
-        pred_df[cons] = this_eta
+        pred_df[cons] = this_eta * m2f
     # create full 8-constituent prediction
-    pred_df['Tide Pred'] = 0
+    pred_df['z'] = 0
     for cons in cons_list:
-        pred_df['Tide Pred'] += pred_df[cons]
-    
+        pred_df['z'] += pred_df[cons]
+    # add the mean se level at Seattle (feet)
+    pred_df['z'] += 6.947
     d = np.array(index.dayofyear.tolist())
     h = np.array(index.hour.tolist())
     yd = d + h/24
@@ -86,9 +90,6 @@ df_2025.index=df_2025['yd']
 
 # PLOTTING
 plt.close('all')
-lw = 1
-figsize = (18,10)
-figsize2 = (18,8)
 
 # RC SETUP (plotting defaults)
 def set_rc(fs, lw, mks):
@@ -106,15 +107,22 @@ def set_rc(fs, lw, mks):
     plt.rc('grid', color='g', ls='-', lw=lw_small, alpha=.3)
 fs = 16
 lw = 3
+lwt = 2
 mks = 25
 set_rc(fs, lw, mks)
 
-fig = plt.figure(figsize=figsize2)
+fig = plt.figure(figsize=(18,8))
 ax = fig.add_subplot(111)
-df_2025.plot(y='Tide Pred',
-        legend=False, style='-r', ax=ax, lw=lw, grid=True, ylim=(-3.2,2))
-df_2017.plot(y='Tide Pred', title=('Predicted 2017 & 2025 Tide Height (m) ' + city),
-        legend=False, style='-b', ax=ax, lw=lw, grid=True, ylim=(-3.2,2), alpha=.5)
+df_2025.plot(y='z',
+        legend=False, style='-r', ax=ax, lw=lwt, grid=True)
+df_2017.plot(y='z', title=('Predicted Tide Height (feet) ' + city),
+        legend=False, style='-b', ax=ax, lw=lwt, grid=True, alpha=.5)
+        
+ax.text(.23,.11,'2017', color='b',
+    transform=ax.transAxes, fontweight='bold', fontsize=26)
+ax.text(.27,.03,'2025', color='r',
+    transform=ax.transAxes, fontweight='bold', fontsize=26)
+
 ax.set_xlabel('Day of Year')    
 plt.show()
 

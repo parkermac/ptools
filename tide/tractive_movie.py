@@ -9,7 +9,7 @@ i.e. longitude increases counter-clockwise.
 The view angles azimuth and elevation are defined exactly
 like lon and lat.
 
-x,y,z are a right handed coordinate system with:
+x,y,z are a right-handed coordinate system with:
 x aligned with lon = 0
 y aligned with lon = pi/2 (90 deg)
 z aligned with the north pole
@@ -43,7 +43,7 @@ mlon_deg_vec = np.linspace(180, -180, nmh)
 mlon_rad_vec = np.deg2rad(mlon_deg_vec)
 #
 r = 10 # radius of the Earth Sphere
-mdec_deg = 15 # set the lunar declination
+mdec_deg = 0#23.5 # set the lunar declination
 mdec_rad = np.deg2rad(mdec_deg)
 #
 
@@ -53,7 +53,7 @@ if do_movie:
     # prepare a directory for results
     outdir0 = dir00 + 'ptools_output/tide/'
     Lfun.make_dir(outdir0, clean=False)
-    outdir = outdir0 + 'tractive_movie/'
+    outdir = outdir0 + 'tractive_movie_' + str(mdec_deg) +'/'
     Lfun.make_dir(outdir, clean=True)
 
 # PLOTTING
@@ -61,7 +61,7 @@ if do_movie:
 plt.close('all')
 
 if do_movie == False:
-    mhour_vec = [mhour_vec[12]]
+    mhour_vec = [mhour_vec[int(nmh/4)]]
     
 i_plot = 0    
 for mh in mhour_vec:
@@ -77,22 +77,28 @@ for mh in mhour_vec:
     ax = fig.add_subplot(111, projection='3d')
     
     tf.draw_sphere(ax, r)
+    tf.draw_moon(ax, r, mlon_rad, mdec_rad)
     tf.draw_vector_ring(ax, mdec_deg, mlon_rad, r, direction='toward_moon')
     tf.draw_vector_ring(ax, mdec_deg, mlon_rad, r, direction='away_from_moon')
     tf.draw_tractive_pretzels(ax, mdec_rad, mlon_rad_vec, mlon_rad, r)
-
-    tf.draw_moon(ax, r, mlon_rad, mdec_rad)
     #tf.add_axes(ax, r)
     
     # add_axes(ax)
     ax.set_axis_off()
-    scl = .92
+    scl = 1#.92
     ax.set_xlim(-scl*r, scl*r)
     ax.set_ylim(-scl*r, scl*r)
     ax.set_zlim(-scl*r, scl*r)
     ax.set_aspect('equal')
-    ax.azim = 20
-    ax.elev = 14
+    if do_movie:
+        ax.azim = 20
+        ax.elev = 14
+    else:
+        ax.azim = 0
+        ax.elev = 0
+    
+    ax.set_title(('Lunar Declination = %s Degrees' % str(mdec_deg)),
+        fontweight='bold', fontsize=16)
 
     if do_movie:
         plt.draw()

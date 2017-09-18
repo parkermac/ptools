@@ -22,6 +22,10 @@ if alp not in sys.path:
     sys.path.append(alp)
 import zfun
 
+# conversion factors
+m2f = 3.28
+f2m = 1/3.28
+
 indir = os.environ.get('HOME') + '/Documents/ptools_data/tide/'
 
 def read_tide(in_fn):
@@ -29,23 +33,30 @@ def read_tide(in_fn):
     for k in df.keys():
         df = df.rename(columns={k: k.strip()})
     df = df.drop(['Sigma', 'I', 'L'], axis=1)
-    df = df.rename(columns={'Water Level': 'Tide Obs'})
-    # remove the mean water level
-    eta0 = df['Tide Obs'].mean()
-    #df['Tide Obs'] = df['Tide Obs'] - eta0
+    df = df.rename(columns={'Water Level': 'z'})
+    # find the mean water level
+    z0 = df['z'].mean()
     # Assumes time is UTC
-    df.index.name = 'Date UTC'
+    df.index.name = 'Date'
     df = df.tz_localize('UTC')
-    return df, eta0
+    return df, z0
 
 # READ IN OBSERVED TIDE DATA
 fn = 'CO-OPS__9447130__hr.csv' # Seattle 2016 observed data
 city = 'Seattle'
 obs_fn = indir + fn
-obs_df, eta0 = read_tide(obs_fn)
+obs_df, z0 = read_tide(obs_fn)
+# convert to feet
+obs_df['z'] = obs_df['z'] * m2f
+z0 = z0 * m2f
+
 # and set related time limits
 year = 2016
-dt0 = datetime(year,1,1,tzinfo=pytz.timezone('UTC'))
+# limits for calculations of ephemera
+dt00 = datetime(year,1,1,tzinfo=pytz.timezone('UTC'))
+dt11 = datetime(year,12,31,tzinfo=pytz.timezone('UTC'))
+# limits for plotting
+dt0 = datetime(year,10,1,tzinfo=pytz.timezone('UTC'))
 dt1 = datetime(year,12,31,tzinfo=pytz.timezone('UTC'))
 
 # MAKE A SYNTHETIC TIDE
@@ -73,7 +84,7 @@ cons_df = pd.read_csv(cons_fn, header=0, sep='\t', index_col='Name')
 #
 # Create the synthetic tide (inherits tzinfo from obs_df)
 pred_df = pd.DataFrame(index = obs_df.index, columns=cons_list)
-pred_df['tsec'] = (pred_df.index - dt0).total_seconds()
+pred_df['tsec'] = (pred_df.index - dt00).total_seconds()
 # separate constituents
 for cons in cons_list:
     f = f_ser[cons]
@@ -82,11 +93,11 @@ for cons in cons_list:
     vu = (np.pi/180) * vu_ser[cons]
     G = (np.pi/180) * cons_df.loc[cons, 'Phase']
     this_eta = f * H * np.cos(om * pred_df['tsec'] + vu - G)
-    pred_df[cons] = this_eta
+    pred_df[cons] = this_eta * m2f
 # create full 8-constituent prediction
-pred_df['Tide Pred'] = 0
+pred_df['z'] = 0
 for cons in cons_list:
-    pred_df['Tide Pred'] += pred_df[cons]
+    pred_df['z'] += pred_df[cons]
 # create other combinations
 """
 # the main diurnals:
@@ -110,32 +121,21 @@ sun_moon_fac = ( cons_df.loc['P1','Amplitude'] /
     (cons_df.loc['P1','Amplitude'] + cons_df.loc['O1','Amplitude']) )
 pred_df['SunDec'] = sun_moon_fac *pred_df['K1'] + pred_df['P1']
 pred_df['MoonDec'] = (1-sun_moon_fac)*pred_df['K1'] + pred_df['O1']
-pred_df['Partial Sum'] = pred_df['SNE'] + pred_df['SunDec'] + pred_df['MoonDec']
+pred_df['z3'] = pred_df['SNE'] + pred_df['SunDec'] + pred_df['MoonDec']
 
 # get some orbital information
-moon_orbit_df = efun.get_moon_orbit(dt0, dt1)
-moon_orbit_df['Declination/20'] = moon_orbit_df['Declination (deg)']/20
+moon_orbit_df = efun.get_moon_orbit(dt00, dt11)
 
 # get full-new moon info
-fm_df, nm_df = efun.get_full_new(dt0, dt1)
-# add normalizedtractive force
+fm_df, nm_df = efun.get_full_new(dt00, dt11)
+
+# add normalized tractive force
 fm_df = tfun.add_tf(fm_df)
 nm_df = tfun.add_tf(nm_df)
 
-# make a low passed signal
-eta = np.array(obs_df['Tide Obs'].tolist())
-etalp = zfun.filt_godin(eta)
-obs_df['Obs Low Passed'] = etalp
-obs_df['Obs-Pred'] = obs_df['Tide Obs'] - pred_df['Tide Pred']
-op = np.array(obs_df['Obs-Pred'].tolist())
-oplp = zfun.filt_godin(op)
-obs_df['Obs-Pred Low Passed'] = oplp # appears identical to etalp
-
 # PLOTTING
 plt.close('all')
-lw = .5
-figsize = (18,10)
-figsize2 = (18,8)
+figsize = (14,12)
 
 # RC SETUP (plotting defaults)
 def set_rc(fs, lw, mks):
@@ -152,53 +152,73 @@ def set_rc(fs, lw, mks):
     plt.rc('font', size=fs_big)
     plt.rc('grid', color='g', ls='-', lw=lw_small, alpha=.3)
 fs = 16
-lw = .5
+lw = 2
 mks = 25
 set_rc(fs, lw, mks)
 
-if True:
-    fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(211)
-    obs_df.plot(y='Tide Obs', title=('Observed Tide Height (m) ' + city),
-            legend=False, style='-b', ax=ax, lw=lw, grid=True)
-    obs_df.plot(y='Obs Low Passed', legend=False,
-            style='-k', ax=ax, grid=True, lw=3)
-    ax.set_xlabel('')
-    ax = fig.add_subplot(212)
-    obs_df.plot(y='Obs Low Passed', label='Tidally Averaged Sea Level (m)',
-            style='-k', ax=ax, grid=True, lw=3)
 
 if True:
     fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(211)
-    obs_df.plot(y='Tide Obs', title=('Observed Tide Height (m) ' + city),
-            legend=False, style='-b', ax=ax, lw=lw, grid=True)
-    ax.set_xlabel('')
+    
+    ax1 = fig.add_subplot(211)
+    obs_df.plot(y='z', title=('Observed Tide Height (feet) ' + city),
+            legend=False, style='-b', ax=ax1, lw=lw, grid=True, xlim=(dt0,dt1))
+    ax1.set_xticklabels('')
+    ax1.set_xlabel('')
+    
     ax = fig.add_subplot(212)
     pred_df.plot(y='SNE', label='Semi-Diurnal: Spring-Neap + Ellipticity',
-            style='-', color='orange', ax=ax, lw=lw)
+            style='-', color='orange', ax=ax, lw=lw, xlim=(dt0,dt1))
     pred_df.plot(y='SunDec', label='Diurnal: Sun Declination',
-            style='-g', ax=ax, lw=lw)
+            style='-g', ax=ax, lw=lw, xlim=(dt0,dt1))
     pred_df.plot(y='MoonDec', label='Diurnal: Moon Declination',
-            style='-r', ax=ax, lw=lw, grid=True)
+            style='-r', ax=ax, lw=lw, grid=True, xlim=(dt0,dt1),
+            title='...Is Mostly the Sum of Three Separate Patterns')
+    ax.set_xlabel('Date')
     
 if True:
-    fig = plt.figure(figsize=figsize2)
-    ax = fig.add_subplot(111)
-    pred_df.plot(y='MoonDec', title='Diurnal Tide Height (m) Due to Lunar Declination',
-            style='-r', ax=ax, lw=lw, grid=True, legend = False)
-    moon_orbit_df.plot(y='Declination/20', label='Lunar Declination (deg/20)',
-             style='-c', lw=3, ax=ax, grid=True, ylim=(-1.5, 1.5))
-
+    fig = plt.figure(figsize=figsize)
+    
+    ax = fig.add_subplot(211)
+    
+    moon_orbit_df.plot(y='Declination (deg)', title='Lunar Declination (degrees)',
+             style='-c', lw=3, ax=ax, grid=True, legend=False, xlim=(dt0,dt1))    
+    
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    
+    ax = fig.add_subplot(212)
+    
+    pred_df.plot(y='MoonDec', title='Diurnal Tide Height (feet) Due to Lunar Declination',
+            style='-r', ax=ax, lw=lw, grid=True, legend = False, xlim=(dt0,dt1))
+             
+    ax.set_xlabel('Date')
+             
 if True:
-    fig = plt.figure(figsize=figsize2)
-    ax = fig.add_subplot(111)
-    nm_df.plot(y='Tractive Force', label='Lunar Tractive Force at New Moon',
-            style='-o', color='gray', ax=ax, grid=True, lw=3)
-    fm_df.plot(y='Tractive Force', label='Lunar Tractive Force at Full Moon',
-            style='-o', color='orange', ax=ax, grid=True, lw=3)
-    pred_df.plot(y='SNE', title='Semi-Diurnal Tide Height (m) Due to Spring-Neap + Ellipticity',
-            style='-', color='orange', ax=ax, lw=lw, legend=False, alpha=.5, grid=True, ylim=(-2.0,2.5))
+    fig = plt.figure(figsize=figsize)
+    
+    ax = fig.add_subplot(211)
+    
+    nm_df.plot(y='Tractive Force', legend=False,
+            style='-o', color='gray', ax=ax, grid=True, lw=3, xlim=(dt0,dt1))
+    fm_df.plot(y='Tractive Force', legend=False,
+            style='-o', color='m', ax=ax, grid=True, lw=3, xlim=(dt0,dt1))
+    ax.set_ylim(0,1.3)
+    
+    ax.text(.05,.4,'Tractive Force at Full Moon', color='m',
+        transform=ax.transAxes, fontweight='bold')
+    ax.text(.05,.2,'Tractive Force at New Moon', color='gray',
+        transform=ax.transAxes, fontweight='bold')
+    
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    
+    ax = fig.add_subplot(212)
+    
+    pred_df.plot(y='SNE', title='Semi-Diurnal Tide Height (feet) Due to Spring-Neap + Ellipticity',
+            style='-', color='orange', ax=ax, lw=lw, legend=False, grid=True, xlim=(dt0,dt1))
+    ax.set_xlabel('Date')
+
 
 plt.show()
 

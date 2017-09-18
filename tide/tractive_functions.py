@@ -109,10 +109,15 @@ def draw_vector_ring(ax, mdec_deg, mlon_rad, r, direction):
     X, Y, Z = get_xyz(lon, lat, 1.1*r)
     R = get_R(0, np.deg2rad(90-mdec_deg), mlon_rad)
     Xr2, Yr2, Zr2 = new_xyz(X, Y, Z, R)
-    ax.quiver(Xr, Yr, Zr, Xr2-Xr, Yr2-Yr, Zr2-Zr,
+    Fx = Xr2-Xr
+    Fy = Yr2-Yr
+    Fz = Zr2-Zr
+    ax.quiver(Xr, Yr, Zr, Fx, Fy, Fz,
         linewidth=2, arrow_length_ratio=.5, color=color)
         
 def draw_sphere(ax, r):
+    alpha = .3
+    alpha2 = .6
     lat = np.linspace(-np.pi/2, np.pi/2, 20)
     # first part of the background sphere
     lon = np.linspace(-np.pi, 0, 20)
@@ -120,19 +125,19 @@ def draw_sphere(ax, r):
     ax.plot_surface(x, y, z,
                     rstride=1, cstride=1,
                     color='b', linewidth=0, shade=True,
-                    alpha=.3)
+                    alpha=alpha)
     # # second part of the background sphere
     lon = np.linspace(0, np.pi, 20)
     x, y, z = get_xyz_mesh(lon, lat, r)
     ax.plot_surface(x, y, z,
                     rstride=1, cstride=1,
                     color='y', linewidth=0, shade=True,
-                    alpha=.3)
+                    alpha=alpha)
     # equator line
     lon = np.linspace(-np.pi, np.pi)
     lat = 0*lon
     X, Y, Z = get_xyz(lon, lat, r)
-    ax.plot(X, Y, Z, '-g', alpha=.6)
+    ax.plot(X, Y, Z, '-g', alpha=alpha2)
     
 def draw_moon(ax, r, mlon_rad, mdec_rad):
     x0, y0, z0 = get_xyz(mlon_rad, mdec_rad, 1.5*r)
@@ -177,7 +182,6 @@ def draw_tractive_pretzels(ax, mdec_rad, mlon_rad_vec, mlon_rad, r):
         Y = y0 + dy
         Z = z0 + dz
         ax.plot(x0, y0, z0, '*r', markersize=10)
-        #ax.plot([x0[0],X], [y0[0],Y], [z0[0],Z], '-r')
         ax.quiver(x0, y0, z0, dx, dy, dz,
             linewidth=2, color='r')
 

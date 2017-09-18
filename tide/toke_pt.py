@@ -24,6 +24,10 @@ if alp not in sys.path:
     sys.path.append(alp)
 import zfun
 
+# conversion factors
+m2f = 3.28
+f2m = 1/3.28
+
 indir = os.environ.get('HOME') + '/Documents/ptools_data/tide/Toke_Pt_2001/'
 
 def read_tide(in_fn):
@@ -31,14 +35,13 @@ def read_tide(in_fn):
     for k in df.keys():
         df = df.rename(columns={k: k.strip()})
     df = df.drop(['Sigma', 'I', 'L'], axis=1)
-    df = df.rename(columns={'Water Level': 'Tide Obs'})
-    # remove the mean water level
-    eta0 = df['Tide Obs'].mean()
-    df['Tide Obs'] = df['Tide Obs'] - eta0
+    df = df.rename(columns={'Water Level': 'z'})
+    # find the mean water level
+    z0 = df['z'].mean()
     # Assumes time is UTC
-    df.index.name = 'Date UTC'
+    df.index.name = 'Date'
     df = df.tz_localize('UTC')
-    return df, eta0
+    return df, z0
     
 def read_met(in_fn):
     df = pd.read_csv(in_fn, index_col='DATE TIME', parse_dates = True)
@@ -46,26 +49,19 @@ def read_met(in_fn):
         df = df.rename(columns={k: k.strip()})
     df = df.drop(['RELHUM', 'VIS'], axis=1)
     # Assumes time is UTC
-    df.index.name = 'Date UTC'
+    df.index.name = 'Date'
     df = df.tz_localize('UTC')
     return df
 
-# READ IN OBSERVED TIDE DATA
+# Load tide data
 fn = 'CO-OPS__9440910__hr.csv' # Toke Pt. 2001 observed data
 obs_fn = indir + fn
-obs_df, eta0 = read_tide(obs_fn)
+obs_df, z0 = read_tide(obs_fn)
 
+# Load met data
 fnm = 'CO-OPS_9440910_from_20010101_to_20011231_met.csv'
 met_fn = indir + fnm
 met_df = read_met(met_fn)
-
-
-
-# make a low passed signal
-eta = np.array(obs_df['Tide Obs'].tolist())
-etalp = zfun.filt_godin(eta)
-obs_df['Obs Low Passed'] = etalp
-
 
 # merge the two
 df = pd.concat([obs_df, met_df], axis=1)
@@ -77,7 +73,7 @@ df = pd.concat([obs_df, met_df], axis=1)
 # First: create 10m standard WSPD
 P = 0.11
 z_stnd = 10
-z_meas = 5
+z_meas = 22.6 * f2m
 df['WSPD_10'] = df['WINDSPEED'] * (z_stnd/z_meas)**P
 wspd = df.WSPD_10.values
 wdir = df.DIR.values
@@ -90,38 +86,110 @@ tauy = tau * np.sin(theta)
 df['taux'] = taux
 df['tauy'] = tauy
 #
-df['tauyF'] = df['tauy'].fillna(method='ffill')
-tauy = np.array(df['tauyF'].tolist())
+# fill in gaps
+df['tauy'] = df['tauy'].fillna(method='ffill')
+#
+# filter the windstress
+tauy = np.array(df['tauy'].tolist())
 tauy8 = zfun.filt_AB8d(tauy)
-df['NS Windstress (8-day filter)'] = tauy8
+df['tauy8'] = tauy8
 
-
-# make corrected ssh
+# make adjusted ssh
 # this is supposed to be sea level with the effect of atm pressure REMOVED
-df['obs_adj'] = df['Tide Obs'] + (df['BARO'] - df['BARO'].mean())/100
+# NOTE: pressure is in millibars
+df['BARO'] = df['BARO'].fillna(method='ffill')# fill gaps
+df['p'] = -(df['BARO'] - df['BARO'].mean())/100
+df['za'] = df['z'] + (df['BARO'] - df['BARO'].mean())/100
 
-# make a low passed adjusted signal
-etaA = np.array(df['obs_adj'].tolist())
-etaAlp = zfun.filt_godin(etaA)
-df['Obs Low Passed Adj'] = etaAlp
+# make low-passed signal
+z = np.array(df['z'].tolist())
+zlp = zfun.filt_godin(z)
+df['zlp'] = zlp
+
+# make low-passed adjusted signal
+za = np.array(df['za'].tolist())
+zalp = zfun.filt_godin(za)
+df['zalp'] = zalp
+
+# make low-passed atm pressure contribution
+p = np.array(df['p'].tolist())
+plp = zfun.filt_godin(p)
+df['plp'] = plp
+
+# convert to feet
+df['z'] = df['z'] * m2f
+df['zlp'] = df['zlp'] * m2f
+df['za'] = df['za'] * m2f
+df['zalp'] = df['zalp'] * m2f
+df['plp'] = df['plp'] * m2f
+
+# make separate positive and negative windstress
+tauy8p = np.array(df['tauy8'].tolist())
+tauy8p[np.isnan(tauy8p)] = 0
+tauy8p[tauy8p < 0] = 0
+df['tauy8p'] = tauy8p
+
+tauy8m = np.array(df['tauy8'].tolist())
+tauy8m[np.isnan(tauy8m)] = 0
+tauy8m[tauy8m > 0] = 0
+df['tauy8m'] = tauy8m
 
 # PLOTTING
 plt.close('all')
-lw = .5
 fs = (14,8)
+
+fsz = 14
 
 if True:
     fig = plt.figure(figsize=fs)
+    
     ax = fig.add_subplot(311)
-    df.plot(y='Tide Obs', ax=ax, lw=lw, grid=True)
+    df.plot(y='z',
+        lw=0.5, color='k',
+         ax=ax, grid=True, legend=False)
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    ax.text(.05,.85,'Toke Pt. Tide Height (feet)', color='k',
+        transform=ax.transAxes, fontweight='bold', fontsize=fsz)
     
-    ax = fig.add_subplot(312)
-    df.plot(y='Obs Low Passed', ax=ax, grid=True)
-    df.plot(y='Obs Low Passed Adj', ax=ax, grid=True)
     
-    ax = fig.add_subplot(313)
-    #df.plot(y='BARO', ax=ax, grid=True)
-    df.plot(y='NS Windstress (8-day filter)', ax=ax, grid=True)
+    ax1 = fig.add_subplot(312)
+            
+    ax1.fill_between(df.index, df['tauy8p'].values, color='r')
+    ax1.fill_between(df.index, df['tauy8m'].values, color='b')
+    
+    ax1.grid()
+    ax1.set_xlim((df.index[0], df.index[-1]))
+    
+    ax1.set_xticklabels('')
+    ax1.set_xlabel('')
+    
+    ax1.text(.05,.05,'North-South Wind UPWELLING', color='b',
+        transform=ax1.transAxes, fontweight='bold', fontsize=fsz)
+    ax1.text(.05,.85,'North-South Wind DOWNWELLING', color='r',
+        transform=ax1.transAxes, fontweight='bold', fontsize=fsz)
+    
+    ax2 = fig.add_subplot(313)
+    
+    df.plot(y='zlp',
+        lw=3, color='k',
+        ax=ax2, grid=True, legend=False)
+        
+    # df.plot(y='p',
+    #     lw=2, color='g',
+    #     ax=ax2, grid=True, legend=False)
+    
+    df.plot(y='zalp',
+        lw=2, color='g',
+        ax=ax2, grid=True, legend=False)
+        
+    ax2.text(.05,.85,'Daily Mean Tide Height (ft)', color='k',
+        transform=ax2.transAxes, fontweight='bold', fontsize=fsz)
+    ax2.text(.05,.7,'Daily Mean Tide Height (ft) Without Atmospheric Pressure', color='g',
+        transform=ax2.transAxes, fontweight='bold', fontsize=fsz)
+
+        
+    ax2.set_xlabel('Date')
     
 
 plt.show()
