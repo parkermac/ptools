@@ -26,6 +26,8 @@ if which_home == '/Users/PM5': # mac version
     in_dir = Ldir['parent'] + 'roms/output/salish_2006_4/'
 elif which_home == '/home/parker': # fjord version
     in_dir = '/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/'
+    
+# use /pmr3/pmraid2/daves/salish_2005_1/OUT/ for 2005
 
 out_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
 Lfun.make_dir(out_dir0)

@@ -107,8 +107,7 @@ for rn in df.index:
     else:
         print(' >> excluding ' + rn.title())
 
-
-#%% figure out river locations
+#%% figure out river source locations
 idir_dict = dict()
 isign_dict = dict()
 uv_dict = dict()
@@ -133,29 +132,37 @@ for rn in good_riv:
         JI = JI_N
     elif np.abs(ph) > 135: # E
         JI = JI_E
-    is_right = False
-    while is_right == False:
+    is_in_grid = True
+    while is_in_grid == True:
         # this while loop has the channel keep going until it
         # hits a mask or hits a wall.
         ji = ji + JI
-        try:
-            # this ensures a minumum depth in the channel
-            z[ji[0], ji[1]] = np.min((z[ji[0], ji[1]], -depth))
-        except IndexError:
-            pass            
-        try:
-            # we stepped into the masked region
-            if m[ji[0],ji[1]] == True:
-                ji_dict[rn] = ji
-                print(rn)
-                is_right = True
-        except IndexError:
-            # assume we hit the edge of the grid and so move back a step
+        if (ji[0] == -1) or (ji[1] == -1):
+            # we hit the edge of the grid and so move back a step
             ji = ji - JI
             m[ji[0],ji[1]] = True
             ji_dict[rn] = ji
-            print(rn + ' (hit boundary) ' + str(ji))
-            is_right = True
+            print(rn + ' (hit a -1 boundary) ' + str(ji))
+            is_in_grid = False
+        else:
+            try:
+                # this ensures a minumum depth in the channel
+                z[ji[0], ji[1]] = np.min((z[ji[0], ji[1]], -depth))
+            except IndexError:
+                pass            
+            try:
+                # we stepped into the masked region
+                if m[ji[0],ji[1]] == True:
+                    ji_dict[rn] = ji
+                    print(rn)
+                    is_in_grid = False
+            except IndexError:
+                # assume we hit the edge of the grid and so move back a step
+                ji = ji - JI
+                m[ji[0],ji[1]] = True
+                ji_dict[rn] = ji
+                print(rn + ' (hit boundary) ' + str(ji))
+                is_in_grid = False
     if (JI == JI_E).all():
         idir_dict[rn] = 0 # 0 = E/W, 1 = N/S
         isign_dict[rn] = 1

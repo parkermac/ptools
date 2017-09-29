@@ -74,7 +74,7 @@ def make_tide(year, city):
     pred_df['z'] = 0
     for cons in cons_list:
         pred_df['z'] += pred_df[cons]
-    # add the mean se level at Seattle (feet)
+    # add the mean sea level at Seattle (feet)
     pred_df['z'] += 6.947
     d = np.array(index.dayofyear.tolist())
     h = np.array(index.hour.tolist())
