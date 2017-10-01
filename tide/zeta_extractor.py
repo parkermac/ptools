@@ -69,6 +69,8 @@ ds.close()
 NT = len(fn_list)
 
 # prepare a directory for results
+outdir0 = Ldir['parent'] + 'ptools_output/tide/'
+Lfun.make_dir(outdir0, clean=False)
 outdir = Ldir['parent'] + 'ptools_output/tide/mod_data/'
 Lfun.make_dir(outdir, clean=False)
 # output file
