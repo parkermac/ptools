@@ -101,6 +101,7 @@ def read_dfo_info(fn):
     m_dict = dict()
     for key in in_list:
         m_dict[name_dict[key]] = mm_dict[key]
+    m_dict['lon'] = '-' + m_dict['lon']
     return m_dict
     
 def get_harmonics(df, lat):
@@ -119,7 +120,6 @@ def get_harmonics(df, lat):
     # h.A is amplitude (m), h.g is phase (degrees)
     return h
              
-    
 if __name__ == '__main__':
     # examples of uses of the functions
     

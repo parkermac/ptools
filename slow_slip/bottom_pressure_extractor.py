@@ -222,6 +222,8 @@ for vn in vn_list2t:
         # ocean_time has no time
         pass
     vv[:] = ds1[vn][:]
+    
+print('WARNING: this may not correctly fill out the variables in vn_list2t')
 #
 for vn in vn_list3t:
     do_var = True
