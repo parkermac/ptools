@@ -33,43 +33,11 @@ home = os.environ.get('HOME')
 dir00 = home + '/Documents/'
 dir0 = dir00 + 'ptools_output/tide/'
 
-noaa_sn_dict = {
-    'Charleston': 9432780,
-    'South Beach': 9435380,
-    'Garibaldi': 9437540,
-    #'Cape Disappointment': 9440581,
-    'Toke Point': 9440910,
-    'Westport': 9441102,
-    'La Push': 9442396,
-    'Neah Bay': 9443090,
-    'Port Angeles': 9444090,
-    'Friday Harbor': 9449880,
-    'Cherry Point': 9449424,
-    'Port Townsend': 9444900,
-    'Seattle': 9447130,
-    'Tacoma': 9446484
-    }
-    
-dfo_sn_dict = {
-    'Point Atkinson': 7795,
-    'Vancouver': 7735,
-    'Patricia Bay': 7277,
-    'Victoria Harbour': 7120,
-    'Bamfield': 8545,
-    'Tofino': 8615,
-    'Winter Harbour': 8735,
-    'Port Hardy': 8408,
-    'Campbell River': 8074,
-    'New Westminster': 7654
-    }
+noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 # extract and save data
 year  = 2013
 outdir = dir0 + 'obs_data/'
-
-sn_dict = {}
-sn_dict.update(noaa_sn_dict)
-sn_dict.update(dfo_sn_dict)
 
 M = dict()
 H = dict()
@@ -86,7 +54,7 @@ for name in sn_dict.keys():
 # plotting
 plt.close('all')
 
-fig = plt.figure(figsize=(12,12))
+fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111)
 pfun.add_coast(ax)
 ax.set_xlim(-130, -122)

@@ -41,7 +41,7 @@ if model_type == 'LiveOcean':
     Ldir = Lfun.Lstart(gridname, tag)
     Ldir['ex_name'] = ex_name
     Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
-    folder_tag = Ldir['gtagex']
+    tag = Ldir['gtagex']
     #
     if Ldir['env'] == 'pm_mac':
         dt0 = datetime(2017,8,5)
@@ -76,7 +76,7 @@ if model_type == 'LiveOcean':
 elif model_type == 'Kurapov':
     Ldir = Lfun.Lstart()
     in_dir = Ldir['parent'] + 'ptools_data/Kurapov/'
-    folder_tag = 'kurapov'
+    tag = 'kurapov'
     
     # get grid info
     fng = in_dir + 'grd_wcofs_large_visc200.nc'
@@ -113,17 +113,27 @@ elif model_type == 'Kurapov':
     z = zrfun.get_z(h, 0*h, S, only_rho=True)
     z0 = z[n_layer,:,:].squeeze()
     ds.close()
+
+if Ldir['env'] == 'pm_mac':
+    etag = '_mac'
+elif Ldir['env'] == 'fjord':
+    etag = ''
     
 NT = len(fn_list)
 
 # prepare a directory for results
 outdir0 = Ldir['parent'] + 'ptools_output/slow_slip/'
 Lfun.make_dir(outdir0, clean=False)
-outdir = outdir0 + folder_tag + '/'
-Lfun.make_dir(outdir, clean=True)
+outdir = outdir0 + 'bottom_pressure_extractions/'
+Lfun.make_dir(outdir, clean=False)
 # output file
-out_name = 'bottom_pressure.nc'
+out_name = 'pressure_' + tag + etag + '.nc'
 out_fn = outdir + out_name
+# get rid of the old version, if it exists
+try:
+    os.remove(out_fn)
+except OSError:
+    pass # assume error was because the file did not exist
 
 # make bottom pressure
 if do_press:
@@ -221,9 +231,15 @@ for vn in vn_list2t:
     except AttributeError:
         # ocean_time has no time
         pass
-    vv[:] = ds1[vn][:]
-    
-print('WARNING: this may not correctly fill out the variables in vn_list2t')
+
+# copy data
+tt = 0
+for fn in fn_list:
+    ds = nc.Dataset(fn)
+    ds2['ocean_time'][tt] = ds['ocean_time'][0].squeeze()
+    ds2['zeta'][tt,:,:] = ds['zeta'][0, :, :].squeeze()
+    tt += 1
+    ds.close()
 #
 for vn in vn_list3t:
     do_var = True
@@ -286,20 +302,38 @@ if os.path.isfile(out_fn):
 else:
     result_dict['result'] = 'fail'
 
-if False:
+if True:
     zfun.ncd(out_fn)
     
-if False:
+if True:
     import matplotlib.pyplot as plt
     plt.close('all')
+    
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    ax = fig.add_subplot(121)
     ds = nc.Dataset(out_fn)
     vn = 'bpa'
     pch = ax.pcolormesh(ds['lon_rho'][:], ds['lat_rho'][:], ds[vn][-1,:,:].squeeze())
     fig.colorbar(pch)
     ax.set_title(ds[vn].long_name + ' (' + ds[vn].units + ')')
     pfun.dar(ax)
+    
+    # put data into a DataFrame
+    import pandas as pd
+    zm = ds['zeta'][:,30,30].squeeze()
+    tm = ds['ocean_time'][:]
+    dtm_list = []
+    for t in tm:
+        dtm_list.append(Lfun.modtime_to_datetime(t))
+    dti = pd.to_datetime(dtm_list)
+    dti = dti.tz_localize('UTC')
+    df = pd.DataFrame(data={'eta':zm}, index = dti)
+    df.index.name = 'Date'
+    ax = fig.add_subplot(122)
+    df.plot(ax=ax)
+    
+    
     plt.show()
+    ds.close()
 
 

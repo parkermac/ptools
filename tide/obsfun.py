@@ -9,7 +9,38 @@ from datetime import datetime
 import pytz
 import utide
 from matplotlib.dates import date2num
-import matplotlib.pyplot as plt
+
+def get_sn_dicts():
+    noaa_sn_dict = {
+        'Charleston': 9432780,
+        'South Beach': 9435380,
+        'Garibaldi': 9437540,
+        'Toke Point': 9440910,
+        'Westport': 9441102,
+        'La Push': 9442396,
+        'Neah Bay': 9443090,
+        'Port Angeles': 9444090,
+        'Friday Harbor': 9449880,
+        'Cherry Point': 9449424,
+        'Port Townsend': 9444900,
+        'Seattle': 9447130,
+        'Tacoma': 9446484}
+    dfo_sn_dict = {
+        'Point Atkinson': 7795,
+        'Vancouver': 7735,
+        'Patricia Bay': 7277,
+        'Victoria Harbour': 7120,
+        'Bamfield': 8545,
+        'Tofino': 8615,
+        'Winter Harbour': 8735,
+        'Port Hardy': 8408,
+        'Campbell River': 8074,
+        'New Westminster': 7654}
+    sn_dict = {}
+    sn_dict.update(noaa_sn_dict)
+    sn_dict.update(dfo_sn_dict)
+    #
+    return noaa_sn_dict, dfo_sn_dict, sn_dict
 
 def get_noaa_tide(sn, year):
     # inputs can be ints or strings
@@ -122,7 +153,6 @@ def get_harmonics(df, lat):
              
 if __name__ == '__main__':
     # examples of uses of the functions
-    
     if True:
         # noaa
         sn = 9447130
@@ -138,13 +168,14 @@ if __name__ == '__main__':
         #
         lat=float(m_dict['lat'])
         h = get_harmonics(df, lat)
-    
     if True:
+        import matplotlib.pyplot as plt
         plt.close('all')
         df.plot(title=m_dict['name'])
         fig = plt.figure()
         ax = fig.add_subplot(111)
         for ii in range(len(h.A)):
+            # plot amplitude vs. frequency
             ax.text(h.aux.frq[ii], h.A[ii], h.name[ii])
         ax.set_title(m_dict['name'])
         plt.show()

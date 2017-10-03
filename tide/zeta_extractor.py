@@ -111,7 +111,7 @@ for vn in ['zeta', 'ocean_time']:
     except AttributeError:
         # ocean_time has no time
         pass
-    
+
 # copy data
 NT = len(fn_list)
 tt = 0
