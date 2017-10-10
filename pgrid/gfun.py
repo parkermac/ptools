@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'hc0'
+gridname = 'big1'
 #gridname = 'cas1'
 
 import os
@@ -41,7 +41,7 @@ def default_choices(Gr):
 
     # Decide if the grid will allow wetting and drying.
     # We do this first becasue it affects several subsequent choices
-    dch['wet_dry'] = False        
+    dch['wet_dry'] = False
 
     # GRID CREATION     
     # Set analytical to true when we define the bathymetry analytically.
@@ -76,7 +76,7 @@ def default_choices(Gr):
         dch['unmask_coast'] = True
     else:
         dch['unmask_coast'] = False
-    # Set remove_islands to True to automatically remove isloated patches of
+    # Set remove_islands to True to automatically remove isolated patches of
     # land or ocean.
     dch['remove_islands'] = True
 

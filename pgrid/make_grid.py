@@ -41,12 +41,20 @@ dch =  gfun.default_choices(Gr)
 # vectors to define the plaid grid
 # start with cell corners (like an extended psi grid)
 
-if Gr['gridname'] == 'cascadia2':
-    # like cascadia1, but low resolution
-    aa = [-127.4, -122, 43, 50]
-    res = 5000 # target resolution (m)
-    plon_vec, plat_vec = gfu.simple_grid(aa, res)
-    dch['nudging_edges'] = ['south', 'west']
+if Gr['gridname'] == 'big1':
+    # the next evolution: big domain, high-res
+    dch['wet_dry'] = True
+    dch['z_land'] = 2
+    maxres = 4000
+    medres = 1000
+    minres = 300
+    lon_list = [-130, -124.5, -123.5, -122]
+    x_res_list = [maxres, medres, minres, minres]
+    lat_list = [42, 46, 47, 49, 50, 52]
+    y_res_list = [maxres, medres, minres, minres, medres, maxres]
+    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+    dch['nudging_edges'] = ['north', 'south', 'west']
     
 elif Gr['gridname'] == 'sal0':
     # start of a salish nest grid

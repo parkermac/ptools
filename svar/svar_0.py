@@ -23,7 +23,7 @@ f_list = os.listdir(dir0)
 f_list.sort()
 f_list = [x for x in f_list if x[0]=='f']
 
-testing = False
+testing = True
 if testing:
     f_list = f_list[:14] # control number of days
 

@@ -121,11 +121,11 @@ ax1.axis(aa)
 # create control buttons
 # list is organized from bottom to top
 blist = ['start', 'pause', 'continueM', 'continueZ',
-         'polyToLand', 'polyToWater', 'polyInfo', 'lineToWater', 'startPoly',
+         'polyToLand', 'polyToWater', 'lineToWater', 'startPoly',
          'done']
 # nicer names
 Blist = ['Start', 'Pause', 'Edit Mask', 'Edit Depth (' + str(dval) + ' m)',
-         'Polygon to Land', 'Polygon to Water', 'Polygon Info',
+         'Polygon to Land', 'Polygon to Water',
          'Line to Water', 'Start Polygon/Line',
          'Done']
 NB = len(blist) # number of buttons
@@ -267,20 +267,6 @@ while flag_get_ginput:
             hh[ji_rho_in[:,0], ji_rho_in[:,1]] = h[ji_rho_in[:,0], ji_rho_in[:,1]]
             cs.set_data(hh)
             remove_poly()
-        elif (bdict[nb]=='polyInfo') and not flag_start:
-            flag_continue = False
-            ji_rho_in = get_indices_in_polygon(plon_poly, plat_poly, NR, NC)
-            dap = da[ji_rho_in[:,0], ji_rho_in[:,1]]
-            dvp = hh[ji_rho_in[:,0], ji_rho_in[:,1]] * da[ji_rho_in[:,0], ji_rho_in[:,1]]
-            ap = np.nansum(dap)
-            vp = np.nansum(dvp)
-            hp = vp/ap
-            print('Volume inside polygon = %0.1f km3' % (vp/1e9) )
-            print('Area inside polygon = %0.1f km2' % (ap/1e6) )
-            print('Mean Depth inside polygon = %0.1f m' % (hp) )
-            inp = input('Push Return to continue\n')
-            remove_poly()
-            ax1.set_title('PAUSED')
         elif (bdict[nb]=='lineToWater') and not flag_start:
             flag_continue = False
             x = plon_poly

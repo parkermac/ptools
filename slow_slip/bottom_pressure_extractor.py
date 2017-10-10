@@ -305,7 +305,7 @@ else:
 if True:
     zfun.ncd(out_fn)
     
-if True:
+if Ldir['env'] == 'pm_mac':
     import matplotlib.pyplot as plt
     plt.close('all')
     

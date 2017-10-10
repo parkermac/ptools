@@ -11,12 +11,13 @@ for analytical (A) rivers.
 
 import os
 import sys
-dir0 = '/Users/PM5/Documents/'
-alp = os.path.abspath(dir0 + 'LiveOcean/alpha')
+alp = os.path.abspath('../../LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 import Lfun
 Ldir = Lfun.Lstart()
+dir0 = Ldir['parent']
+
 import numpy as np
 import pandas as pd
 

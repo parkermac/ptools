@@ -24,7 +24,7 @@ Suggested order to run the code, and what dch items are used:
 
 * make_mask.py
     z_land
-    do_cell_average/z_lan_alt
+    do_cell_average/z_land_alt
     unmask_coast
     remove_islands
 

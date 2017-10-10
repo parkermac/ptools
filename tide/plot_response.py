@@ -25,22 +25,13 @@ import numpy as np
 import pickle
 import netCDF4 as nc
 
-from importlib import reload
 import obsfun as ofn
-reload(ofn)
 
 home = os.environ.get('HOME')
 dir00 = home + '/Documents/'
 dir0 = dir00 + 'ptools_output/tide/'
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
-testing = False
-if testing == True:
-    name_list = ['Neah Bay', 'Campbell River', 'Victoria Harbour', 'Tacoma']
-    a = dict()
-    for name in name_list:
-        a[name] = sn_dict[name]
-    sn_dict = a
 
 # load observational data
 year  = 2013
@@ -73,22 +64,6 @@ for name in sn_dict.keys():
     Mmod[name] = Lfun.csv_to_dict(mfn)
     Hmod[name] = pickle.load(open(hfn, 'rb'))
     
-# # the main diurnals:
-# # - can make into SunDec and MoonDec
-# O1                            Lunar diurnal constituent
-# P1                            Solar diurnal constituent
-# K1                            Lunar diurnal constituent (really Luni-Solar)
-#
-# # the main semi-diurnals:
-# # - can make into Spring-Neap, with elliptical modulation
-# M2              Principal lunar semidiurnal constituent
-# S2              Principal solar semidiurnal constituent
-# N2        Larger lunar elliptic semidiurnal constituent
-#
-# # these are small, about 5 cm:
-# Q1            Larger lunar elliptic diurnal constituent
-# K2                    Lunisolar semidiurnal constituent
-
 def get_AG(name, hn, Hobs, Hmod):
     ho = Hobs[name]
     hm = Hmod[name]
@@ -105,66 +80,101 @@ def get_AG(name, hn, Hobs, Hmod):
 
 plt.close('all')
 
+# plot amplitude and phase, comparing two stations (ocean and inland)
+# for both observations and model
+
+# OFFSHORE
+#name0 = 'Westport'
+#name0 = 'La Push'
+name0 = 'Neah Bay'
+#name0 = 'Bamfield'
+#name0 = 'Garibaldi'
+
+# INLAND
+#name1 = 'Campbell River'
+#name1 = 'Point Atkinson'
+#name1 = 'Vancouver'
+name1 = 'Tacoma'
+#name1 = 'Seattle'
+#name1 = 'Friday Harbor'
+
+fig = plt.figure(figsize=(14, 8))
+fig.suptitle('OCEAN:' + name0 + ' to INLAND:' + name1)
+
+flo = .5
+fhi = 2.5
+
+ax1 = fig.add_subplot(221)
+ax1.set_xlim(flo, fhi)
+ax1.set_ylim(0, 3)
+ax1.grid()
+ax1.text(.05,.9, 'Amplification Factor (INLAND/OCEAN)', weight='bold', color='k',
+    transform=ax1.transAxes)
+ax1.text(.05,.8, 'OBSERVATION', weight='bold', color='r',
+    transform=ax1.transAxes)
+ax1.text(.05,.7, 'MODEL', weight='bold', color='b',
+    transform=ax1.transAxes)
+
+ax2 = fig.add_subplot(222)
+ax2.set_xlim(flo, fhi)
+ax2.set_ylim(0, 180)
+ax2.grid()
+ax2.text(.05,.9, 'Phase Shift (INLAND-OCEAN deg)', weight='bold', color='k',
+    transform=ax2.transAxes)
+
+hn_list = ['M2','S2','N2','O1','P1','K1']
+for hn in hn_list:
+    Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
+    Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
+    Aro = Ao1/Ao0
+    Arm = Am1/Am0
+    dGo = Go1 - Go0
+    if dGo < 0:
+        dGo += 360
+    dGm = Gm1 - Gm0
+    if dGm < 0:
+        dGm += 360
+    ax1.plot(Fo0, Aro, '*r', Fm0, Arm, '*b')
+    ax2.plot(Fo0, dGo, '*r', Fm0, dGm, '*b')
+    
+ax3 = fig.add_subplot(223)
+ax3.set_xlim(flo, fhi)
+ax3.set_ylim(0, 1)
+ax3.grid()
+ax3.set_xlabel('Frequency (cycles/day)')
+ax3.text(.05,.9, 'OCEAN Amplitude (m)', weight='bold', color='k',
+    transform=ax3.transAxes)
+
+ax4 = fig.add_subplot(224)
+ax4.set_xlim(flo, fhi)
+ax4.set_ylim(0, 360)
+ax4.grid()
+ax4.set_xlabel('Frequency (cycles/day)')
+ax4.text(.05,.9, 'OCEAN Phase (deg G)', weight='bold', color='k',
+    transform=ax4.transAxes)
+
+hn_list = ['M2','S2','N2','O1','P1','K1']
+for hn in hn_list:
+    Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
+    Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
+    ax3.text(Fo0, Ao0, hn, color='r', weight='bold')
+    ax3.text(Fm0, Am0, hn, color='b', weight='bold')
+    ax4.text(Fo0, Go0, hn, color='r', weight='bold')
+    ax4.text(Fm0, Gm0, hn, color='b', weight='bold')
+    
 if True:
-    
-    #name0 = 'Westport'
-    #name0 = 'La Push'
-    name0 = 'Neah Bay'
-    #name0 = 'Bamfield'
-    
-    #name1 = 'Campbell River'
-    #name1 = 'Point Atkinson'
-    #name1 = 'Vancouver'
-    name1 = 'Tacoma'
-    #name1 = 'Seattle'
-    
-    #
-    fig = plt.figure(figsize=(8, 8))
-    ax1 = fig.add_subplot(211)
-    ax1.set_xlim(0, 3)
-    ax1.set_ylim(0, 3)
-    ax1.grid()
-    ax1.set_ylabel('Amplification Factor')
-    ax1.set_title(name0 + ' to ' + name1)
-    
-    ax2 = fig.add_subplot(212)
-    ax2.set_xlim(0, 3)
-    ax2.set_ylim(0, 1)
-    ax2.grid()
-    ax2.set_xlabel('Frequency (cycles/day)')
-    ax2.set_ylabel('Phase shift / 180 (deg/deg)')
-    #
-    hn_list = ['M2','S2','N2','O1','P1','K1']
-    for hn in hn_list:
-        Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
-        Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
-        Aro = Ao1/Ao0
-        Arm = Am1/Am0
-        dGo = Go1 - Go0
-        if dGo < 0:
-            dGo += 360
-        dGm = Gm1 - Gm0
-        if dGm < 0:
-            dGm += 360
-        ax1.plot(Fo0, Aro, '*r', Fm0, Arm, '*b')
-        ax1.plot(Fo0, Am0/Ao0, 'ok', alpha=.3)
-        ax2.plot(Fo0, dGo/180, '*r', Fm0, dGm/180, '*b')
-        #
-    
-if False:
-    #
-    fig2 = plt.figure(figsize=(8, 8))
+    # Plot station locations
+    fig2 = plt.figure(figsize=(8,12))
     ax = fig2.add_subplot(111)
-    pfun.add_coast(ax)
-    ax.set_xlim(-130, -122)
-    ax.set_ylim(42, 52)
+    pfun.add_coast(ax, color='g')
+    ax.set_xlim(-129, -121)
+    ax.set_ylim(43, 51)
     pfun.dar(ax)
-    #
     for name in sn_dict.keys():
-        xo = Mobs[name]['lon']
-        yo = Mobs[name]['lat']
+        xo = float(Mobs[name]['lon'])
+        yo = float(Mobs[name]['lat'])
         ax.plot(xo, yo, '*r')
-        ax.text(xo, yo, name)
+        ax.text(xo+.05, yo, name)
         xm = Mmod[name]['lon']
         ym = Mmod[name]['lat']
         ax.plot(xm, ym, '*b')
