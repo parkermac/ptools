@@ -25,7 +25,7 @@ c2 = g * beta * H * Socn
 # have Socn be determined dynamically
 
 # forcing functions
-ff_list = ['linear_ramp_Qr', 'linear_ramp_Ut', 'jumps', 'cycles']
+ff_list = ['linear_ramp_Qr', 'test', 'linear_ramp_Ut', 'jumps', 'cycles']
 
 # USER: run different cases by changing the number below,
 # e.g. ff_list[0] does the first example "linear_ramp_Qr"
@@ -33,8 +33,8 @@ force_flag = ff_list[3]
 
 def fQr(t, force_flag):
     td = t/86400
-    if force_flag == 'linear_ramp_Qr':
-        Qr = td * 10
+    if force_flag in ['linear_ramp_Qr', 'test']:
+        Qr = td * 10 + 100
     elif force_flag == 'linear_ramp_Ut':
         Qr = 1000
     elif force_flag == 'jumps':
@@ -51,7 +51,7 @@ def fQr(t, force_flag):
     
 def fUt(t, force_flag):
     td = t/86400
-    if force_flag == 'linear_ramp_Qr':
+    if force_flag in ['linear_ramp_Qr', 'test']:
         Ut = 1
     elif force_flag == 'linear_ramp_Ut':
         Ut = .3 + td * (3/700)
@@ -73,18 +73,25 @@ def fK(Cd, Ut, H):
     return K
     
 def fQin(H, B, c2, K, L, S1, Socn):
-    Qin = (0.5*H*B*c2*H**2) * (1 - S1/Socn) / (48*K*L)
+    dsdx = (Socn - (S1)) / L
+    ue = (1/48) * c2 * H**2 * dsdx / (Socn * K)
+    Qin = 0.5 * H * B * ue
     return Qin
     
 def fSin(H, B, c2, K, L, S1, Socn):
-    Sc = 2.2
-    ue = (1/48) * c2 * H**2 * (1 - S1/Socn) / (K * L)
-    Sin = S1 + Socn * (3/20) * ue * H**2 * (1 - S1/Socn) / ((K/Sc) * L)
+    dsdx = (Socn - (S1)) / L
+    ue = (1/48) * c2 * H**2 * dsdx / (Socn * K)
+    ds = Socn * (3/20) * ue * H**2 * dsdx / (Socn * (K/2.2))
+    Sin = S1 + ds
+    if Sin >= Socn:
+        # giant hack
+        Sin = Socn
     return Sin
 
 # prepare result vectors
 
 ND = 2*365 # number of days for integration
+#ND = 40 # number of days for integration
 dt = 86400 # time step (s)
 NT = int(ND*dt / 86400)
 
@@ -110,7 +117,7 @@ for nt in range(NT-1):
     Qin = fQin(H, B, c2, K, L, S1[nt], Socn)
     Qin_a[nt] = Qin
     Sin = fSin(H, B, c2, K, L, S1[nt], Socn)
-    Sin_a[nt] = Sin    
+    Sin_a[nt] = Sin
     S1[nt+1] = S1[nt] + dt*( - S1[nt]*(Qin + Qr)/V1 + S2[nt]*Qin/V1)    
     S2[nt+1] = S2[nt] + dt*( Sin*Qin/V2 - S2[nt]*Qin/V2)
     
@@ -153,11 +160,13 @@ plt.close()
 fig = plt.figure(figsize=(12,8))
 
 ax = fig.add_subplot(311)
-ax.plot(Td,S1,'-b', Td,S2,'-r', linewidth=3)
+ax.plot(Td, S1,'-b', Td, S2,'-r', Td, Sin_a, '-c', linewidth=3)
 ax.text(.1, .5, '$S_{1}$', horizontalalignment='left',
     transform=ax.transAxes, color='b', fontsize=20)
 ax.text(.2, .5, '$S_{2}$', horizontalalignment='left',
     transform=ax.transAxes, color='r', fontsize=20)
+ax.text(.3, .5, '$S_{in}$', horizontalalignment='left',
+    transform=ax.transAxes, color='c', fontsize=20)
 ax.set_xlim((Td[0],Td[-1]))
 ax.set_title(force_flag.upper())
 ax.grid()
@@ -168,7 +177,7 @@ ax.text(.1, .8, '$Q_{IN}/1000 (m^3s^{-1})$', horizontalalignment='left',
     transform=ax.transAxes, color='g', fontsize=20)
 ax.set_xlim((Td[0],Td[-1]))
 aa = ax.axis()
-ax.set_ylim((0, aa[3]))
+#ax.set_ylim((0, aa[3]))
 ax.grid()
 
 ax = fig.add_subplot(313)
