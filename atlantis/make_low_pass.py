@@ -87,7 +87,7 @@ for ii0 in range(26, 8666 + 1, 24):
     # make output name (full path) using LiveOcean naming convention
     out_dir = out_dir0 + 'f' + TM.strftime('%Y.%m.%d') + '/'
     Lfun.make_dir(out_dir)
-    out_fn = (out_dir + '/low_passed.nc')
+    out_fn = (out_dir + 'low_passed.nc')
 
     # create the filter
     time_format = '%Y.%m.%d %H:%M:%S'
