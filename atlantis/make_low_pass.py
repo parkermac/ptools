@@ -21,15 +21,18 @@ import collections
 
 from datetime import datetime
 
-which_home = os.environ.get("HOME") # This works even when called by cron.
-if which_home == '/Users/PM5': # mac version
-    in_dir = Ldir['parent'] + 'roms/output/salish_2006_4/'
-elif which_home == '/home/parker': # fjord version
-    in_dir = '/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/'
-    
-# use /pmr3/pmraid2/daves/salish_2005_1/OUT/ for 2005
+whichyear = 2005
 
-out_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+if Ldir['env'] == 'pm_mac': # mac version
+    in_dir = Ldir['parent'] + 'roms/output/salish_2006_4/'
+elif Ldir['env'] == 'fjord': # fjord version
+    if whichyear == 2006:
+        in_dir = '/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/'
+        out_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+    elif whichyear == 2005:
+        in_dir = '/pmr3/pmraid2/daves/salish_2005_1/OUT/'
+        out_dir0 = Ldir['parent'] + 'roms/output/salish_2005_1_lp/'
+    
 Lfun.make_dir(out_dir0)
 
 # make input list (full paths)
@@ -46,9 +49,20 @@ Lfun.make_dir(out_dir0)
 #
 # for the full year we should start at ii0 = 26 and go to 8666, like this:
 # for ii0 in range(26, 8666 + 1, 24):
-# for testing use
-# for ii0 in [4994]:
 
+# for salish_2005_1 we have 0001-8715, and ocean_time says
+# long_name: time since initialization
+# units: seconds since 2005-01-01 00:00:00
+# for 0001 ocean_time = 86400. = (2015,1,2,0,0)
+# and for 8715 ocean_time = 31456800. = (2005,12,31,2,0)
+# (which makes no sense at all! but I think it is right)
+#
+# I think we can perfectly well use the same indices as we did for 2006:
+# for the full year we should start at ii0 = 26 and go to 8666, like this:
+# for ii0 in range(26, 8666 + 1, 24):
+
+
+# for ii0 in [4994]: # testing for 2006
 for ii0 in range(26, 8666 + 1, 24):
 #for ii0 in range(4994, 4994 + 24 + 1, 24):
 #for ii0 in [4994]:
