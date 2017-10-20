@@ -40,10 +40,16 @@ if using_old_grid==True:
 elif using_old_grid==False:
     fn = gfun.select_file(Gr)
     in_fn = Gr['gdir'] + fn
+    in_fn0 = Gr['gdir'] + 'grid_m00_r00_s00_x00.nc'
+    import pickle
+    dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # load the data
 ds = nc.Dataset(in_fn)
 z = -ds.variables['h'][:]
+if using_old_grid==False:
+    ds0 = nc.Dataset(in_fn0)
+    z0 = -ds0.variables['h'][:]
 mask_rho = ds.variables['mask_rho'][:]
 
 plon, plat = gfp.get_plon_plat(using_old_grid, ds)
@@ -51,6 +57,8 @@ buff = 0.05*(plat[-1,0]-plat[0,0])
 ax_lims = (plon[0,0]-buff, plon[0,-1]+buff, plat[0,0]-buff, plat[-1,0]+buff)
 
 zm = np.ma.masked_where(mask_rho == 0, z)
+if using_old_grid==False:
+    z0m = np.ma.masked_where(mask_rho == 0, z0)
 
 # plotting
 plt.close()
@@ -61,7 +69,7 @@ flag_show_grids = False
 if flag_show_grids:
     NC += 1
     icg = NC       
-flag_show_sections = False
+flag_show_sections = True
 if flag_show_sections:
     NC += 1
     ics = NC
@@ -93,10 +101,13 @@ if flag_show_sections:
         x = lon_rho[0, :]
         jj = int(lon_rho.shape[0]/(NS+1) * (ss+1))
         y = z[jj, :]/100
-        ax.plot(x, y, '-r', linewidth=2)
-        ax.plot(x, 0*x, '-', color=color_list[ss], linewidth=2)
+        y0 = z0[jj, :]/100
+        ax.plot(x, y, '-r', linewidth=1)
+        if using_old_grid==False:
+            ax.plot(x, y0, '-c', linewidth=1)
+        ax.plot(x, 0*x, '-', color=color_list[ss], linewidth=1)
         ax.set_xlim(x[0], x[-1])
-        ax.set_ylim(-3, 1)
+        ax.set_ylim(-5, 1)
         if ss == NS-1:
             ax.set_title('Z/(100 m)')
         
@@ -133,6 +144,7 @@ if flag_show_grids:
     gfp.add_river_tracks(Gr, ds, ax)
 
 ds.close()
+ds0.close()
 
 plt.show()
 pfun.topfig()

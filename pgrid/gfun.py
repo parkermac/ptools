@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'big1'
+gridname = 'big2'
 #gridname = 'cas1'
 
 import os
@@ -35,18 +35,18 @@ plp = os.path.abspath(dir0 +'LiveOcean/plotting')
 if plp not in sys.path:
     sys.path.append(plp)
     
-def default_choices(Gr):
+def default_choices(Gr, wet_dry=False):
     # Default choices (can override in each case)    
     dch = dict()    
 
     # Decide if the grid will allow wetting and drying.
     # We do this first becasue it affects several subsequent choices
-    dch['wet_dry'] = False
+    dch['wet_dry'] = wet_dry
 
     # GRID CREATION     
     # Set analytical to true when we define the bathymetry analytically.
     dch['analytical'] = False      
-    # z_offset is an djustment to zero of the bathymetry to account for
+    # z_offset is an adjustment to zero of the bathymetry to account for
     # the fact that mean sea level is somewhat higher than NAVD88.
     dch['use_z_offset'] = True
     dch['z_offset'] = -1.06    
@@ -83,17 +83,16 @@ def default_choices(Gr):
     # SMOOTHING
     if dch['wet_dry'] == True:
         dch['fjord_cliff_edges'] = False    
-        dch['use_min_depth'] = False # a placeholder
     else:
         # With fjord_cliff_edges True the smoothing deviates from its
         # usual volume-conserving
         # nature when it is next to a masked region, and instead adjusts the slope
         # by preferentially deepening at the coast.  This does a much better job of
         # preserving thalweg depth in channels like Hood Canal
-        dch['fjord_cliff_edges'] = True    
-        # Set the minimum depth.
-        dch['use_min_depth'] = True
-        dch['min_depth'] = 4 # meters (positive down)
+        dch['fjord_cliff_edges'] = True
+    # Set the minimum depth.
+    dch['use_min_depth'] = True # now I think this is always a good idea
+    dch['min_depth'] = 4 # meters (positive down)
         
     # NUDGING
     # Use nudging edges to decide which edges to have nudging to climatology

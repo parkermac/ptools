@@ -48,13 +48,29 @@ V0 = V_arr.mean() # mean volume
 # River flow (positive)
 Qr = -Qin1
 
+dVdt_lp = zfun.filt_godin(dV_dt)
+dSaltdt_lp = zfun.filt_godin(dSalt_dt)
+dSVdt_lp = zfun.filt_godin(dSV_dt)
+Mix_lp = zfun.filt_godin(Mixa_arr)
+MixFull_lp = -zfun.filt_godin(dSV_dt - qsv)
+MixTEF_lp = (Sin0*Sout0*Qr +
+        dSaltdt_lp * (Sin0 + Sout0 - 2*Sbar) +
+        dVdt_lp * (Sbar*Sbar - Sin0*Sout0) -
+        dSVdt_lp)
+MixTEFsimple = Sin0*Sout0*Qr
+
+AdvFull = dSVdt_lp + MixFull_lp
+AdvTEF = dSVdt_lp + MixTEF_lp
+
+
 # record-mean budgets
 MM = np.nanmean(zfun.filt_godin(Mix_arr))
+MM_full = np.nanmean(MixFull_lp)
 SSin = np.nanmean(Qin0*Sin0)/np.nanmean(Qin0)
 SSout = np.nanmean(Qout0*Sout0)/np.nanmean(Qout0)
 QQr = np.nanmean(Qr)
 MM_alt = QQr * SSin * SSout
-print('MM = %0.2f, Qr*Sin*Sout = %0.2f (1e6 (g/kg)^2 m3/s)' % (MM/1e6, MM_alt/1e6))
+print('MM_full = %0.2f, Qr*Sin*Sout = %0.2f (1e6 (g/kg)^2 m3/s)' % (MM_full/1e6, MM_alt/1e6))
 
 # PLOTTING
 plt.close('all')
@@ -84,27 +100,18 @@ figsize = (14, 8)
 
 if True:
     # three estimates of mixing
-    fig4 = plt.figure(figsize=figsize)
+    fig4 = plt.figure(figsize=(14,12))
     scl = 1e6
-    dVdt_lp = zfun.filt_godin(dV_dt)
-    dSaltdt_lp = zfun.filt_godin(dSalt_dt)
-    dSVdt_lp = zfun.filt_godin(dSV_dt)
-    Mix_lp = zfun.filt_godin(Mixa_arr)
-    MixFull_lp = -zfun.filt_godin(dSV_dt - qsv)
-    MixTEF_lp = (Sin0*Sout0*Qr +
-            dSaltdt_lp * (Sin0 + Sout0 - 2*Sbar) +
-            dVdt_lp * (Sbar*Sbar - Sin0*Sout0) -
-            dSVdt_lp)
-    MixTEFsimple = Sin0*Sout0*Qr
-    ax = fig4.add_subplot(2,1,1)
+    
+    ax = fig4.add_subplot(3,1,1)
     l1, = ax.plot(td, Mix_lp/scl, '-g')
     l1.set_label('Resolved Mixing')
     l2, = ax.plot(td,MixFull_lp/scl, '-r')
     l2.set_label('Full Mixing')
     l3, = ax.plot(td, MixTEF_lp/scl, '-b')
     l3.set_label('TEF Approximate Mixing')
-    l4, = ax.plot(td, MixTEFsimple/scl, '-', color='orange')
-    l4.set_label('$Q_rS_{in}S_{out}$')
+    # l4, = ax.plot(td, MixTEFsimple/scl, '-', color='orange')
+    # l4.set_label('$Q_rS_{in}S_{out}$')
     ax.legend(loc='upper left')
     ax.text(.6, .9, '(a) Estimates of Mixing', transform=ax.transAxes)
     ax.grid()
@@ -115,16 +122,32 @@ if True:
     ax.set_xticklabels('')
     ax.set_xlabel('')
     ax.plot([td0, td1], [0,0], '-k', linewidth=1)
+    
+    ax = fig4.add_subplot(3,1,2)
+    l1, = ax.plot(td, AdvFull/scl, '-r')
+    l1.set_label('Advection')
+    l2, = ax.plot(td, AdvTEF/scl, '-b')
+    l2.set_label('TEF Advection')
+    ax.legend(loc='upper left')
+    ax.text(.6, .9, '(b) Estimates of Advection', transform=ax.transAxes)
+    ax.grid()
+    ylab = '$10^6\ (g/kg)^2\ m^3s^{-1}$'
+    ax.set_ylabel(ylab)
+    ax.set_ylim(0, 4)
+    ax.set_xlim(td0, td1)    
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    ax.plot([td0, td1], [0,0], '-k', linewidth=1)
     #
     # compare ways of calculating the TEF Salinity Variance terms
-    ax = fig4.add_subplot(2,1,2)
+    ax = fig4.add_subplot(3,1,3)
     SVin_alt = (Sin0 - Sbar)**2
     SVout_alt = (Sout0 - Sbar)**2
     ax.plot(td, SVin0,'-m', td, SVout0, '--m',
         td, SVin_alt,'-c', td, SVout_alt, '--c',
         linewidth=3)
     ax.grid()
-    ax.text(.05, .9, '(b) TEF Variance at Ocean End', transform=ax.transAxes)
+    ax.text(.05, .9, '(c) TEF Variance at Ocean End', transform=ax.transAxes)
     ax.set_xlabel('Time (days)')
     ax.set_ylabel('$(g/kg)^2$')
     ax.set_xlim(td0, td1)
@@ -199,13 +222,13 @@ if False:
     ax.set_title('(d) TEF Salinities')
     ax.set_xlabel('Time (days)')
     
-if False:
+if True:
     # Variance Budget
-    fig2 = plt.figure(figsize=figsize)
+    fig2 = plt.figure(figsize=(14,12))
     
     scl = 1e6
     
-    ax = fig2.add_subplot(2,1,1)
+    ax = fig2.add_subplot(3,1,1)
     l1, = ax.plot(td, zfun.filt_godin(dSV_dt)/scl, '-r')
     l1.set_label('d(Net Variance)/dt')
     l2, = ax.plot(td, zfun.filt_godin(qsv)/scl, '-b')
@@ -225,7 +248,19 @@ if False:
     ax.set_xlabel('')
     ax.plot([td0, td1], [0,0], '-k', linewidth=1)
     
-    ax = fig2.add_subplot(2,1,2)    
+    # Just look at total variance over time
+    ax = fig2.add_subplot(3,1,2)
+    ax.plot(td, SV/V, '-k')
+    ax.grid()
+    ax.set_title('(b) Volume-Average Variance')
+    ax.set_xlabel('Time (days)')
+    ax.set_ylabel('$(g/kg)^2$')
+    ax.set_xlim(td0, td1)
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    ax.set_ylim(0, 150)
+    
+    ax = fig2.add_subplot(3,1,3)    
     l5, = ax.plot(td, Qin0*SVin0/scl, '-m')
     l5.set_label('$Q_{in}S^{\prime2}_{in}$')
     l6, = ax.plot(td, Qout0*SVout0/scl, '--m')
@@ -236,7 +271,7 @@ if False:
     l8.set_label('Sum = Advection')
     
     ax.legend(ncol=4, loc='upper center')
-    ax.set_title('(b) Advection Decomposed into TEF Terms')
+    ax.set_title('(c) Advection Decomposed into TEF Terms')
     ax.grid()
     ax.set_xlabel('Time (days)')
     ax.set_ylabel(ylab)

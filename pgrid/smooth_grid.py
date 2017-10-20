@@ -63,8 +63,15 @@ AreaMatrix = dx * dy
 
 import time
 tt0 = time.time()
+
+rx0max = 0.15
+if dch['min_depth'] > 0:
+    shift = 0
+elif dch['min_depth'] <= 0:
+    shift = dch['min_depth'] - 1
 Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix,
-            fjord_cliff_edges=dch['fjord_cliff_edges'])
+            fjord_cliff_edges=dch['fjord_cliff_edges'], shift=shift)
+
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 
 # Again, make sure that anything not masked is not shallower than min_depth.
@@ -113,7 +120,7 @@ if True:
     ax = fig.add_subplot(122)
     cmap1 = plt.get_cmap(name='bwr')
     cs = ax.pcolormesh(plon, plat, dz,
-                       vmin=-100, vmax=100, cmap = cmap1)
+                       vmin=-10, vmax=10, cmap = cmap1)
     fig.colorbar(cs, ax=ax, extend='both')
     pfun.add_coast(ax)
     pfun.dar(ax)

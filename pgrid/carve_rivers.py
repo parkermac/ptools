@@ -73,7 +73,7 @@ for rn in df.index:
         df_tr = pd.read_csv(fn_tr, index_col='ind')
         x = df_tr['lon'].values
         y = df_tr['lat'].values
-        # only include the river if it ends in the domain
+        # only include the river if it ENDS in the domain
         if ( x[0] > ax_lims[0] and x[0] < ax_lims[1] and
             y[0] > ax_lims[2] and y[0] < ax_lims[3]):
             good_riv.append(rn)

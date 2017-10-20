@@ -34,7 +34,7 @@ out_fn = Gr['gdir'] + fn
 print(50*'*')
 print(out_fn)
 
-dch =  gfun.default_choices(Gr)
+dch = gfun.default_choices(Gr)
 
 #%% GRID DEFINITIONS
 
@@ -43,7 +43,7 @@ dch =  gfun.default_choices(Gr)
 
 if Gr['gridname'] == 'big1':
     # the next evolution: big domain, high-res
-    dch['wet_dry'] = True
+    dch =  gfun.default_choices(Gr, wet_dry=True) # override for wet_dry
     dch['z_land'] = 2
     maxres = 4000
     medres = 1000
@@ -55,6 +55,23 @@ if Gr['gridname'] == 'big1':
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
     dch['nudging_edges'] = ['north', 'south', 'west']
+
+if Gr['gridname'] == 'big2':
+    # the next-next evolution: big domain, med-high-res
+    dch =  gfun.default_choices(Gr, wet_dry=True) # override for wet_dry
+    dch['z_land'] = 2
+    dch['min_depth'] = -5 # negative means land
+    maxres = 4000
+    medres = 1000
+    minres = 600
+    lon_list = [-130, -124.5, -123.5, -122]
+    x_res_list = [maxres, medres, minres, minres]
+    lat_list = [42, 46, 47, 49, 50, 52]
+    y_res_list = [maxres, medres, minres, minres, medres, maxres]
+    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+    dch['nudging_edges'] = ['north', 'south', 'west']
+
     
 elif Gr['gridname'] == 'sal0':
     # start of a salish nest grid
