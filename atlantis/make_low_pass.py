@@ -28,10 +28,10 @@ if Ldir['env'] == 'pm_mac': # mac version
 elif Ldir['env'] == 'fjord': # fjord version
     if whichyear == 2006:
         in_dir = '/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/'
-        out_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+        out_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
     elif whichyear == 2005:
         in_dir = '/pmr3/pmraid2/daves/salish_2005_1/OUT/'
-        out_dir0 = Ldir['parent'] + 'roms/output/salish_2005_1_lp/'
+        out_dir0 = '/boildat1/parker/roms/output/salish_2005_1_lp/'
     
 Lfun.make_dir(out_dir0)
 
