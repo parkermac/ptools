@@ -49,7 +49,7 @@ def default_choices(Gr, wet_dry=False):
     # z_offset is an adjustment to zero of the bathymetry to account for
     # the fact that mean sea level is somewhat higher than NAVD88.
     dch['use_z_offset'] = True
-    dch['z_offset'] = -1.06    
+    dch['z_offset'] = -1.06
     # Set do_cell_average to True for grids that are much
     # coarser than the bathy files.
     # It means we average all data inside a rho grid cell to get depth there,
@@ -66,7 +66,7 @@ def default_choices(Gr, wet_dry=False):
              'ttp_patch/TTP_Regional_27m_patch.nc']
  
     # MASKING
-    # set z position of initial dividing line (positive up)
+    # set z position of INITIAL dividing line (positive up)
     dch['z_land'] = 0        
     # Set alternate z position of initial dividing line; could be
     # used for example when dch['do_cell_average'] = True.
@@ -82,13 +82,15 @@ def default_choices(Gr, wet_dry=False):
 
     # SMOOTHING
     if dch['wet_dry'] == True:
-        dch['fjord_cliff_edges'] = False    
+        # don't use fjord_cliff_edges with wet_dry because it will mess
+        # with intertidal zones
+        dch['fjord_cliff_edges'] = False
     else:
         # With fjord_cliff_edges True the smoothing deviates from its
-        # usual volume-conserving
-        # nature when it is next to a masked region, and instead adjusts the slope
+        # usual volume-conserving nature when it is next to a
+        # masked region, and instead adjusts the slope
         # by preferentially deepening at the coast.  This does a much better job of
-        # preserving thalweg depth in channels like Hood Canal
+        # preserving thalweg depth in channels like Hood Canal.
         dch['fjord_cliff_edges'] = True
     # Set the minimum depth.
     dch['use_min_depth'] = True # now I think this is always a good idea
@@ -123,6 +125,7 @@ def select_file(Gr, using_old_grid=False):
         for item in fn_list_raw:
             if item[-3:] == '.nc':
                 fn_list.append(item)
+        fn_list.sort()
     Nfn = len(fn_list)
     fn_dict = dict(zip(range(Nfn), fn_list))
     for nfn in range(Nfn):

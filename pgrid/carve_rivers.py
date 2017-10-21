@@ -80,22 +80,31 @@ for rn in df.index:
             print('including ' + rn.title())
             # This unmasks it in the places where the
             # river crosses a tile
-            for I in range(len(x)-1):
-                xx = np.linspace(x[I], x[I+1], 100)
-                yy = np.linspace(y[I], y[I+1], 100)
-                ii0, ii1, ifr = zfun.get_interpolant(xx, plon_vec, extrap_nan=True)
-                jj0, jj1, jfr = zfun.get_interpolant(yy, plat_vec, extrap_nan=True)
-                # drop extrapolated points
-                ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
-                jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
-                # this unmasks points crossed by the river
-                m[jj0, ii0] = False
-                # and this sets the depth in those places, if needed,
-                # "carving the river channel"
-                for ff in range(len(ii0)):
-                    JJ = jj0[ff]
-                    II = ii0[ff]
-                    z[JJ, II] = np.min((z[JJ, II], -depth))
+            #
+            # and we jiggle a little to make sure paths are not blocked
+            nudge_list = [(.003,0), (0,.003), (0,0)]
+            #nudge_list = [(0,0)]
+            x_orig = x.copy()
+            y_orig = y.copy()
+            for nudge in nudge_list:
+                x = x_orig + nudge[0]
+                y = y_orig + nudge[1]
+                for I in range(len(x)-1):
+                    xx = np.linspace(x[I], x[I+1], 100)
+                    yy = np.linspace(y[I], y[I+1], 100)
+                    ii0, ii1, ifr = zfun.get_interpolant(xx, plon_vec, extrap_nan=True)
+                    jj0, jj1, jfr = zfun.get_interpolant(yy, plat_vec, extrap_nan=True)
+                    # drop extrapolated points
+                    ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
+                    jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
+                    # this unmasks points crossed by the river
+                    m[jj0, ii0] = False
+                    # and this sets the depth in those places, if needed,
+                    # "carving the river channel"
+                    for ff in range(len(ii0)):
+                        JJ = jj0[ff]
+                        II = ii0[ff]
+                        z[JJ, II] = np.min((z[JJ, II], -depth))
             # this creates information about the index and direction of the river
             ilon_dict[rn] = II
             ilat_dict[rn] = JJ
@@ -211,7 +220,7 @@ fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(111)
 cmap1 = plt.get_cmap(name='rainbow')
 cs = ax.pcolormesh(plon, plat,zm,
-                   vmin=-200, vmax=200, cmap = cmap1)
+                   vmin=-200, vmax=20, cmap = cmap1)
 fig.colorbar(cs, ax=ax, extend='both')
 pfun.add_coast(ax)
 pfun.dar(ax)

@@ -269,29 +269,34 @@ while flag_get_ginput:
             remove_poly()
         elif (bdict[nb]=='lineToWater') and not flag_start:
             flag_continue = False
-            x = plon_poly
-            y = plat_poly
+            x = np.array(plon_poly)
+            y = np.array(plat_poly)
             # This unmasks or carves depth in the places where the
             # line crosses a tile
-            for I in range(len(x)-1):
-                xx = np.linspace(x[I], x[I+1], 100)
-                yy = np.linspace(y[I], y[I+1], 100)
-                ii0, ii1, ifr = zfun.get_interpolant(xx, np.arange(NC), extrap_nan=True)
-                jj0, jj1, jfr = zfun.get_interpolant(yy, np.arange(NR), extrap_nan=True)
-                # drop extrapolated points
-                ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
-                jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
-                if False:
-                    # this unmasks points crossed by the line
-                    ax1.set_title('PAUSED: Changed line to Water')
-                    hh[jj0, ii0] = h[jj0, ii0]
-                else:
+            #
+            # and we jiggle a little to make sure paths are not blocked
+            # (note these are indices instead of lat,lon degrees)
+            nudge_list = [(1,0), (0,1), (0,0)]
+            #nudge_list = [(0,0)]
+            x_orig = x.copy()
+            y_orig = y.copy()
+            for nudge in nudge_list:
+                x = x_orig + nudge[0]
+                y = y_orig + nudge[1]
+                for I in range(len(x)-1):
+                    xx = np.linspace(x[I], x[I+1], 100)
+                    yy = np.linspace(y[I], y[I+1], 100)
+                    ii0, ii1, ifr = zfun.get_interpolant(xx, np.arange(NC), extrap_nan=True)
+                    jj0, jj1, jfr = zfun.get_interpolant(yy, np.arange(NR), extrap_nan=True)
+                    # drop extrapolated points
+                    ii0 = ii0[~np.isnan(ifr) & ~np.isnan(jfr)]
+                    jj0 = jj0[~np.isnan(ifr) & ~np.isnan(jfr)]
                     # this sets the depth of points crossed by the line to dval
                     ax1.set_title('PAUSED: Changed line to Water of depth '
                                   + str(dval) + ' m')
                     hh[jj0, ii0] = dval
             cs.set_data(hh)
-            remove_poly()            
+            remove_poly()
         elif (bdict[nb]=='done') and not flag_start:
             flag_get_ginput = False
             ax1.set_title('DONE')

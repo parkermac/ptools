@@ -34,7 +34,11 @@ ds = nc.Dataset(in_fn, 'a')
 mask_rho = ds['mask_rho'][:]
 
 if dch['use_min_depth']:
-    # enforce a minimum depth
+    # Enforce a minimum depth (the default is that we ALWAYS do this).
+    # And in this case it applies to the whole grid, not just the
+    # masked part.  Probably not necessary, but it doesn't hurt, and makes
+    # some plotting choices easier.  I wonder if it would make sense to
+    # just do it at the very start...?
     h = ds['h'][:]
     hnew = h.copy()
     hnew[ h <= dch['min_depth'] ] = dch['min_depth']

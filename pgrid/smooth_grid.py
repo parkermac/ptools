@@ -32,7 +32,7 @@ in_fn = Gr['gdir'] + fn
 fn_new = gfun.increment_filename(fn, tag='_s')
 out_fn = Gr['gdir'] + fn_new
 
-#%% Test: retrieve the output
+# retrieve the output
 
 ds = nc.Dataset(in_fn)
 z = -ds.variables['h'][:]
@@ -52,7 +52,7 @@ Hobs = -z.copy()
 
 rx0max = 0.15
 
-# Make sure that anything not masked is not shallower than min_depth.
+# Make sure that anything NOT MASKED is not shallower than min_depth.
 if dch['use_min_depth']:
     Hobs[(MSK==1) & (Hobs < dch['min_depth'])] = dch['min_depth']
 
@@ -65,16 +65,23 @@ import time
 tt0 = time.time()
 
 rx0max = 0.15
+
+# Shift the whole depth grid for the case where we have active bathymetry
+# on land (e.g. when using wet_dry), becasue otherwise the smoothing
+# code will fail.  We shift it back at the end.  All the shifting is done in
+# gfu.GRID_PlusMinusScheme_rx0().
 if dch['min_depth'] > 0:
     shift = 0
 elif dch['min_depth'] <= 0:
     shift = dch['min_depth'] - 1
+    
+# Do the smoothing.
 Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix,
             fjord_cliff_edges=dch['fjord_cliff_edges'], shift=shift)
 
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 
-# Again, make sure that anything not masked is not shallower than min_depth.
+# Again, make sure that anything NOT MASKED is not shallower than min_depth.
 if dch['use_min_depth']:
     Hnew[(MSK==1) & (Hnew < dch['min_depth'])] = dch['min_depth']
 

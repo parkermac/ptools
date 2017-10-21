@@ -71,7 +71,6 @@ if Gr['gridname'] == 'big2':
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
     dch['nudging_edges'] = ['north', 'south', 'west']
-
     
 elif Gr['gridname'] == 'sal0':
     # start of a salish nest grid
