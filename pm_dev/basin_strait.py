@@ -29,7 +29,7 @@ ff_list = ['linear_ramp_Qr', 'test', 'linear_ramp_Ut', 'jumps', 'cycles']
 
 # USER: run different cases by changing the number below,
 # e.g. ff_list[0] does the first example "linear_ramp_Qr"
-force_flag = ff_list[3]
+force_flag = ff_list[4]
 
 def fQr(t, force_flag):
     td = t/86400
@@ -73,25 +73,32 @@ def fK(Cd, Ut, H):
     return K
     
 def fQin(H, B, c2, K, L, S1, Socn):
-    dsdx = (Socn - (S1)) / L
-    ue = (1/48) * c2 * H**2 * dsdx / (Socn * K)
-    Qin = 0.5 * H * B * ue
+    Ks = K/2.2
+    a = (1/48) * (c2/Socn) * H**2 / K
+    b = (3/80) * a * H**2 / Ks
+    dsdx = ( -0.5*L/b + np.sqrt((0.5*L/b)**2 + (2/b)*(Socn-S1)) ) / 2
+    ue = a * dsdx
+    Qin = H * B * ue / 4
     return Qin
     
 def fSin(H, B, c2, K, L, S1, Socn):
-    dsdx = (Socn - (S1)) / L
-    ue = (1/48) * c2 * H**2 * dsdx / (Socn * K)
-    ds = Socn * (3/20) * ue * H**2 * dsdx / (Socn * (K/2.2))
-    Sin = S1 + ds
-    if Sin >= Socn:
-        # giant hack
-        Sin = Socn
-    return Sin
+    Ks = K/2.2
+    a = (1/48) * (c2/Socn) * H**2 / K
+    b = (3/80) * a * H**2 / Ks
+    dsdx = ( -0.5*L/b + np.sqrt((0.5*L/b)**2 + (2/b)*(Socn-S1)) ) / 2
+    ue = a * dsdx
+    ds = b * dsdx**2 # note ds = delta_s/4
+    Sin = S1 + 2*ds
+    dsdx_alt = (Socn - Sin) / L
+    return Sin, dsdx, dsdx_alt
 
 # prepare result vectors
 
-ND = 2*365 # number of days for integration
-#ND = 40 # number of days for integration
+if force_flag == 'test':
+    ND = 40 # number of days for integration
+else:
+    ND = 2*365 # number of days for integration
+    
 dt = 86400 # time step (s)
 NT = int(ND*dt / 86400)
 
@@ -105,22 +112,22 @@ Qr_a = np.nan * np.ones(NT)
 Ut_a = np.nan * np.ones(NT)
 
 # draft intial conditions
-S1[0] = Socn - 1
+S1[0] = Socn
 S2[0] = Socn
 
 # make an equilibrated initial condition
-for nt in range(NT-1):    
-    t = T[0]    
+for nt in range(NT-1):
+    t = T[0]
     Qr = fQr(t, force_flag)
     Ut = fUt(t, force_flag)
     K = fK(Cd, Ut, H)
     Qin = fQin(H, B, c2, K, L, S1[nt], Socn)
     Qin_a[nt] = Qin
-    Sin = fSin(H, B, c2, K, L, S1[nt], Socn)
+    Sin, dsdx, dsdx_alt = fSin(H, B, c2, K, L, S1[nt], Socn)
     Sin_a[nt] = Sin
-    S1[nt+1] = S1[nt] + dt*( - S1[nt]*(Qin + Qr)/V1 + S2[nt]*Qin/V1)    
+    S1[nt+1] = S1[nt] + dt*( - S1[nt]*(Qin + Qr)/V1 + S2[nt]*Qin/V1)
     S2[nt+1] = S2[nt] + dt*( Sin*Qin/V2 - S2[nt]*Qin/V2)
-    
+
 # reset the initial condition
 # intial conditions
 S1[0] = S1[-1]
@@ -134,14 +141,15 @@ for nt in range(NT-1):
     K = fK(Cd, Ut, H)
     Qin = fQin(H, B, c2, K, L, S1[nt], Socn)
     Qin_a[nt] = Qin
-    Sin = fSin(H, B, c2, K, L, S1[nt], Socn)
+    Sin, dsdx, dsdx_alt = fSin(H, B, c2, K, L, S1[nt], Socn)
     Sin_a[nt] = Sin    
     S1[nt+1] = S1[nt] + dt*( - S1[nt]*(Qin + Qr)/V1 + S2[nt]*Qin/V1)    
     S2[nt+1] = S2[nt] + dt*( Sin*Qin/V2 - S2[nt]*Qin/V2)
+    
 # finishing up
 Qin = fQin(H, B, c2, K, L, S1[nt+1], Socn)
 Qin_a[nt+1] = Qin
-Sin = fSin(H, B, c2, K, L, S1[nt+1], Socn)
+Sin, dsdx, dsdx_alt = fSin(H, B, c2, K, L, S1[nt+1], Socn)
 Sin_a[nt+1] = Sin
 
 # collect forcing time series
