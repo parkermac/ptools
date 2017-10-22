@@ -34,8 +34,8 @@ elif Ldir['env'] == 'fjord': # fjord version
         in_dir = '/pmr3/pmraid2/daves/salish_2005_1/OUT/'
         out_dir0 = '/boildat1/parker/roms/output/salish_2005_1_lp/'
         
-#for ii0 in range(26, 8666 + 1, 24):
-for ii0 in range(26, 300 + 1, 24):
+for ii0 in range(26, 8666 + 1, 24):
+#for ii0 in range(26, 300 + 1, 24):
     start_time = datetime.now()
 
     NF = 71
