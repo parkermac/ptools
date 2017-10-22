@@ -54,4 +54,4 @@ for ii0 in range(26, 300 + 1, 24):
     TM = mdates.num2date(mdv.mean())
 
     # make output name (full path) using LiveOcean naming convention
-    print('%s %d' % (TM.strftime('%Y.%m.%d'), ii0)
+    print('%s %d' % (TM.strftime('%Y.%m.%d'), ii0) )
