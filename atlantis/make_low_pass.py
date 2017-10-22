@@ -62,10 +62,8 @@ Lfun.make_dir(out_dir0)
 # for ii0 in range(26, 8666 + 1, 24):
 
 
-# for ii0 in [4994]: # testing for 2006
-for ii0 in range(26, 8666 + 1, 24):
-#for ii0 in range(4994, 4994 + 24 + 1, 24):
-#for ii0 in [4994]:
+#for ii0 in range(26, 8666 + 1, 24):
+for ii0 in range(4274, 8666 + 1, 24):
     start_time = datetime.now()
 
     NF = 71
