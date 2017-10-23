@@ -109,7 +109,7 @@ for ii0 in range(4298, 8666 + 1, 24):
     sys.stdout.flush()
 
     # RUN THE FUNCTION
-    zrfun.roms_low_pass(flist, out_fn, filt0)
+    zrfun.roms_low_pass(flist, out_fn, filt0, exclude=['AKs', 'AKv'])
 
     # save result info
     result_dict = collections.OrderedDict()
