@@ -57,13 +57,19 @@ Lfun.make_dir(out_dir0)
 # and for 8715 ocean_time = 31456800. = (2005,12,31,2,0)
 # (which makes no sense at all! but I think it is right)
 #
+# ISSUE: 2005 dis missing at least AKv starting around July 1:
+# -rw-r--r--. 1 root root 284M Jul 25  2014 ocean_his_4343.nc
+# -rw-r--r--. 1 root root 284M Jul 25  2014 ocean_his_4344.nc
+# -rw-r--r--. 1 root root 218M Jul 25  2014 ocean_his_4345.nc
+# -rw-r--r--. 1 root root 218M Jul 25  2014 ocean_his_4346.nc
+#
 # I think we can perfectly well use the same indices as we did for 2006:
 # for the full year we should start at ii0 = 26 and go to 8666, like this:
 # for ii0 in range(26, 8666 + 1, 24):
 
 
 #for ii0 in range(26, 8666 + 1, 24):
-for ii0 in range(4274, 8666 + 1, 24):
+for ii0 in range(4298, 8666 + 1, 24):
     start_time = datetime.now()
 
     NF = 71

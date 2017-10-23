@@ -61,8 +61,8 @@ def fUt(t, force_flag):
             Ut = 1.5
         elif td>=250:
             Ut = .5
-    elif force_flag == 'cycles':            
-        Ut = 1.5 + 0.5*np.cos((2*np.pi/14)*td)*(1 + 0.5*np.cos((2*np.pi/365)*td))
+    elif force_flag == 'cycles':
+        Ut = 1.5 + 0.5*np.cos((2*np.pi/14)*td)*(1 + 0.5*np.cos((4*np.pi/365)*td))
     return Ut
    
 # functions for derived quantities
@@ -70,40 +70,33 @@ def fUt(t, force_flag):
 def fK(Cd, Ut, H):
     a0 = 0.028
     K = a0 * Cd * Ut * H
-    return K
-    
-def fQin(H, B, c2, K, L, S1, Socn):
     Ks = K/2.2
-    a = (1/48) * (c2/Socn) * H**2 / K
-    b = (3/80) * a * H**2 / Ks
-    dsdx = ( -0.5*L/b + np.sqrt((0.5*L/b)**2 + (2/b)*(Socn-S1)) ) / 2
-    ue = a * dsdx
-    Qin = H * B * ue / 4
-    return Qin
+    return K, Ks
     
-def fSin(H, B, c2, K, L, S1, Socn):
-    Ks = K/2.2
+def fSQin(H, B, c2, K, Ks, L, S1, Socn):
     a = (1/48) * (c2/Socn) * H**2 / K
     b = (3/80) * a * H**2 / Ks
     dsdx = ( -0.5*L/b + np.sqrt((0.5*L/b)**2 + (2/b)*(Socn-S1)) ) / 2
     ue = a * dsdx
     ds = b * dsdx**2 # note ds = delta_s/4
     Sin = S1 + 2*ds
+    Qin = H * B * ue / 4
     dsdx_alt = (Socn - Sin) / L
-    return Sin, dsdx, dsdx_alt
+    return Sin, Qin, dsdx
 
 # prepare result vectors
 
 if force_flag == 'test':
     ND = 40 # number of days for integration
 else:
-    ND = 2*365 # number of days for integration
+    ND = 365 # number of days for integration
     
 dt = 86400 # time step (s)
 NT = int(ND*dt / 86400)
 
 T = np.linspace(0, NT*dt, NT)
 Td = T/86400
+
 S1 = np.nan * np.ones(NT)
 S2 = np.nan * np.ones(NT)
 Qin_a = np.nan * np.ones(NT)
@@ -120,10 +113,9 @@ for nt in range(NT-1):
     t = T[0]
     Qr = fQr(t, force_flag)
     Ut = fUt(t, force_flag)
-    K = fK(Cd, Ut, H)
-    Qin = fQin(H, B, c2, K, L, S1[nt], Socn)
+    K, Ks = fK(Cd, Ut, H)
+    Sin, Qin, dsdx = fSQin(H, B, c2, K, Ks, L, S1[nt], Socn)
     Qin_a[nt] = Qin
-    Sin, dsdx, dsdx_alt = fSin(H, B, c2, K, L, S1[nt], Socn)
     Sin_a[nt] = Sin
     S1[nt+1] = S1[nt] + dt*( - S1[nt]*(Qin + Qr)/V1 + S2[nt]*Qin/V1)
     S2[nt+1] = S2[nt] + dt*( Sin*Qin/V2 - S2[nt]*Qin/V2)
@@ -138,18 +130,18 @@ for nt in range(NT-1):
     t = T[nt+1]    
     Qr = fQr(t, force_flag)
     Ut = fUt(t, force_flag)
-    K = fK(Cd, Ut, H)
-    Qin = fQin(H, B, c2, K, L, S1[nt], Socn)
+    K, Ks = fK(Cd, Ut, H)
+    Sin, Qin, dsdx = fSQin(H, B, c2, K, Ks, L, S1[nt], Socn)
     Qin_a[nt] = Qin
-    Sin, dsdx, dsdx_alt = fSin(H, B, c2, K, L, S1[nt], Socn)
-    Sin_a[nt] = Sin    
+    Sin_a[nt] = Sin
     S1[nt+1] = S1[nt] + dt*( - S1[nt]*(Qin + Qr)/V1 + S2[nt]*Qin/V1)    
     S2[nt+1] = S2[nt] + dt*( Sin*Qin/V2 - S2[nt]*Qin/V2)
     
 # finishing up
-Qin = fQin(H, B, c2, K, L, S1[nt+1], Socn)
+
+K, Ks = fK(Cd, Ut, H)
+Sin, Qin, dsdx = fSQin(H, B, c2, K, Ks, L, S1[nt+1], Socn)
 Qin_a[nt+1] = Qin
-Sin, dsdx, dsdx_alt = fSin(H, B, c2, K, L, S1[nt+1], Socn)
 Sin_a[nt+1] = Sin
 
 # collect forcing time series
