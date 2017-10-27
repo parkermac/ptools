@@ -62,18 +62,19 @@ Lfun.make_dir(out_dir0)
 # -rw-r--r--. 1 root root 284M Jul 25  2014 ocean_his_4344.nc
 # -rw-r--r--. 1 root root 218M Jul 25  2014 ocean_his_4345.nc
 # -rw-r--r--. 1 root root 218M Jul 25  2014 ocean_his_4346.nc
+# FIXED: by adding an "exclude" flag to the low pass function:
+# zrfun.roms_low_pass(flist, out_fn, filt0, exclude=['AKs', 'AKv'])
 #
-# I think we can perfectly well use the same indices as we did for 2006:
+# We use the same indices as we did for 2006:
 # for the full year we should start at ii0 = 26 and go to 8666, like this:
 # for ii0 in range(26, 8666 + 1, 24):
 
-
-#for ii0 in range(26, 8666 + 1, 24):
-for ii0 in range(4298, 8666 + 1, 24):
+for ii0 in range(26, 8666 + 1, 24):
+#for ii0 in range(4298, 8666 + 1, 24): # restart for bug fix
     start_time = datetime.now()
 
     NF = 71
-    #NF = 3
+    #NF = 3 # testing
     flist = []
     for ii in range(NF):
         hh = ('000' + str(ii0 + ii))[-4:]

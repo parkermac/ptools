@@ -41,24 +41,30 @@ import pickle
 
 #%% setup output location
 
-if Ldir['parent'] == '/Users/PM5/Documents/':
-    run_loc = 'mac'
-elif Ldir['parent'] == '/data1/parker/':
-    run_loc = 'fjord'
+whichyear = 2005
 
-if run_loc == 'mac':
-    R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
-elif run_loc == 'fjord':
-    R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
+if Ldir['env'] == 'pm_mac': # mac version
+    if whichyear == 2006:
+        R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2006/'
+    elif whichyear == 2005:
+        R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2005_1_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2005/'
+elif Ldir['env'] == 'fjord': # fjord version
+    if whichyear == 2006:
+        R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2006/'
+    elif whichyear == 2005:
+        R_in_dir0 = '/boildat1/parker/roms/output/salish_2005_1_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2005/'
 
-out_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
 Lfun.make_dir(out_dir0)
 out_dir = out_dir0 + 'gridded_polygons/'
 Lfun.make_dir(out_dir, clean=True)
 
 #%% get ROMS history file
 
-dt = datetime(2006,7,29)
+dt = datetime(whichyear,7,29)
 f_string = 'f' + dt.strftime('%Y.%m.%d')
 R_in_dir = R_in_dir0 + f_string + '/'
 R_fn = R_in_dir + 'low_passed.nc'
