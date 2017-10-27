@@ -29,21 +29,26 @@ if testing == True:
 
 #%% setup input locations
 
-if Ldir['parent'] == '/Users/PM5/Documents/':
-    run_loc = 'mac'
-elif Ldir['parent'] == '/data1/parker/':
-    run_loc = 'fjord'
+whichyear = 2005
+if Ldir['env'] == 'pm_mac': # mac version
+    if whichyear == 2006:
+        R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2006/'
+    elif whichyear == 2005:
+        R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2005_1_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2005/'
+elif Ldir['env'] == 'fjord': # fjord version
+    if whichyear == 2006:
+        R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2006/'
+    elif whichyear == 2005:
+        R_in_dir0 = '/boildat1/parker/roms/output/salish_2005_1_lp/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2005/'
 
-in_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
-in_dir = in_dir0 + 'gridded_polygons/'
+in_dir = out_dir0 + 'gridded_polygons/'
 
-out_dir = in_dir0 + 'fluxes/'
+out_dir = out_dir0 + 'fluxes/'
 Lfun.make_dir(out_dir, clean=True)
-
-if run_loc == 'mac':
-    R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
-elif run_loc == 'fjord':
-    R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
 
 # load polygon results
 
@@ -56,17 +61,17 @@ NLAY = len(z_dict) - 1
 
 #%% find fluxes
 
-dt0 = datetime(2006,1,1)
+dt0 = datetime(whichyear,1,1)
 
-if run_loc == 'mac':
+if Ldir['env'] == 'pm_mac':
     # have 2006.07.01-31 = days 181 to 211
     # big convergence errors for 7/29, 7/30 = 209, 210
     day_list = [208, 209] #range(181,211+1)
-elif run_loc == 'fjord':
+elif Ldir['env'] == 'fjord':
     # in /data1/parker/roms/output/salish_2006_4_lp
     # we have f2006.01.04 through 2016.12.29
     # = days 3 to 362
-    day_list = range(3,363)
+    day_list = range(3, 363)
 
 counter = 0
 for nday in day_list:
