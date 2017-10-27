@@ -77,7 +77,7 @@ Lat = lat[:,0].flatten()
 
 #%% load Atlantis polygon info into a DataFrame
 
-pfn = (Ldir['parent'] + 'PROJECTS/LLTK/Atlantis/Puget_Sound_HydroAtlantis/' +
+pfn = (Ldir['parent'] + 'ptools_data/atlantis/' +
         'AtlantisBoxInfo_toParker.xlsx')
 df = pd.read_excel(pfn, sheetname='BoxVertices')
 NPOLY = df.box_id.max() + 1
