@@ -39,9 +39,9 @@ Suggested order to run the code, and which dch items are used at each step:
     use_min_depth/min_depth
     fjord_cliff_edges
 
-* carve_rivers.py (again to make sure we did not edit them away)
+* carve_rivers.py (not needed)
 
-* smooth_grid.py (again)
+* smooth_grid.py (not needed)
 
 * make_extras.py
     min_depth (enforced for whole grid)

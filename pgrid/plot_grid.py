@@ -80,7 +80,7 @@ fig = plt.figure(figsize=(8*NC,8))
 ax1 = fig.add_subplot(1,NC,1)
 cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis
 cs = ax1.pcolormesh(plon, plat, zm,
-                   vmin=-200, vmax=100, cmap = cmap1)
+                   vmin=-200, vmax=10, cmap = cmap1)
 fig.colorbar(cs, ax=ax1, extend='both')
 pfun.add_coast(ax1)
 pfun.dar(ax1)
@@ -95,7 +95,7 @@ if flag_show_sections:
                     'aquamarine', 'cadetblue', 'royalblue', 'purple']
     lon_rho = ds['lon_rho'][:]
     lat_rho = ds['lat_rho'][:]
-    NS = 5 # number of sections
+    NS = 8 # number of sections
     for ss in range(NS):
         ax = fig.add_subplot(NS,NC,ics*NS - ics*(ss+1) + ics)
         x = lon_rho[0, :]

@@ -111,7 +111,8 @@ if dch['remove_islands']:
         m[1:-1, 1:-1] = mm
         
 # make sure that any remaining high spots are masked
-m[(m==False) & (z >= dch['z_land'])] = True
+# NOTE: this might be a good thing to do in the future.
+# m[(m==False) & (z >= dch['z_land'])] = True
 
 #% Save the output file
 
