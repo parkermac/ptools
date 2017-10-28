@@ -9,8 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'big2'
-#gridname = 'cas1'
+gridname = 'cas2'
 
 import os
 dir0 = os.environ.get('HOME') + '/Documents/'
@@ -56,7 +55,7 @@ def default_choices(Gr, wet_dry=False):
     # instead of using interpolation.
     # We also make a mask_rho that is the average of all values in a cell
     # using 1=water, 0=land.
-    dch['do_cell_average'] = False    
+    dch['do_cell_average'] = False
     # specify topography files to use
     dch['t_dir'] = Gr['dir0'] + 'tools_data/geo_data/topo/'    
     # list of topo files: coarsest to finest
@@ -91,7 +90,8 @@ def default_choices(Gr, wet_dry=False):
         # masked region, and instead adjusts the slope
         # by preferentially deepening at the coast.  This does a much better job of
         # preserving thalweg depth in channels like Hood Canal.
-        dch['fjord_cliff_edges'] = True
+        dch['fjord_cliff_edges'] = False
+        # As of 2017.10.28 I am moving away from this.
     # Set the minimum depth.
     dch['use_min_depth'] = True # now I think this is always a good idea
     dch['min_depth'] = 4 # meters (positive down)

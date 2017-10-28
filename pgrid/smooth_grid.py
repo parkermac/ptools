@@ -96,7 +96,9 @@ except OSError:
     pass # assume error was because the file did not exist
 shutil.copyfile(in_fn, out_fn)
 ds = nc.Dataset(out_fn, 'a')
+    
 ds['h'][:] = -zn
+ds['mask_rho'][:] = MSK
 
 #%% plotting
 

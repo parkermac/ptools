@@ -100,9 +100,15 @@ elif Gr['gridname'] == 'cas1': # An extended version of cascadia1
     y_res_list = [medres, minres, minres, medres]
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
-    dch['use_cell_average'] = True
+    dch['do_cell_average'] = True
     dch['nudging_edges'] = ['south', 'west']
-                                        
+    
+elif Gr['gridname'] == 'cas2': # Another extended version of cascadia1
+    aa = [-127.4, -122, 42, 50]
+    res = 900 # target resolution (m)
+    plon_vec, plat_vec = gfu.simple_grid(aa, res)
+    dch['nudging_edges'] = ['south', 'west']
+
 elif Gr['gridname'] == 'aestus1': # idealized model
     lon_list = [-1, 0, 1, 2, 3]
     x_res_list = [5000, 1000, 1000, 5000, 5000]
@@ -175,7 +181,7 @@ else:
                         pass
             # put good values of z_part in z
             z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-            m[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]            
+            m[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]
     else:
         # m is the start of a mask: 1=water, 0=land
         m = np.ones_like(lon)

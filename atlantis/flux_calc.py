@@ -79,7 +79,7 @@ for nday in day_list:
     tt0 = time.time()
     
     # specify ROMS file to work on
-    dt0 = datetime(2006,1,1)
+    dt0 = datetime(whichyear,1,1)
     dt = dt0 + timedelta(days=nday)
     f_string = 'f' + dt.strftime('%Y.%m.%d')
     print('\nWorking on day %s (nday = %3d)' % (f_string, nday))
@@ -461,7 +461,9 @@ for nday in day_list:
     
     # report on calculation time
     print('  Took %0.1f seconds' % (time.time() - tt0))
-
+    
+    sys.stdout.flush()
+    
     # a plot of the net convergence in all polygons, before and after
     # the iterative correction
     if (testing == True):

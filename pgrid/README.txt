@@ -17,9 +17,9 @@ You can use plot_grid.py to look at any of the grids.  You can override the defa
 
 Suggested order to run the code, and which dch items are used at each step:
 
-* make_grid.py
+* start_grid.py
     analytical
-    do_cell_average
+    do_cell_average [BUGGY!]
     t_dir/t_list
     use_z_offset/z_offset
 
@@ -40,6 +40,8 @@ Suggested order to run the code, and which dch items are used at each step:
     fjord_cliff_edges
 
 * carve_rivers.py (again to make sure we did not edit them away)
+
+* smooth_grid.py (again)
 
 * make_extras.py
     min_depth (enforced for whole grid)

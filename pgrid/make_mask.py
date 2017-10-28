@@ -77,7 +77,7 @@ if dch['unmask_coast']:
       
 # remove islands and lakes
 if dch['remove_islands']:
-    # What is does is mask any water point that has land on 3 sides
+    # What this does is mask any water point that has land on 3 sides
     # or any land point that has water on three sides. By doing this repeatedly
     # you get rid of stray channels or peninsulas.
     # The number in range() determines how long of a feature is removed.
@@ -109,7 +109,10 @@ if dch['remove_islands']:
         MMl = mm & ~ms & ~me & ~mw
         mm[MMl] = False
         m[1:-1, 1:-1] = mm
-       
+        
+# make sure that any remaining high spots are masked
+m[(m==False) & (z >= dch['z_land'])] = True
+
 #% Save the output file
 
 # create the new mask_rho
