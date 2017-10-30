@@ -25,9 +25,9 @@ import matplotlib.pyplot as plt
 
 #%% get zeta time series
 
-R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
+R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2005_4_lp/'
 
-dt0 = datetime(2006,7,1)
+dt0 = datetime(2005,7,1)
 
 lon0 = -123
 lat0 = 48.25
