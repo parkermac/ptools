@@ -25,17 +25,13 @@ whichyear = 2005
 if Ldir['env'] == 'pm_mac': # mac version
     if whichyear == 2006:
         in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2006/'
-        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_mac_2006/'
     elif whichyear == 2005:
         in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2005/'
-        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_mac_2005/'
 elif Ldir['env'] == 'fjord': # fjord version
     if whichyear == 2006:
         in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2006/'
-        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_fjord_2006/'
     elif whichyear == 2005:
         in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2005/'
-        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_fjord_2005/'
 
 Lfun.make_dir(out_dir0, clean=True)
 
