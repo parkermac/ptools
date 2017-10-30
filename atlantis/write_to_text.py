@@ -33,8 +33,6 @@ elif Ldir['env'] == 'fjord': # fjord version
     elif whichyear == 2005:
         in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2005/'
 
-Lfun.make_dir(out_dir0, clean=True)
-
 # specify z levels
 z_dict = {0:5, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
 NLAY = len(z_dict) - 1
