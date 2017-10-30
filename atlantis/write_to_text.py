@@ -19,22 +19,38 @@ import numpy as np
 from datetime import datetime, timedelta
 import pickle
 
+#%% setup input locations
+
+whichyear = 2005
+if Ldir['env'] == 'pm_mac': # mac version
+    if whichyear == 2006:
+        in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2006/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_mac_2006/'
+    elif whichyear == 2005:
+        in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2005/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_mac_2005/'
+elif Ldir['env'] == 'fjord': # fjord version
+    if whichyear == 2006:
+        in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2006/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_fjord_2006/'
+    elif whichyear == 2005:
+        in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2005/'
+        out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_textfiles_fjord_2005/'
+
+Lfun.make_dir(out_dir0, clean=True)
+
 # specify z levels
 z_dict = {0:5, 1:-5, 2:-25, 3:-50, 4:-100, 5:-150, 6:-350}
 NLAY = len(z_dict) - 1
 
 # starting day
-dt0 = datetime(2006,1,1)
+dt0 = datetime(whichyear,1,1)
 
-#%% setup input locations
-if False: # local files for testing and development
-    in_dir0 = Ldir['parent'] + 'ptools_output/atlantis/'
-else: # using files downloaded from fjord
-    in_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord/'
-    
 in_dir_means = in_dir0 + 'means/'
 in_dir_fluxes = in_dir0 + 'fluxes/'
+
 dd = os.listdir(in_dir_means)
+dd.sort()
 # these should be sorted by date
 stv_list = [item for item in dd if 'stv' in item]
 
@@ -58,6 +74,7 @@ for mo in mo_list:
         Lfun.make_dir(out_dir, clean=True)
         
         print('writing to ' + out_dir)
+        sys.stdout.flush()
 
         # prepare to organize output
         avg_dict = dict()

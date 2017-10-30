@@ -8,20 +8,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import dev_functions as dfun
 
-testing = True
+testing = False
 
-if testing == False:
+if testing == True:
     ND = 40 # number of days for integration
 else:
     ND = 3*365 # number of days for integration
     
 # forcing functions
-ff_list = ['linear_ramp_Qr', 'linear_ramp_Ut', 'jumps', 'cycles', 'steady']
+ff_dict = {1:'linear_ramp_Qr',
+        2:'linear_ramp_Ut',
+        3:'jumps',
+        4:'cycles',
+        5:'steady',
+        6:'Qr_jump'}
 
 # USER: run different cases by changing the number below,
 # e.g. ff_list[0] does the first example "linear_ramp_Qr"
-force_flag = ff_list[2]
-
+force_flag = ff_dict[6]
 
 # constants
 beta = 7.7e-4
@@ -49,8 +53,6 @@ def fQr(t, force_flag):
     td = t/86400
     if force_flag == 'linear_ramp_Qr':
         Qr = td * 10 + 100
-    elif force_flag == 'linear_ramp_Ut':
-        Qr = 1000
     elif force_flag == 'jumps':
         Qr = 1000
         if td>=400 and td<500:
@@ -61,15 +63,17 @@ def fQr(t, force_flag):
         ny = np.floor(td/365)
         Qr = 500 + (1000*np.exp(-(td-365/2-ny*365)**2/50**2)
             + 1500*np.exp(-(td-300-ny*365)**2/20**2))
-    elif force_flag == 'steady':
+    elif force_flag == 'Qr_jump':
         Qr = 1000
+        if td>=100 and td<500:
+            Qr = 2000
+    else:
+        Qr = 1000 # default
     return(Qr)
     
 def fUt(t, force_flag):
     td = t/86400
-    if force_flag == 'linear_ramp_Qr':
-        Ut = 1
-    elif force_flag == 'linear_ramp_Ut':
+    if force_flag == 'linear_ramp_Ut':
         Ut = .3 + td * (3/700)
     elif force_flag == 'jumps':
         Ut = 1
@@ -79,8 +83,8 @@ def fUt(t, force_flag):
             Ut = .5
     elif force_flag == 'cycles':
         Ut = 1.5 + 0.5*np.cos((2*np.pi/14)*td)*(1 + 0.5*np.cos((4*np.pi/365)*td))
-    elif force_flag == 'steady':
-        Ut = 1
+    else:
+        Ut = 1 # default
     return Ut
    
 # functions for derived quantities
@@ -169,9 +173,12 @@ for nt in range(NT-1):
         + F21/V1 )
     S2_a[nt+1] = S2_a[nt] + dt*( Sin_l*Qin/V2 - S2_a[nt]*Qin/V2)
 
+
 # reset the initial condition
 S1_a[0] = S1_a[-1]
 S2_a[0] = S2_a[-1]
+S3_a[0] = S3_a[-1]
+S4_a[0] = S4_a[-1]
 
 # time integration
 for nt in range(NT-1):
@@ -202,13 +209,15 @@ for nt in range(NT-1):
         + F21/V1 )
     S2_a[nt+1] = S2_a[nt] + dt*( Sin_l*Qin/V2 - S2_a[nt]*Qin/V2)
 
-# finishing up
-K, Ks = fK(Cd, Ut, H)
-Sout_l = S1_a[-1]
-Sin_s = Socn
-Sin_l, Sout_s, Qin, Qout, dsdx = fSQin(H, B, c2, K, Ks, L, Qr, Sout_l, Sin_s)
-Qin_a[nt+1] = Qin
-Sin_a[nt+1] = Sin_l
+# # finishing up
+# K, Ks = fK(Cd, Ut, H)
+# Sout_l = S1_a[-1]
+# Sin_s = Socn
+# Sin_l, Sout_s, Qin, Qout, dsdx = fSQin(H, B, c2, K, Ks, L, Qr, Sout_l, Sin_s)
+# Qin_a[nt+1] = Qin
+# Sin_a[nt+1] = Sin_l
+    
+
 
 if False:
     # Checking on salt flux conservation in the strait
@@ -246,7 +255,7 @@ ax.text(.3, .3, '$S_{lower}$', horizontalalignment='left',
 # ax.text(.1, .3, '$S_{4}$', horizontalalignment='left',
 #     transform=ax.transAxes, color='r', fontsize=20)
 ax.set_xlim((Td[0],Td[-1]))
-ax.set_ylim(32,26)
+ax.set_ylim(32,22)
 ax.set_title(force_flag.upper())
 ax.grid()
 
