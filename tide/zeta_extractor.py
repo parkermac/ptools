@@ -26,9 +26,9 @@ if pth not in sys.path:
     sys.path.append(pth)
 import pfun
 
-gridname = 'cascadia1'
-tag = 'base'
-ex_name = 'lobio1'
+gridname = 'cas2'
+tag = 'v0'
+ex_name = 'lo6'
 list_type = 'hourly'
 #
 Ldir = Lfun.Lstart(gridname, tag)
@@ -37,11 +37,11 @@ Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
 folder_tag = Ldir['gtagex']
 #
 if Ldir['env'] == 'pm_mac':
-    dt0 = datetime(2017,8,5)
-    dt1 = datetime(2017,8,9)
+    dt0 = datetime(2013,1,15)
+    dt1 = datetime(2013,1,15)
 elif Ldir['env'] == 'fjord':
     dt0 = datetime(2013,1,2)
-    dt1 = datetime(2013,12,31)
+    dt1 = datetime(2013,1,15)
 #
 if list_type == 'hourly':
     fn_list = []

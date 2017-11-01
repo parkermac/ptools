@@ -104,12 +104,12 @@ if True:
     scl = 1e6
     
     ax = fig4.add_subplot(3,1,1)
+    l3, = ax.plot(td, MixTEF_lp/scl, '-c')
+    l3.set_label('Approximate Mixing')
+    l2, = ax.plot(td,MixFull_lp/scl, '-m')
+    l2.set_label('Full Mixing')
     l1, = ax.plot(td, Mix_lp/scl, '-g')
     l1.set_label('Resolved Mixing')
-    l2, = ax.plot(td,MixFull_lp/scl, '-r')
-    l2.set_label('Full Mixing')
-    l3, = ax.plot(td, MixTEF_lp/scl, '-b')
-    l3.set_label('TEF Approximate Mixing')
     # l4, = ax.plot(td, MixTEFsimple/scl, '-', color='orange')
     # l4.set_label('$Q_rS_{in}S_{out}$')
     ax.legend(loc='upper left')
@@ -124,10 +124,10 @@ if True:
     ax.plot([td0, td1], [0,0], '-k', linewidth=1)
     
     ax = fig4.add_subplot(3,1,2)
-    l1, = ax.plot(td, AdvFull/scl, '-r')
+    l2, = ax.plot(td, AdvTEF/scl, '-c')
+    l2.set_label('Approximate Advection')
+    l1, = ax.plot(td, AdvFull/scl, '-b')
     l1.set_label('Advection')
-    l2, = ax.plot(td, AdvTEF/scl, '-b')
-    l2.set_label('TEF Advection')
     ax.legend(loc='upper left')
     ax.text(.6, .9, '(b) Estimates of Advection', transform=ax.transAxes)
     ax.grid()
@@ -222,7 +222,7 @@ if False:
     ax.set_title('(d) TEF Salinities')
     ax.set_xlabel('Time (days)')
     
-if True:
+if False:
     # Variance Budget
     fig2 = plt.figure(figsize=(14,12))
     
