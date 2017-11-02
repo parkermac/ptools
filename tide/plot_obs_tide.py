@@ -1,5 +1,5 @@
 """
-Code to automate getting year-long tide height records from
+Code to plot year-long tide height records from
 a series of NOAA and DFO sites around the Salish Sea and NE Pacific
 coast.
 

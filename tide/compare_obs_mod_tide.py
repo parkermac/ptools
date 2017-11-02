@@ -1,8 +1,5 @@
 """
-Code to automate getting year-long tide height records from
-an extracted model NetCDF file of surface height at
-a series of NOAA and DFO sites around the Salish Sea and NE Pacific
-coast.
+Compare detailed tide records at a selected point
 
 """
 
@@ -14,6 +11,8 @@ if pth not in sys.path:
 import Lfun
 import zfun
 import zrfun
+
+Ldir = Lfun.Lstart()
 
 pth = os.path.abspath('../../LiveOcean/plotting')
 if pth not in sys.path:
@@ -36,13 +35,17 @@ dir00 = home + '/Documents/'
 dir0 = dir00 + 'ptools_output/tide/'
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
-testing = False
-if testing == True:
-    name_list = ['Neah Bay', 'Campbell River', 'Tacoma']
-    a = dict()
-    for name in name_list:
-        a[name] = sn_dict[name]
-    sn_dict = a
+
+# select a subset
+name_list = ['Neah Bay', 'Tacoma']
+a = dict()
+for name in name_list:
+    a[name] = sn_dict[name]
+sn_dict = a
+
+# select model run
+Ldir['gtagex'] = 'cas2_v0_lo6'
+#Ldir['gtagex'] = 'cascadia1_base_lobio1'
 
 # load observational data
 year  = 2013
@@ -55,10 +58,8 @@ for name in sn_dict.keys():
     sn = sn_dict[name]
     fn = obs_dir + 'tide_' + str(sn) + '_' + str(year) + '.p'
     mfn = obs_dir + 'm_' + str(sn) + '_' + str(year) + '.csv'
-    hfn = obs_dir + 'h_' + str(sn) + '_' + str(year) + '.p'
     Tobs[name] = pd.read_pickle(fn)
     Mobs[name] = Lfun.csv_to_dict(mfn)
-    Hobs[name] = pickle.load(open(hfn, 'rb'))
 
 def get_ij_good(lon, lat, xvec, yvec, i0, j0):
     # find the nearest unmasked point
@@ -98,7 +99,7 @@ def get_ij_good(lon, lat, xvec, yvec, i0, j0):
 
 # load model data
 mod_dir = dir0 + 'mod_data/'
-fn = mod_dir + 'cascadia1_base_lobio1/eta_' + str(year) + '.nc'
+fn = mod_dir + Ldir['gtagex'] + '/eta_' + str(year) + '.nc'
 ds = nc.Dataset(fn)
 lon = ds['lon_rho'][:]
 lat = ds['lat_rho'][:]
@@ -108,7 +109,6 @@ yvec = lat[:,0].flatten()
 
 Tmod = dict()
 Mmod = dict()
-Hmod = dict()
 
 for name in sn_dict.keys():
     slon = Mobs[name]['lon']
@@ -139,19 +139,28 @@ for name in sn_dict.keys():
     m_dict['lon'] = xvec[i0]
     m_dict['lat'] = yvec[j0]
     Mmod[name] = m_dict
-    Hmod[name]= ofn.get_harmonics(df, float(Mmod[name]['lat']))
 
-# save results to disk, exactly like what we did for the observations
+# # save results to disk, exactly like what we did for the observations
+# for name in sn_dict.keys():
+#     sn = sn_dict[name]
+#     fn = mod_dir + 'tide_' + str(sn) + '_' + str(year) + '.p'
+#     mfn = mod_dir + 'm_' + str(sn) + '_' + str(year) + '.csv'
+#     Tmod[name].to_pickle(fn)
+#     Lfun.dict_to_csv(Mmod[name], mfn)
+
 for name in sn_dict.keys():
-    sn = sn_dict[name]
-    fn = mod_dir + 'tide_' + str(sn) + '_' + str(year) + '.p'
-    mfn = mod_dir + 'm_' + str(sn) + '_' + str(year) + '.csv'
-    hfn = mod_dir + 'h_' + str(sn) + '_' + str(year) + '.p'
-    Tmod[name].to_pickle(fn)
-    Lfun.dict_to_csv(Mmod[name], mfn)
-    pickle.dump(Hmod[name], open(hfn, 'wb'))
+    tmod = Tmod[name]
+    tobs = Tobs[name]
+    tcomb = tmod.copy()
+    tcomb = tcomb.rename(columns={'eta':'eta_mod'})
+    tcomb['eta_obs'] = tobs.loc[tcomb.index[0]:tcomb.index[-1],'eta']
+    tcomb['eta_mod'] -= tcomb['eta_mod'].mean()
+    tcomb['eta_obs'] -= tcomb['eta_obs'].mean()
+    tcomb.plot(title=name)
+plt.show()
+
     
-if True:
+if False:
     plt.close('all')
     #
     fig = plt.figure(figsize=(8, 8))

@@ -34,14 +34,13 @@ list_type = 'hourly'
 Ldir = Lfun.Lstart(gridname, tag)
 Ldir['ex_name'] = ex_name
 Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
-folder_tag = Ldir['gtagex']
 #
 if Ldir['env'] == 'pm_mac':
-    dt0 = datetime(2013,1,15)
-    dt1 = datetime(2013,1,15)
+    print('local version not implemented')
 elif Ldir['env'] == 'fjord':
-    dt0 = datetime(2013,1,2)
-    dt1 = datetime(2013,1,15)
+    whichyear = 2013
+    dt0 = datetime(whichyear,1,2)
+    dt1 = datetime(whichyear,1,15)
 #
 if list_type == 'hourly':
     fn_list = []
@@ -69,12 +68,14 @@ ds.close()
 NT = len(fn_list)
 
 # prepare a directory for results
-outdir0 = Ldir['parent'] + 'ptools_output/tide/'
-Lfun.make_dir(outdir0, clean=False)
-outdir = Ldir['parent'] + 'ptools_output/tide/mod_data/'
+outdir00 = Ldir['parent'] + 'ptools_output/tide/'
+Lfun.make_dir(outdir00, clean=False)
+outdir0 = outdir00 + 'mod_data/'
+Lfun.make_dir(outdir, clean=False)
+outdir = outdir0 + Ldir['gtagex'] +'/'
 Lfun.make_dir(outdir, clean=False)
 # output file
-out_name = 'eta_' + Ldir['gtagex'] + '.nc'
+out_name = 'eta_' + str(whichyear) + '.nc'
 out_fn = outdir + out_name
 # get rid of the old version, if it exists
 try:
