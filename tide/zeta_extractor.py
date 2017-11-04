@@ -71,7 +71,7 @@ NT = len(fn_list)
 outdir00 = Ldir['parent'] + 'ptools_output/tide/'
 Lfun.make_dir(outdir00, clean=False)
 outdir0 = outdir00 + 'mod_data/'
-Lfun.make_dir(outdir, clean=False)
+Lfun.make_dir(outdir0, clean=False)
 outdir = outdir0 + Ldir['gtagex'] +'/'
 Lfun.make_dir(outdir, clean=False)
 # output file
