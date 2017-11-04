@@ -39,8 +39,8 @@ if Ldir['env'] == 'pm_mac':
     print('local version not implemented')
 elif Ldir['env'] == 'fjord':
     whichyear = 2013
-    dt0 = datetime(whichyear,1,2)
-    dt1 = datetime(whichyear,1,15)
+    dt0 = datetime(whichyear,1,1)
+    dt1 = datetime(whichyear,1,31)
 #
 if list_type == 'hourly':
     fn_list = []
@@ -140,7 +140,7 @@ if os.path.isfile(out_fn):
 else:
     result_dict['result'] = 'fail'
 
-if True:
+if False:
     zfun.ncd(out_fn)
     
 if False:
