@@ -44,7 +44,7 @@ for name in name_list:
 sn_dict = a
 
 # select model run
-Ldir['gtagex'] = 'cas2_v0_lo6'
+Ldir['gtagex'] = 'cas2_regulartide_lo6'
 #Ldir['gtagex'] = 'cascadia1_base_lobio1'
 
 # load observational data

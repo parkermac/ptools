@@ -4,151 +4,136 @@ Adjustment time for the basin strait model.
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
 import basin_strait_functions as bsf
 from importlib import reload
 reload(bsf)
 
+dims, params = bsf.get_dims()
+Socn = params['Socn']
 
-# forcing functions
-ff_dict = {1:'Qr_jump', 2:'Ut_jump'}
-force_flag = ff_dict[1]
+landward_basin = False
+ND = 3000 # number of days
 
-dims = bsf.get_dims()
-H, B, L, Hp, Bp, Lp, V1, V2, V3, V4, beta, g, Cd, Socn = dims
+# result vectors
+vkm3_list = [20, 50, 100, 200, 500, 1000]
 
-landward_basin = True
-ND = 1000 # number of days
+# DataFrame for results
+tadj = pd.DataFrame(index=vkm3_list,
+    columns=['S1', 'S2', 'Qin', 'v1', 'v2', 'qr0', 'qr1', 'qin0', 'qin1'])
+    # the first three are adjustment times in days,
+    # the rest are volumes, start/end river flow, start/end Qin
 
-# forcing functions
-
-def fQr(t, force_flag):
-    td = t/86400
-    if force_flag == 'Qr_jump':
-        Qr = 1000
-        if td>=100:
-            Qr = 2000
-    else:
-        Qr = 1000 # default
-    return Qr
+for vkm3 in vkm3_list:
     
-def fUt(t, force_flag):
-    td = t/86400
-    if force_flag == 'Ut_jump':
-        Ut = 1
-        if td>=100:
-            Ut = 1.5
-    else:
-        Ut = 1 # default
-    return Ut
+    dims['V1'] = vkm3*1e9 * 0.2 # volume of upper basin box
+    dims['V2'] = vkm3*1e9 - dims['V1'] # volume of deeper basin box
     
-# prepare result vectors
-    
-dt = 86400 # time step (s)
-NT = int(ND*dt / 86400)
-T = np.linspace(0, NT*dt, NT)
-Td = T/86400
-S1 = np.nan * np.ones(NT)
-S2 = np.nan * np.ones(NT)
-S3 = np.nan * np.ones(NT)
-S4 = np.nan * np.ones(NT)
-# landward sill
-Qin = np.nan * np.ones(NT)
-Sin = np.nan * np.ones(NT)
-# seaward sill
-Qinp = np.nan * np.ones(NT)
-Sinp = np.nan * np.ones(NT)
-# forcing
-QR = np.nan * np.ones(NT)
-UT = np.nan * np.ones(NT)
-# make forcing time series
-for nt in range(NT):
-    QR[nt] = fQr(T[nt], force_flag)
-    UT[nt] = fUt(T[nt], force_flag)
+    dims['V3'] = 0.2*vkm3*1e9 * 0.2 # volume of upper basin box
+    dims['V4'] = 0.2*vkm3*1e9 - dims['V3'] # volume of deeper basin box
 
-# draft intial conditions
-s1 = Socn-2; s2 = Socn-1; s3 = Socn-3; s4 = Socn-2
-# make an equilibrated initial condition
-for nt in range(NT-1):
-    s1, s2, s3, s4, Qin[nt], Qinp[nt] = bsf.advance_s(
-            QR[0], UT[0], dims, s1, s2, s3, s4, dt,
+    # prepare result vectors
+    # time
+    dt = 86400 # time step (s)
+    NT = int(ND*dt / 86400)
+    T = np.linspace(0, NT*dt, NT)
+    Td = T/86400
+    # basin salinities
+    S1 = np.nan * np.ones(NT); S2 = np.nan * np.ones(NT)
+    S3 = np.nan * np.ones(NT); S4 = np.nan * np.ones(NT)
+    # landward sill
+    Qin = np.nan * np.ones(NT); Sin = np.nan * np.ones(NT)
+    # seaward sill
+    Qinp = np.nan * np.ones(NT); Sinp = np.nan * np.ones(NT)
+    # forcing
+    QR = 2000 * np.ones(NT)
+    QR[0] = 1000
+    UT = np.ones(NT)
+    # draft intial conditions
+    s1 = Socn-2; s2 = Socn-1; s3 = Socn-3; s4 = Socn-2
+    # make an equilibrated initial condition
+    for nt in range(NT-1):
+        s1, s2, s3, s4, Qin[nt], Qinp[nt] = bsf.advance_s(
+                QR[0], UT[0], dims, params, s1, s2, s3, s4, dt,
+                landward_basin=landward_basin)
+    # reset the initial condition to equilibrated state
+    S1[0] = s1; S2[0] = s2; S3[0] = s3; S4[0] = s4
+    # actual time integration
+    for nt in range(NT-1):
+        S1[nt+1], S2[nt+1], S3[nt+1], S4[nt+1], Qin[nt], Qinp[nt] = bsf.advance_s(
+                QR[nt+1], UT[nt+1], dims, params, S1[nt], S2[nt], S3[nt], S4[nt], dt,
+                landward_basin=landward_basin)
+    # finishing up (we already have all the S1-4 final points)
+    nt = NT-1
+    junk, junk, junk, junk, Qin[nt], Qinp[nt] = bsf.advance_s(
+            QR[nt], UT[nt], dims, params, S1[nt], S2[nt], S3[nt], S4[nt], dt,
             landward_basin=landward_basin)
-# reset the initial condition to equilibrated state
-S1[0] = s1; S2[0] = s2; S3[0] = s3; S4[0] = s4
-#
-# actual time integration
-for nt in range(NT-1):
-    S1[nt+1], S2[nt+1], S3[nt+1], S4[nt+1], Qin[nt], Qinp[nt] = bsf.advance_s(
-            QR[nt+1], UT[nt+1], dims, S1[nt], S2[nt], S3[nt], S4[nt], dt,
-            landward_basin=landward_basin)
-#
-# finishing up (we already have all the S1-4 final points)
-nt = NT-1
-junk, junk, junk, junk, Qin[nt], Qinp[nt] = bsf.advance_s(
-        QR[nt], UT[nt], dims, S1[nt], S2[nt], S3[nt], S4[nt], dt,
-        landward_basin=landward_basin)
 
-# calculate the Qin adjustment time
-def calc_tadj(ser, Td):
-    v0 = ser[0]
-    v1 = ser[-1]
-    dv = v1-v0
-    vv = (ser - v0)/dv
-    value = (1 - 1/np.e)
-    idx_q = (np.abs(vv-value)).argmin()
-    idx_t0 = (np.abs(Td-100)).argmin()
-    t0 = Td[idx_t0]
-    t1 = Td[idx_q]
-    tadj = t1-t0
-    print('Adjustment Time = %0.2f days' % (tadj))
+    # function to calculate adjustment time
+    def calc_tadj(name, ser, Td):
+        v0 = ser[0]
+        v1 = ser[-1]
+        dv = v1-v0
+        vv = (ser - v0)/dv
+        value = (1 - 1/np.e)
+        idx_q = (np.abs(vv-value)).argmin()
+        idx_t0 = (np.abs(Td)).argmin()
+        t0 = Td[idx_t0]
+        t1 = Td[idx_q]
+        tadj = t1-t0
+        return tadj
 
-for vv in [S1, S2, Qin]:
-    calc_tadj(vv, Td)
+    tadj.loc[vkm3,'v1'] = dims['V1']
+    tadj.loc[vkm3,'v2'] = dims['V2']
+    tadj.loc[vkm3,'qr0'] = QR[0]
+    tadj.loc[vkm3,'qr1'] = QR[-1]
+    tadj.loc[vkm3, 'qin0'] = Qin[0]
+    tadj.loc[vkm3, 'qin1'] = Qin[-1]
     
+    vdict = {'S1':S1, 'S2':S2, 'Qin':Qin}
+    for vn in vdict.keys():
+        this_tadj = calc_tadj(vn, vdict[vn], Td)
+        tadj.loc[vkm3,vn] = this_tadj
+        #print('%s: Adjustment Time = %0.2f days' % (vn, tadj))
+
+# calculate residence times
+tadj['tres1'] = (1/86400) * tadj['v1']/(tadj['qr0'] + tadj['qin0'])
+tadj['tres2'] = (1/86400) * tadj['v2']/tadj['qin0']
 
 # PLOTTING
+fs_big = 16
+fs_small = 12
+lw_big = 3
+lw_small = 2
+bsf.set_rc(fs_big, fs_small, lw_big, lw_small)
 
-def add_line(ax, nd):
-    aa = ax.axis()
-    ax.plot([nd, nd], aa[-2:], '-k')
-    
-#plt.close()
+#plt.close('all')
 fig = plt.figure(figsize=(12,8))
 
-ax = fig.add_subplot(311)
-ax.plot(Td, S1,'-b', Td, S2,'-r',
-     Td, S3, '--b', S4, '--r', linewidth=3)
-ax.text(.05, .85, '$S_{upper}$', horizontalalignment='left',
+ax = fig.add_subplot(111)
+tadj.plot(y='S1', ax=ax, style='-', color='b', lw=3, legend=False)
+tadj.plot(y='S2', ax=ax, style='-', color='r', lw=3, legend=False)
+tadj.plot(y='tres1', ax=ax, style=':', color='b', lw=3, legend=False)
+tadj.plot(y='tres2', ax=ax, style=':', color='r', lw=3, legend=False)
+ax.text(.05, .8, '$S_{upper}$', horizontalalignment='left',
     transform=ax.transAxes, color='b', fontsize=20)
-ax.text(.05, .65, '$S_{lower}$', horizontalalignment='left',
+ax.text(.05, .6, '$S_{lower}$', horizontalalignment='left',
     transform=ax.transAxes, color='r', fontsize=20)
-ax.set_xlim((Td[0],Td[-1]))
-ax.set_ylim(32,22)
-#ax.set_title(force_flag.upper())
-ax.set_title('Seaward Basin/Sill = Solid Line, Landward = Dashed')
-ax.grid()
-
-ax = fig.add_subplot(312)
-ax.plot(Td, Qin/1000, '-m',Td, Qinp/1000, '--m', linewidth=3)
-ax.text(.95, .8, '$Q_{IN}/1000 (m^3s^{-1})$', horizontalalignment='right',
+    
+tadj.plot(y='Qin', ax=ax, style='-', color='m', lw=3, legend=False)
+ax.text(.05, .4, '$Q_{in}$', horizontalalignment='left',
     transform=ax.transAxes, color='m', fontsize=20)
-ax.set_xlim((Td[0],Td[-1]))
-aa = ax.axis()
-#ax.set_ylim((0, aa[3]))
+ax.set_xlabel('$Basin\ Volume\ (km^{3})$')
 ax.grid()
 
-ax = fig.add_subplot(313)
-ax.plot(Td,QR/1000,'-g', linewidth=6)
-ax.plot(Td,UT,'-k', linewidth=2)
-ax.set_xlabel('Time (days)')
-ax.set_xlim((Td[0],Td[-1]))
-aa = ax.axis()
-ax.set_ylim((0,aa[3]))
-ax.grid()
-ax.text(.05, .1, '$Q_{R}/1000 (m^3s^{-1})$', horizontalalignment='left',
-    transform=ax.transAxes, color='g', fontsize=20)
-ax.text(.95, .8, '$U_{T} (ms^{-1})$', horizontalalignment='right',
-    transform=ax.transAxes, color='k', fontsize=20)
+ax.set_title('Adjustment Times (days) [Dashed Lines = Residence Time]')
 
 plt.show()
+
+# RC CLEANUP
+plt.rcdefaults()
+
+
     
 

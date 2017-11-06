@@ -12,11 +12,8 @@ reload(bsf)
 
 testing = False
 
-if testing == True:
-    ND = 40 # number of days for integration
-else:
-    ND = 3*365 # number of days for integration
-    
+ND = 1000
+
 # forcing functions
 ff_dict = {1:'linear_ramp_Qr',
         2:'linear_ramp_Ut',
@@ -26,12 +23,20 @@ ff_dict = {1:'linear_ramp_Qr',
         6:'Qr_jump'}
 # USER: run different cases by changing the number below,
 # e.g. ff_list[0] does the first example "linear_ramp_Qr"
-force_flag = ff_dict[3]
+force_flag = ff_dict[6]
 
-landward_basin = True
+landward_basin = False
 
-dims = bsf.get_dims()
-H, B, L, Hp, Bp, Lp, V1, V2, V3, V4, beta, g, Cd, Socn = dims
+dims, params = bsf.get_dims()
+
+# adjust by hand
+vkm3 = 500
+dims['V1'] = vkm3*1e9 * 0.2 # volume of upper basin box
+dims['V2'] = vkm3*1e9 - dims['V1'] # volume of deeper basin box
+
+dims['V3'] = 0.2*vkm3*1e9 * 0.2 # volume of upper basin box
+dims['V4'] = 0.2*vkm3*1e9 - dims['V3'] # volume of deeper basin box
+
 
 # forcing functions
 
@@ -51,7 +56,7 @@ def fQr(t, force_flag):
             + 1500*np.exp(-(td-300-ny*365)**2/20**2))
     elif force_flag == 'Qr_jump':
         Qr = 1000
-        if td>=100 and td<500:
+        if td>=100:# and td<500:
             Qr = 2000
     else:
         Qr = 1000 # default
@@ -101,11 +106,12 @@ for nt in range(NT):
     UT[nt] = fUt(T[nt], force_flag)
 
 # draft intial conditions
+Socn = params['Socn']
 s1 = Socn-2; s2 = Socn-1; s3 = Socn-3; s4 = Socn-2
 # make an equilibrated initial condition
 for nt in range(NT-1):
     s1, s2, s3, s4, Qin[nt], Qinp[nt] = bsf.advance_s(
-            QR[0], UT[0], dims, s1, s2, s3, s4, dt,
+            QR[0], UT[0], dims, params, s1, s2, s3, s4, dt,
             landward_basin=landward_basin)
 # reset the initial condition to equilibrated state
 S1[0] = s1; S2[0] = s2; S3[0] = s3; S4[0] = s4
@@ -113,20 +119,17 @@ S1[0] = s1; S2[0] = s2; S3[0] = s3; S4[0] = s4
 # actual time integration
 for nt in range(NT-1):
     S1[nt+1], S2[nt+1], S3[nt+1], S4[nt+1], Qin[nt], Qinp[nt] = bsf.advance_s(
-            QR[nt+1], UT[nt+1], dims, S1[nt], S2[nt], S3[nt], S4[nt], dt,
+            QR[nt+1], UT[nt+1], dims, params, S1[nt], S2[nt], S3[nt], S4[nt], dt,
             landward_basin=landward_basin)
 #
 # finishing up (we already have all the S1-4 final points)
 nt = NT-1
 junk, junk, junk, junk, Qin[nt], Qinp[nt] = bsf.advance_s(
-        QR[nt], UT[nt], dims, S1[nt], S2[nt], S3[nt], S4[nt], dt,
+        QR[nt], UT[nt], dims, params, S1[nt], S2[nt], S3[nt], S4[nt], dt,
         landward_basin=landward_basin)
     
 # PLOTTING
 
-def add_line(ax, nd):
-    aa = ax.axis()
-    ax.plot([nd, nd], aa[-2:], '-k')
     
 #plt.close()
 fig = plt.figure(figsize=(12,8))

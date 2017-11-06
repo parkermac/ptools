@@ -1,29 +1,30 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def get_dims():
-    # SIZES
+    # DIMENSIONS
+    dims = dict()
     # seaward sill
-    H = 56 # depth
-    B = 9.7e3 # width
-    L = 35e3 # length
+    dims['H'] = 56 # depth
+    dims['B'] = 9.7e3 # width
+    dims['L'] = 35e3 # length
     # seaward basin
-    V1 = 77e9 * 0.2 # volume of upper basin box
-    V2 = 77e9 - V1 # volume of deeper basin box
+    dims['V1'] = 77e9 * 0.2 # volume of upper basin box
+    dims['V2'] = 77e9 - dims['V1'] # volume of deeper basin box
     # landward sill
-    Hp = 49 # depth
-    Bp = 1.4e3 # width
-    Lp = 9e3 # length
+    dims['Hp'] = 49 # depth
+    dims['Bp'] = 1.4e3 # width
+    dims['Lp'] = 9e3 # length
     # landward basin
-    V3 = 17e9 * 0.3 # volume of upper basin box
-    V4 = 17e9 - V3 # volume of deeper basin box
-    # constants
-    beta = 7.7e-4
-    g = 9.8
-    Cd = 2.6e-3
-    Socn = 32
-    #
-    dims = (H, B, L, Hp, Bp, Lp, V1, V2, V3, V4, beta, g, Cd, Socn)
-    return dims
+    dims['V3'] = 17e9 * 0.3 # volume of upper basin box
+    dims['V4'] = 17e9 - dims['V3'] # volume of deeper basin box
+    # PARAMETERS
+    params = dict()
+    params['beta'] = 7.7e-4
+    params['g'] = 9.8
+    params['Cd'] = 2.6e-3
+    params['Socn'] = 32
+    return dims, params
 
 def fK(Cd, Ut, H):
     a0 = 0.028
@@ -32,6 +33,8 @@ def fK(Cd, Ut, H):
     return K, Ks
     
 def fSQin(H, B, K, Ks, L, Qr, Sout_l, Sin_s):
+    g = 9.8
+    beta = 7.7e-4
     c2 = g * beta * H * Sin_s
     A = H*B
     H2 = H**2
@@ -50,8 +53,27 @@ def fSQin(H, B, K, Ks, L, Qr, Sout_l, Sin_s):
     Sout_s = Sin_s - 2*ds - eps
     return Sin_l, Sout_s, Qin, Qout, dsdx
     
-def advance_s(Qr, Ut, dims, S1, S2, S3, S4, dt, do_check=False, landward_basin=True):
-    H, B, L, Hp, Bp, Lp, V1, V2, V3, V4, beta, g, Cd, Socn = dims
+def advance_s(Qr, Ut, dims, params, S1, S2, S3, S4, dt, do_check=False, landward_basin=True):
+    
+    H = dims['H']
+    B = dims['B']
+    L = dims['L']
+    # seaward basin
+    V1 = dims['V1']
+    V2 = dims['V2']
+    # landward sill
+    Hp = dims['Hp']
+    Bp = dims['Bp']
+    Lp = dims['Lp']
+    # landward basin
+    V3 = dims['V3']
+    V4 = dims['V4']
+    
+    beta = params['beta']
+    g = params['g']
+    Cd = params['Cd']
+    Socn = params['Socn']
+    
     # landward basin
     K, Ks = fK(Cd, Ut, Hp)
     Sout_l = S3
@@ -118,8 +140,24 @@ def cubic_solver(a,b,c,d):
     #F2 = -(u + v)/2 + (u - v)*i*np.sqrt(3)/2
     #F3 = -(u + v)/2 - (u - v)*i*np.sqrt(3)/2
     the_root = np.real(F1 - b3a)
-
     return the_root
+    
+# RC SETUP (plotting defaults)
+def set_rc(fs_big, fs_small, lw_big, lw_small):
+    plt.rc('xtick', labelsize=fs_small)
+    plt.rc('ytick', labelsize=fs_small)
+    plt.rc('xtick.major', size=10, pad=5, width=lw_small)
+    plt.rc('ytick.major', size=10, pad=5, width=lw_small)
+    plt.rc('axes', lw=lw_small)
+    plt.rc('lines', lw=lw_big)
+    plt.rc('font', size=fs_big)
+    plt.rc('grid', color='g', ls='-', lw=lw_small, alpha=.3)
+    
+def add_line(ax, nd):
+    aa = ax.axis()
+    ax.plot([nd, nd], aa[-2:], '-k')
+
+
 
 if __name__ == '__main__':
     # example use of the functions
