@@ -12,7 +12,12 @@ reload(bsf)
 
 testing = False
 
-ND = 1000
+if testing:
+    ND = 20
+    do_check = True
+else:
+    ND = 1000
+    do_check = False
 
 # forcing functions
 ff_dict = {1:'linear_ramp_Qr',
@@ -25,17 +30,17 @@ ff_dict = {1:'linear_ramp_Qr',
 # e.g. ff_list[0] does the first example "linear_ramp_Qr"
 force_flag = ff_dict[6]
 
-landward_basin = False
+landward_basin = True
 
 dims, params = bsf.get_dims()
 
 # adjust by hand
-vkm3 = 500
-dims['V1'] = vkm3*1e9 * 0.2 # volume of upper basin box
-dims['V2'] = vkm3*1e9 - dims['V1'] # volume of deeper basin box
-
-dims['V3'] = 0.2*vkm3*1e9 * 0.2 # volume of upper basin box
-dims['V4'] = 0.2*vkm3*1e9 - dims['V3'] # volume of deeper basin box
+# vkm3 = 500
+# dims['V1'] = vkm3*1e9 * 0.2 # volume of upper basin box
+# dims['V2'] = vkm3*1e9 - dims['V1'] # volume of deeper basin box
+#
+# dims['V3'] = 0.2*vkm3*1e9 * 0.2 # volume of upper basin box
+# dims['V4'] = 0.2*vkm3*1e9 - dims['V3'] # volume of deeper basin box
 
 
 # forcing functions
@@ -60,7 +65,8 @@ def fQr(t, force_flag):
             Qr = 2000
     else:
         Qr = 1000 # default
-    return Qr
+    Qr_p = Qr/10
+    return Qr, Qr_p
     
 def fUt(t, force_flag):
     td = t/86400
@@ -76,7 +82,8 @@ def fUt(t, force_flag):
         Ut = 1.5 + 0.5*np.cos((2*np.pi/14)*td)*(1 + 0.5*np.cos((4*np.pi/365)*td))
     else:
         Ut = 1 # default
-    return Ut
+    Ut_p = Ut
+    return Ut, Ut_p
     
 # prepare result vectors
     
@@ -88,67 +95,68 @@ Td = T/86400
 
 S1 = np.nan * np.ones(NT)
 S2 = np.nan * np.ones(NT)
-S3 = np.nan * np.ones(NT)
-S4 = np.nan * np.ones(NT)
+S1_p = np.nan * np.ones(NT)
+S2_p = np.nan * np.ones(NT)
 # landward sill
 Qin = np.nan * np.ones(NT)
-Sin = np.nan * np.ones(NT)
 # seaward sill
-Qinp = np.nan * np.ones(NT)
-Sinp = np.nan * np.ones(NT)
+Qin_p = np.nan * np.ones(NT)
 
 QR = np.nan * np.ones(NT)
 UT = np.nan * np.ones(NT)
+QR_p = np.nan * np.ones(NT)
+UT_p = np.nan * np.ones(NT)
 
 # make forcing time series
 for nt in range(NT):
-    QR[nt] = fQr(T[nt], force_flag)
-    UT[nt] = fUt(T[nt], force_flag)
+    QR[nt], QR_p[nt] = fQr(T[nt], force_flag)
+    UT[nt], UT_p[nt] = fUt(T[nt], force_flag)
 
 # draft intial conditions
 Socn = params['Socn']
-s1 = Socn-2; s2 = Socn-1; s3 = Socn-3; s4 = Socn-2
+s1 = Socn-2; s2 = Socn-1; s1_p = Socn-3; s2_p = Socn-2
 # make an equilibrated initial condition
-for nt in range(NT-1):
-    s1, s2, s3, s4, Qin[nt], Qinp[nt] = bsf.advance_s(
-            QR[0], UT[0], dims, params, s1, s2, s3, s4, dt,
-            landward_basin=landward_basin)
+if testing == False:
+    for nt in range(NT-1):
+        s1, s2, s1_p, s2_p, junk, junk = bsf.advance_s(
+            QR[0], QR_p[0], UT[0], UT_p[0], dims, params, s1, s2, s1_p, s2_p, dt,
+            do_check=do_check, landward_basin=landward_basin)
 # reset the initial condition to equilibrated state
-S1[0] = s1; S2[0] = s2; S3[0] = s3; S4[0] = s4
+S1[0] = s1; S2[0] = s2; S1_p[0] = s1_p; S2_p[0] = s2_p
 #
 # actual time integration
 for nt in range(NT-1):
-    S1[nt+1], S2[nt+1], S3[nt+1], S4[nt+1], Qin[nt], Qinp[nt] = bsf.advance_s(
-            QR[nt+1], UT[nt+1], dims, params, S1[nt], S2[nt], S3[nt], S4[nt], dt,
-            landward_basin=landward_basin)
+    S1[nt+1], S2[nt+1], S1_p[nt+1], S2_p[nt+1], Qin[nt], Qin_p[nt] = bsf.advance_s(
+        QR[nt+1], QR_p[nt+1], UT[nt+1], UT_p[nt+1], dims, params, S1[nt], S2[nt], S1_p[nt], S2_p[nt], dt,
+        do_check=do_check, landward_basin=landward_basin)
 #
 # finishing up (we already have all the S1-4 final points)
 nt = NT-1
-junk, junk, junk, junk, Qin[nt], Qinp[nt] = bsf.advance_s(
-        QR[nt], UT[nt], dims, params, S1[nt], S2[nt], S3[nt], S4[nt], dt,
-        landward_basin=landward_basin)
+junk, junk, junk, junk, Qin[nt], Qin_p[nt] = bsf.advance_s(
+        QR[nt], QR_p[nt], UT[nt], UT_p[nt], dims, params, S1[nt], S2[nt], S1_p[nt], S2_p[nt], dt,
+        do_check=do_check, landward_basin=landward_basin)
     
 # PLOTTING
 
     
-#plt.close()
+plt.close()
 fig = plt.figure(figsize=(12,8))
 
 ax = fig.add_subplot(311)
 ax.plot(Td, S1,'-b', Td, S2,'-r',
-     Td, S3, '--b', S4, '--r', linewidth=3)
+     Td, S1_p, '--b', S2_p, '--r', linewidth=3)
 ax.text(.05, .85, '$S_{upper}$', horizontalalignment='left',
     transform=ax.transAxes, color='b', fontsize=20)
 ax.text(.05, .65, '$S_{lower}$', horizontalalignment='left',
     transform=ax.transAxes, color='r', fontsize=20)
 ax.set_xlim((Td[0],Td[-1]))
-ax.set_ylim(32,22)
+#ax.set_ylim(32,22)
 #ax.set_title(force_flag.upper())
 ax.set_title('Seaward Basin/Sill = Solid Line, Landward = Dashed')
 ax.grid()
 
 ax = fig.add_subplot(312)
-ax.plot(Td, Qin/1000, '-m',Td, Qinp/1000, '--m', linewidth=3)
+ax.plot(Td, Qin/1000, '-m',Td, Qin_p/1000, '--m', linewidth=3)
 ax.text(.95, .8, '$Q_{IN}/1000 (m^3s^{-1})$', horizontalalignment='right',
     transform=ax.transAxes, color='m', fontsize=20)
 ax.set_xlim((Td[0],Td[-1]))

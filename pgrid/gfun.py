@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'cas2'
+gridname = 'aestus1'
 
 import os
 dir0 = os.environ.get('HOME') + '/Documents/'

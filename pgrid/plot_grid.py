@@ -41,8 +41,6 @@ elif using_old_grid==False:
     fn = gfun.select_file(Gr)
     in_fn = Gr['gdir'] + fn
     in_fn0 = Gr['gdir'] + 'grid_m00_r00_s00_x00.nc'
-    import pickle
-    dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
 # load the data
 ds = nc.Dataset(in_fn)

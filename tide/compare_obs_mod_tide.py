@@ -37,15 +37,17 @@ dir0 = dir00 + 'ptools_output/tide/'
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 # select a subset
-name_list = ['Neah Bay', 'Tacoma']
+# name_list = ['Neah Bay', 'Tacoma']
+# name_list = ['La Push', 'Vancouver']
+name_list = ['La Push', 'Tacoma']
+# name_list = ['La Push', 'Campbell River']
 a = dict()
 for name in name_list:
     a[name] = sn_dict[name]
 sn_dict = a
 
-# select model run
-Ldir['gtagex'] = 'cas2_regulartide_lo6'
-#Ldir['gtagex'] = 'cascadia1_base_lobio1'
+# select several model runs
+run_list = ['cascadia1_base_lobio1', 'cas2_regulartide_lo6', 'cas2_v0_lo6']
 
 # load observational data
 year  = 2013
@@ -61,7 +63,7 @@ for name in sn_dict.keys():
     Tobs[name] = pd.read_pickle(fn)
     Mobs[name] = Lfun.csv_to_dict(mfn)
 
-def get_ij_good(lon, lat, xvec, yvec, i0, j0):
+def get_ij_good(lon, lat, xvec, yvec, i0, j0, mask):
     # find the nearest unmasked point
     #
     # starting point
@@ -97,71 +99,97 @@ def get_ij_good(lon, lat, xvec, yvec, i0, j0):
     #
     return igood, jgood
 
-# load model data
-mod_dir = dir0 + 'mod_data/'
-fn = mod_dir + Ldir['gtagex'] + '/eta_' + str(year) + '.nc'
-ds = nc.Dataset(fn)
-lon = ds['lon_rho'][:]
-lat = ds['lat_rho'][:]
-mask = ds['mask_rho'][:]
-xvec = lon[0,:].flatten()
-yvec = lat[:,0].flatten()
+# function to load model data
+def get_model_records(gtagex, dir0, year, sn_dict, Mobs):
+    
+    mod_dir = dir0 + 'mod_data/'
+    fn = mod_dir + gtagex + '/eta_' + str(year) + '.nc'
+    ds = nc.Dataset(fn)
+    lon = ds['lon_rho'][:]
+    lat = ds['lat_rho'][:]
+    mask = ds['mask_rho'][:]
+    xvec = lon[0,:].flatten()
+    yvec = lat[:,0].flatten()
 
-Tmod = dict()
-Mmod = dict()
+    Tmod = dict()
+    Mmod = dict()
 
+    for name in sn_dict.keys():
+        slon = Mobs[name]['lon']
+        slat = Mobs[name]['lat']
+        i0, i1, frx = zfun.get_interpolant(np.array([float(slon)]), xvec)
+        j0, j1, fry = zfun.get_interpolant(np.array([float(slat)]), yvec)
+        i0 = int(i0)
+        j0 = int(j0)
+        # find indices of nearest good point
+        if mask[j0,i0] == 1:
+            print(name + ': point ok')
+        elif mask[j0,i0] == 0:
+            print(name + ':point masked')
+            i0, j0 = get_ij_good(lon, lat, xvec, yvec, i0, j0, mask)
+        # put data into a DataFrame
+        zm = ds['zeta'][:,j0,i0].squeeze()
+        tm = ds['ocean_time'][:]
+        dtm_list = []
+        for t in tm:
+            dtm_list.append(Lfun.modtime_to_datetime(t))
+        dti = pd.to_datetime(dtm_list)
+        dti = dti.tz_localize('UTC')
+        df = pd.DataFrame(data={'eta':zm}, index = dti)
+        df.index.name = 'Date'
+        #
+        Tmod[name] = df
+        m_dict = dict()
+        m_dict['lon'] = xvec[i0]
+        m_dict['lat'] = yvec[j0]
+        Mmod[name] = m_dict
+    ds.close()
+    return Tmod, Mmod
+    
+# get the model data
+Tmod_dict = dict()
+Mmod_dict = dict()
+for gtagex in run_list:
+    Tmod_dict[gtagex], Mmod_dict[gtagex] = get_model_records(
+        gtagex, dir0, year, sn_dict, Mobs)
+
+# PLOTTING
+plt.close('all')
+
+fig = plt.figure(figsize=(12,8))
+ax1 = fig.add_subplot(211)
+ax2 = fig.add_subplot(212)
+
+count = 0
 for name in sn_dict.keys():
-    slon = Mobs[name]['lon']
-    slat = Mobs[name]['lat']
-    i0, i1, frx = zfun.get_interpolant(np.array([float(slon)]), xvec)
-    j0, j1, fry = zfun.get_interpolant(np.array([float(slat)]), yvec)
-    i0 = int(i0)
-    j0 = int(j0)
-    # find indices of nearest good point
-    if mask[j0,i0] == 1:
-        print(name + ': point ok')
-    elif mask[j0,i0] == 0:
-        print(name + ':point masked')
-        i0, j0 = get_ij_good(lon, lat, xvec, yvec, i0, j0)
-    # put data into a DataFrame
-    zm = ds['zeta'][:,j0,i0].squeeze()
-    tm = ds['ocean_time'][:]
-    dtm_list = []
-    for t in tm:
-        dtm_list.append(Lfun.modtime_to_datetime(t))
-    dti = pd.to_datetime(dtm_list)
-    dti = dti.tz_localize('UTC')
-    df = pd.DataFrame(data={'eta':zm}, index = dti)
-    df.index.name = 'Date'
-    #
-    Tmod[name] = df
-    m_dict = dict()
-    m_dict['lon'] = xvec[i0]
-    m_dict['lat'] = yvec[j0]
-    Mmod[name] = m_dict
-
-# # save results to disk, exactly like what we did for the observations
-# for name in sn_dict.keys():
-#     sn = sn_dict[name]
-#     fn = mod_dir + 'tide_' + str(sn) + '_' + str(year) + '.p'
-#     mfn = mod_dir + 'm_' + str(sn) + '_' + str(year) + '.csv'
-#     Tmod[name].to_pickle(fn)
-#     Lfun.dict_to_csv(Mmod[name], mfn)
-
-for name in sn_dict.keys():
-    tmod = Tmod[name]
     tobs = Tobs[name]
-    tcomb = tmod.copy()
-    tcomb = tcomb.rename(columns={'eta':'eta_mod'})
-    tcomb['eta_obs'] = tobs.loc[tcomb.index[0]:tcomb.index[-1],'eta']
-    tcomb['eta_mod'] -= tcomb['eta_mod'].mean()
+    tcomb = tobs.copy()
+    tcomb = tcomb.rename(columns={'eta':'eta_obs'})
     tcomb['eta_obs'] -= tcomb['eta_obs'].mean()
-    tcomb.plot(title=name)
+    
+    for gtagex in run_list:
+        Tmod = Tmod_dict[gtagex]
+        tmod = Tmod[name]
+        tcomb[gtagex] = tmod['eta']
+        tcomb[gtagex] -= tcomb[gtagex].mean()
+        
+    if count == 0:
+        ax = ax1
+    else:
+        ax = ax2
+        
+    tcomb.plot(ax = ax, title=name)
+    dt0 = datetime(year,1,10)
+    dt1 = datetime(year,1,16)
+    ax.set_xlim(dt0, dt1)
+    ax.set_ylim(-3,2)
+    ax.grid()
+    count += 1
+    
 plt.show()
 
     
 if False:
-    plt.close('all')
     #
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
