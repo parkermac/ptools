@@ -95,6 +95,16 @@ lw_big = 3
 lw_small = 2
 set_rc(fs_big, fs_small, lw_big, lw_small)
 
+# a function to add spring neap labels
+def add_sn(ax, y=0):
+    # add spring-neap labels
+    snx_list = [3, 10.4, 17.8, 25.2]
+    sn_list = ['S', 'N', 'S', 'N']
+    sn_dict = dict(zip(snx_list, sn_list))
+    for snx in sn_dict.keys():
+        sn = sn_dict[snx]
+        ax.text(snx, y, sn, fontsize=50, alpha=.5, horizontalalignment='center')
+
 #figsize = (18, 12)
 figsize = (14, 8)
 
@@ -122,6 +132,9 @@ if True:
     ax.set_xticklabels('')
     ax.set_xlabel('')
     ax.plot([td0, td1], [0,0], '-k', linewidth=1)
+    
+    # add spring-neap labels
+    add_sn(ax, y=.5)
     
     ax = fig4.add_subplot(3,1,2)
     l2, = ax.plot(td, AdvTEF/scl, '-c')
@@ -171,7 +184,7 @@ if False:
     ax.set_ylim(0, 150)
 
 
-if False:
+if True:
     # TEF Salt Budget
     fig0 = plt.figure(figsize=figsize)
     
@@ -200,6 +213,9 @@ if False:
     ax.set_xticklabels('')
     ax.set_xlabel('')
     
+    # add spring-neap labels
+    add_sn(ax, y=-200)
+    
     ax = fig0.add_subplot(2,2,3)
     scl = 1e3
     ax.plot(td, Qin0/scl, '-b')
@@ -212,6 +228,9 @@ if False:
     ax.set_title('(c) TEF Volume Transports $(10^3\ m^{3}s^{-1})$')
     ax.set_xlabel('Time (days)')
     
+    # add spring-neap labels
+    add_sn(ax, y=2.5)
+    
     ax = fig0.add_subplot(2,2,4)
     ax.plot(td, Sin0, '-', color='orange')
     ax.plot(td, Sout0, '--', color='orange')
@@ -222,7 +241,11 @@ if False:
     ax.set_title('(d) TEF Salinities')
     ax.set_xlabel('Time (days)')
     
-if False:
+    # add spring-neap labels
+    add_sn(ax, y=26)
+    
+    
+if True:
     # Variance Budget
     fig2 = plt.figure(figsize=(14,12))
     
@@ -248,19 +271,7 @@ if False:
     ax.set_xlabel('')
     ax.plot([td0, td1], [0,0], '-k', linewidth=1)
     
-    # Just look at total variance over time
-    ax = fig2.add_subplot(3,1,2)
-    ax.plot(td, SV/V, '-k')
-    ax.grid()
-    ax.set_title('(b) Volume-Average Variance')
-    ax.set_xlabel('Time (days)')
-    ax.set_ylabel('$(g/kg)^2$')
-    ax.set_xlim(td0, td1)
-    ax.set_xticklabels('')
-    ax.set_xlabel('')
-    ax.set_ylim(0, 150)
-    
-    ax = fig2.add_subplot(3,1,3)    
+    ax = fig2.add_subplot(3,1,2)    
     l5, = ax.plot(td, Qin0*SVin0/scl, '-m')
     l5.set_label('$Q_{in}S^{\prime2}_{in}$')
     l6, = ax.plot(td, Qout0*SVout0/scl, '--m')
@@ -271,14 +282,28 @@ if False:
     l8.set_label('Sum = Advection')
     
     ax.legend(ncol=4, loc='upper center')
-    ax.set_title('(c) Advection Decomposed into TEF Terms')
+    ax.set_title('(b) Advection Decomposed into TEF Terms')
     ax.grid()
-    ax.set_xlabel('Time (days)')
     ax.set_ylabel(ylab)
     ax.set_ylim(-3, 4)
     ax.set_xlim(td0, td1)
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
     ax.plot([td0, td1], [0,0], '-k', linewidth=1)
     
+    # Just look at total variance over time
+    ax = fig2.add_subplot(3,1,3)
+    ax.plot(td, SV/V, '-k')
+    ax.grid()
+    ax.set_title('(c) Volume-Average Variance')
+    ax.set_xlabel('Time (days)')
+    ax.set_ylabel('$(g/kg)^2$')
+    ax.set_xlim(td0, td1)
+    ax.set_xlabel('Time (days)')
+    ax.set_ylim(0, 150)
+    
+    # add spring-neap labels
+    add_sn(ax, y=20)
     
 if False:
     # plot raw time series of volume and salt equations

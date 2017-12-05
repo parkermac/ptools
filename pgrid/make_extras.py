@@ -97,6 +97,27 @@ y_rho = np.cumsum(dy, axis=0)
 x_var[:] = x_rho
 y_var[:] = y_rho
 #
+xp_var = ds.createVariable('x_psi', float, ('eta_psi', 'xi_psi'))
+yp_var = ds.createVariable('y_psi', float, ('eta_psi', 'xi_psi'))
+x_psi = x_rho[1:,1:] - dx[1:,1:]/2
+y_psi = y_rho[1:,1:] - dy[1:,1:]/2
+xp_var[:] = x_psi
+yp_var[:] = y_psi
+#
+xu_var = ds.createVariable('x_u', float, ('eta_u', 'xi_u'))
+yu_var = ds.createVariable('y_u', float, ('eta_u', 'xi_u'))
+x_u = x_rho[:,1:] - dx[:,1:]/2
+y_u = y_rho[:,1:]
+xu_var[:] = x_u
+yu_var[:] = y_u
+#
+xv_var = ds.createVariable('x_v', float, ('eta_v', 'xi_v'))
+yv_var = ds.createVariable('y_v', float, ('eta_v', 'xi_v'))
+x_v = x_rho[1:,:]
+y_v = y_rho[1:,:]  - dy[1:,:]/2
+xv_var[:] = x_v
+yv_var[:] = y_v
+#
 # and more
 dndx_var = ds.createVariable('dndx', float, ('eta_rho', 'xi_rho'))
 dmde_var = ds.createVariable('dmde', float, ('eta_rho', 'xi_rho'))
