@@ -105,12 +105,131 @@ def add_sn(ax, y=0):
         sn = sn_dict[snx]
         ax.text(snx, y, sn, fontsize=50, alpha=.5, horizontalalignment='center')
 
-#figsize = (18, 12)
-figsize = (14, 8)
+figsize = (14, 12)
 
-if False:
+if True:
+    # TEF Salt Budget
+    fig0 = plt.figure(figsize=figsize)
+    
+    ax = fig0.add_subplot(2,2,1)
+    scl = 1e6
+    Sstorage = zfun.filt_godin(dSalt_dt)
+    ax.plot(td, Sstorage/scl, '-r', label='d(Net Salt)/dt')
+    ax.plot(td, Qin0*Sin0/scl, '-m', label='$Q_{in}S_{in}$')
+    ax.plot(td, Qout0*Sout0/scl, '--m', label='$Q_{out}S_{out}$')
+    ax.plot(td, (Sstorage - Qin0*Sin0 - Qout0*Sout0)/scl, '-k', label='Error')
+    ax.legend(ncol=2, loc='upper center')
+    ax.grid()
+    ax.set_xlim(td0, td1)
+    ax.set_ylim(-.4, .6)
+    ax.set_title('(a) TEF Salinity Budget $(10^6\ (g/kg)\ m^{3}s^{-1})$')
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    
+    ax = fig0.add_subplot(2,2,2)
+    scl = 1e3
+    ax.plot(td, q0_arr/scl, '-k', linewidth=1.5)
+    ax.set_xlim(td0, td1)
+    ax.set_ylim(-250, 250)
+    ax.grid()
+    ax.set_title('(b) Tidal Volume Transport at Mouth $(10^3\ m^{3}s^{-1})$')
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    
+    # add spring-neap labels
+    add_sn(ax, y=-200)
+    
+    ax = fig0.add_subplot(2,2,3)
+    scl = 1e3
+    ax.plot(td, Qin0/scl, '-b')
+    ax.plot(td, -Qout0/scl, '--b')
+    ax.plot(td, -Qin1/scl, ':b')
+    ax.legend(['$Q_{in}$','$-Q_{out}$','$Q_r$'], ncol=3, loc='upper center')
+    ax.grid()
+    ax.set_xlim(td0, td1)
+    ax.set_ylim(0, 16)
+    ax.set_title('(c) TEF Volume Transports $(10^3\ m^{3}s^{-1})$')
+    ax.set_xlabel('Time (days)')
+    
+    # add spring-neap labels
+    add_sn(ax, y=5)
+    
+    ax = fig0.add_subplot(2,2,4)
+    ax.plot(td, Sin0, '-', color='orange')
+    ax.plot(td, Sout0, '--', color='orange')
+    ax.legend(['$S_{in}$','$S_{out}$'], loc='lower left')
+    ax.grid()
+    ax.set_xlim(td0, td1)
+    ax.set_ylim(20, 35)
+    ax.set_title('(d) TEF Salinities')
+    ax.set_xlabel('Time (days)')
+    # add spring-neap labels
+    add_sn(ax, y=26)
+    
+    
+if True:
+    # Variance Budget
+    fig2 = plt.figure(figsize=figsize)
+    
+    scl = 1e6
+    
+    ax = fig2.add_subplot(3,1,1)
+    l1, = ax.plot(td, zfun.filt_godin(dSV_dt)/scl, '-r')
+    l1.set_label('d(Net Variance)/dt')
+    l2, = ax.plot(td, zfun.filt_godin(qsv)/scl, '-b')
+    l2.set_label('Advection')
+    l3, = ax.plot(td, -zfun.filt_godin(Mixa_arr)/scl, 'g')
+    l3.set_label('-Mixing')
+    l4, = ax.plot(td, zfun.filt_godin(dSV_dt - qsv + Mixa_arr)/scl, '-k')
+    l4.set_label('Error = -Numerical Mixing')
+    ax.legend(ncol=4, loc='upper center')
+    ax.set_title('(a) d(Net Variance)/dt = Advection - Mixing + Error')
+    ax.grid()
+    ylab = '$10^6\ (g/kg)^2\ m^3s^{-1}$'
+    ax.set_ylabel(ylab)
+    ax.set_ylim(-3, 4)
+    ax.set_xlim(td0, td1)    
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    ax.plot([td0, td1], [0,0], '-k', linewidth=1)
+    
+    ax = fig2.add_subplot(3,1,2)    
+    l5, = ax.plot(td, Qin0*SVin0/scl, '-m')
+    l5.set_label('$Q_{in}S^{\prime2}_{in}$')
+    l6, = ax.plot(td, Qout0*SVout0/scl, '--m')
+    l6.set_label('$Q_{out}S^{\prime2}_{out}$')
+    l7, = ax.plot(td, Qr*SVin1/scl, ':m')
+    l7.set_label('$Q_{r}\overline{S}^{2}$')
+    l8, = ax.plot(td, (Qin0*SVin0+Qout0*SVout0+Qr*SVin1)/scl, '-b')
+    l8.set_label('Sum = Advection')
+    
+    ax.legend(ncol=4, loc='upper center')
+    ax.set_title('(b) Advection Decomposed into TEF Terms')
+    ax.grid()
+    ax.set_ylabel(ylab)
+    ax.set_ylim(-2, 4)
+    ax.set_xlim(td0, td1)
+    ax.set_xticklabels('')
+    ax.set_xlabel('')
+    ax.plot([td0, td1], [0,0], '-k', linewidth=1)
+    
+    # Just look at total variance over time
+    ax = fig2.add_subplot(3,1,3)
+    ax.plot(td, SV/V, '-k')
+    ax.grid()
+    ax.set_title('(c) Volume-Average Variance')
+    ax.set_xlabel('Time (days)')
+    ax.set_ylabel('$(g/kg)^2$')
+    ax.set_xlim(td0, td1)
+    ax.set_xlabel('Time (days)')
+    ax.set_ylim(0, 150)
+    
+    # add spring-neap labels
+    add_sn(ax, y=20)
+    
+if True:
     # three estimates of mixing
-    fig4 = plt.figure(figsize=(14,12))
+    fig4 = plt.figure(figsize=figsize)
     scl = 1e6
     
     ax = fig4.add_subplot(3,1,1)
@@ -164,166 +283,11 @@ if False:
     ax.set_xlabel('Time (days)')
     ax.set_ylabel('$(g/kg)^2$')
     ax.set_xlim(td0, td1)
-    ax.set_ylim(-10, 250)
+    ax.set_ylim(-10, 350)
     ax.legend(['$S^{\prime2}_{in}$', '$S^{\prime2}_{out}$',
         '$(S_{in}-\overline{S})^2$','$(S_{out}-\overline{S})^2$'],
         loc='lower left', ncol=2)
-
-if False:
-    
-    # Simple time series of volume-averaged variance
-    fig5 = plt.figure(figsize=(10,7))
-    # Just look at total variance over time
-    ax = fig5.add_subplot(111)
-    ax.plot(td, SV/V, '-k')
-    ax.grid()
-    ax.text(.05, .9, 'Volume-Average Variance', transform=ax.transAxes)
-    ax.set_xlabel('Time (days)')
-    ax.set_ylabel('$(g/kg)^2$')
-    ax.set_xlim(td0, td1)
-    ax.set_ylim(0, 150)
-
-
-if True:
-    # TEF Salt Budget
-    fig0 = plt.figure(figsize=figsize)
-    
-    ax = fig0.add_subplot(2,2,1)
-    scl = 1e6
-    Sstorage = zfun.filt_godin(dSalt_dt)
-    ax.plot(td, Sstorage/scl, '-r', label='d(Net Salt)/dt')
-    ax.plot(td, Qin0*Sin0/scl, '-m', label='$Q_{in}S_{in}$')
-    ax.plot(td, Qout0*Sout0/scl, '--m', label='$Q_{out}S_{out}$')
-    ax.plot(td, (Sstorage - Qin0*Sin0 - Qout0*Sout0)/scl, '-k', label='Error')
-    ax.legend(ncol=2, loc='upper center')
-    ax.grid()
-    ax.set_xlim(td0, td1)
-    ax.set_ylim(-.6, .9)
-    ax.set_title('(a) TEF Salinity Budget $(10^6\ (g/kg)\ m^{3}s^{-1})$')
-    ax.set_xticklabels('')
-    ax.set_xlabel('')
-    
-    ax = fig0.add_subplot(2,2,2)
-    scl = 1e3
-    ax.plot(td, q0_arr/scl, '-k', linewidth=1.5)
-    ax.set_xlim(td0, td1)
-    ax.set_ylim(-250, 250)
-    ax.grid()
-    ax.set_title('(b) Tidal Volume Transport at Mouth $(10^3\ m^{3}s^{-1})$')
-    ax.set_xticklabels('')
-    ax.set_xlabel('')
-    
-    # add spring-neap labels
-    add_sn(ax, y=-200)
-    
-    ax = fig0.add_subplot(2,2,3)
-    scl = 1e3
-    ax.plot(td, Qin0/scl, '-b')
-    ax.plot(td, -Qout0/scl, '--b')
-    ax.plot(td, -Qin1/scl, ':b')
-    ax.legend(['$Q_{in}$','$-Q_{out}$','$Q_r$'], ncol=3, loc='upper center')
-    ax.grid()
-    ax.set_xlim(td0, td1)
-    ax.set_ylim(0, 20)
-    ax.set_title('(c) TEF Volume Transports $(10^3\ m^{3}s^{-1})$')
-    ax.set_xlabel('Time (days)')
-    
-    # add spring-neap labels
-    add_sn(ax, y=2.5)
-    
-    ax = fig0.add_subplot(2,2,4)
-    ax.plot(td, Sin0, '-', color='orange')
-    ax.plot(td, Sout0, '--', color='orange')
-    ax.legend(['$S_{in}$','$S_{out}$'], loc='lower left')
-    ax.grid()
-    ax.set_xlim(td0, td1)
-    ax.set_ylim(20, 35)
-    ax.set_title('(d) TEF Salinities')
-    ax.set_xlabel('Time (days)')
-    
-    # add spring-neap labels
-    add_sn(ax, y=26)
-    
-    
-if False:
-    # Variance Budget
-    fig2 = plt.figure(figsize=(14,12))
-    
-    scl = 1e6
-    
-    ax = fig2.add_subplot(3,1,1)
-    l1, = ax.plot(td, zfun.filt_godin(dSV_dt)/scl, '-r')
-    l1.set_label('d(Net Variance)/dt')
-    l2, = ax.plot(td, zfun.filt_godin(qsv)/scl, '-b')
-    l2.set_label('Advection')
-    l3, = ax.plot(td, -zfun.filt_godin(Mixa_arr)/scl, 'g')
-    l3.set_label('-Mixing')
-    l4, = ax.plot(td, zfun.filt_godin(dSV_dt - qsv + Mixa_arr)/scl, '-k')
-    l4.set_label('Error = -Numerical Mixing')
-    ax.legend(ncol=4, loc='upper center')
-    ax.set_title('(a) d(Net Variance)/dt = Advection - Mixing + Error')
-    ax.grid()
-    ylab = '$10^6\ (g/kg)^2\ m^3s^{-1}$'
-    ax.set_ylabel(ylab)
-    ax.set_ylim(-3, 4)
-    ax.set_xlim(td0, td1)    
-    ax.set_xticklabels('')
-    ax.set_xlabel('')
-    ax.plot([td0, td1], [0,0], '-k', linewidth=1)
-    
-    ax = fig2.add_subplot(3,1,2)    
-    l5, = ax.plot(td, Qin0*SVin0/scl, '-m')
-    l5.set_label('$Q_{in}S^{\prime2}_{in}$')
-    l6, = ax.plot(td, Qout0*SVout0/scl, '--m')
-    l6.set_label('$Q_{out}S^{\prime2}_{out}$')
-    l7, = ax.plot(td, Qr*SVin1/scl, ':m')
-    l7.set_label('$Q_{r}\overline{S}^{2}$')
-    l8, = ax.plot(td, (Qin0*SVin0+Qout0*SVout0+Qr*SVin1)/scl, '-b')
-    l8.set_label('Sum = Advection')
-    
-    ax.legend(ncol=4, loc='upper center')
-    ax.set_title('(b) Advection Decomposed into TEF Terms')
-    ax.grid()
-    ax.set_ylabel(ylab)
-    ax.set_ylim(-3, 4)
-    ax.set_xlim(td0, td1)
-    ax.set_xticklabels('')
-    ax.set_xlabel('')
-    ax.plot([td0, td1], [0,0], '-k', linewidth=1)
-    
-    # Just look at total variance over time
-    ax = fig2.add_subplot(3,1,3)
-    ax.plot(td, SV/V, '-k')
-    ax.grid()
-    ax.set_title('(c) Volume-Average Variance')
-    ax.set_xlabel('Time (days)')
-    ax.set_ylabel('$(g/kg)^2$')
-    ax.set_xlim(td0, td1)
-    ax.set_xlabel('Time (days)')
-    ax.set_ylim(0, 150)
-    
-    # add spring-neap labels
-    add_sn(ax, y=20)
-    
-if False:
-    # plot raw time series of volume and salt equations
-    fig1 = plt.figure(figsize=figsize)
-    #
-    ax = fig1.add_subplot(2,1,1)
-    ax.plot(td, q, '-b')
-    ax.plot(td, dV_dt, '-r')
-    ax.set_title('Test of Volume Conservation')
-    #
-    ax = fig1.add_subplot(2,1,2)
-    ax.plot(td, qs, '-b')
-    ax.plot(td, dSalt_dt, '-r')
-    ax.set_title('Test of Salt Conservation')
-    ax.set_xlabel('Time (days)')
-    #
-    rmse = np.std(qs-dSalt_dt)
-    relative_error = rmse / np.std(dSalt_dt)
-    print('rms salt error / std(dSalt/dt) = %0.5f' % (relative_error))    
-    
+        
 plt.show()
 
 # RC CLEANUP

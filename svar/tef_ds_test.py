@@ -1,5 +1,7 @@
 """
-Code to explore the salinity variance in a simulation.
+Code to explore ways to calcualte TEF, motivated by
+the lack of convergence Elizabeth found unsing smaller
+salinity bins.
 """
 
 import os
@@ -35,8 +37,6 @@ nt = len(f_list) * 24
 # these are all volume integrals with tidal variability
 V_arr = np.nan * np.ones(nt+1)
 Salt_arr = np.nan * np.ones(nt+1)
-SV_arr = np.nan * np.ones(nt+1)
-Mix_arr = np.nan * np.ones(nt+1)
 # initialize result arrays for average files
 # 0 and 1 mean ocean and river ends
 T_arr = np.nan + np.ones(nt) # ocean time
@@ -46,22 +46,17 @@ q1_arr = np.nan * np.ones(nt)
 # salt flux
 qs0_arr = np.nan * np.ones(nt)
 qs1_arr = np.nan * np.ones(nt)
-# variance flux
-qsv0_arr = np.nan * np.ones(nt)
-qsv1_arr = np.nan * np.ones(nt)
 # volume-average salinity
 sbar_arr = np.nan * np.ones(nt)
 
 # initialize intermediate results arrays for TEF quantities
-sedges = np.linspace(0, 35, 1001) # original was 35*20 + 1
+sedges = np.linspace(0, 35, 1001) # original was 35*20 + 1 bins
 sbins = sedges[:-1] + np.diff(sedges)/2
 ns = len(sbins) # number of salinity bins
 tef_q0 = np.zeros((ns, nt))
 tef_q1 = np.zeros((ns, nt))
 tef_qs0 = np.zeros((ns, nt))
 tef_qs1 = np.zeros((ns, nt))
-tef_qsv0 = np.zeros((ns, nt))
-tef_qsv1 = np.zeros((ns, nt))
 
 # loop over hours
 tt = 0 # history
@@ -104,24 +99,10 @@ for f_dir in f_list:
         
         V = np.sum(da.reshape((1,ny,nx))*dzr) # volume
         Salt = np.sum(da.reshape((1,ny,nx))*dzr*salt) # net salt
-        sbar = Salt/V # average salinity
-        sp = salt - sbar # s' = s - sbar
-        sv = sp**2 # salinity variance
-        SV = np.sum(da.reshape((1,ny,nx))*dzr*sv)
-                
-        # and calculate net destruction of variance by vertical mixing
-        K = ds['AKs'][0, 1:-1, j0:j1, i0:i1].squeeze()
-        dzw = np.diff(zr, axis=0)
-        dsdz = np.diff(salt, axis=0) / dzw
-        mix = 2 * K * dsdz**2
-        dvw = da.reshape((1,ny,nx))*dzw
-        Mix = np.sum(mix * dvw)
         
         # store results
         V_arr[tt] = V
         Salt_arr[tt] = Salt
-        SV_arr[tt] = SV
-        Mix_arr[tt] = Mix
         
         ds.close()
         tt += 1
@@ -139,28 +120,10 @@ for f_dir in f_list:
         dq1 = ds['Huon'][0, : , j0:j1, i1-1].squeeze()
         dqs0 = ds['Huon_salt'][0, : , j0:j1, i0-1].squeeze()
         dqs1 = ds['Huon_salt'][0, : , j0:j1, i1-1].squeeze()
-        # calculating flux of salinity variance
-        # first we need to get sbar for the average state
-        zeta = ds['zeta'][0, j0:j1, i0:i1].squeeze()
-        salt = ds['salt'][0, :, j0:j1, i0:i1].squeeze()
-        zr, zw = zrfun.get_z(h, zeta, S)
-        dzr = np.diff(zw, axis=0)        
-        V = np.sum(da.reshape((1,ny,nx))*dzr) # volume
-        Salt = np.sum(da.reshape((1,ny,nx))*dzr*salt) # net salt
-        sbar = Salt/V # average salinity
-        sbar_arr[tta] = sbar
         # then get the salinity averaged onto the u-grid on both open boundaries
         s0 = (ds['salt'][0, :, j0:j1, i0-1].squeeze() + ds['salt'][0, :, j0:j1, i0].squeeze())/2
         s1 = (ds['salt'][0, :, j0:j1, i1-1].squeeze() + ds['salt'][0, :, j0:j1, i1].squeeze())/2
-        # and turn it into variance (these are arrays)
-        sp0 = s0 - sbar
-        sp1 = s1 - sbar
-        sv0 = sp0**2
-        sv1 = sp1**2
-        #
-        # next we take area integrals at ocean and river ends to
-        # get net fluxes
-        #
+        # next we take area integrals at ocean and river ends to get net fluxes
         # Volume
         q0_arr[tta] = -np.sum(dq0)
         q1_arr[tta] = np.sum(dq1)
@@ -177,30 +140,22 @@ for f_dir in f_list:
         # with the rms error being about 0.2% of the std of dSalt/dt.
         # This gives support to the calculation of variance advection
         # below.
-        # Salinity Variance
-        qsv0_arr[tta] = -np.sum(dq0 * sv0)
-        qsv1_arr[tta] = np.sum(dq1 * sv1)
-        #
+
         # TEF variables
         # which are also area integrals at ocean and river ends
         s00 = s0[s0.mask==False] # flattens the array
         dq00 = dq0[dq0.mask==False]
         dqs00 = dqs0[dqs0.mask==False]
-        dqsv0 = dq0 * sv0
-        dqsv00 = dqsv0[dqsv0.mask==False]
         inds = np.digitize(s00, sedges, right=True)
         counter = 0
         for ii in inds:
             tef_q0[ii-1,tta] += dq00[counter]
             tef_qs0[ii-1,tta] += dqs00[counter]
-            tef_qsv0[ii-1,tta] += dqsv00[counter]
             counter += 1
         #
         s11 = s1[s1.mask==False]
         dq11 = dq1[dq1.mask==False]
         dqs11 = dqs1[dqs1.mask==False]
-        dqsv1 = dq1 * sv1
-        dqsv11 = dqsv1[dqsv1.mask==False]
         inds = np.digitize(s11, sedges, right=True)
         counter = 0
         for ii in inds:
@@ -208,7 +163,6 @@ for f_dir in f_list:
             # salinity bins (centered at sbins)
             tef_q1[ii-1,tta] += dq11[counter]
             tef_qs1[ii-1,tta] += dqs11[counter]
-            tef_qsv1[ii-1,tta] += dqsv11[counter]
             counter += 1
         ds.close()
         
@@ -220,126 +174,86 @@ tef_q0_lp = np.nan * np.ones_like(tef_q0)
 tef_q1_lp = np.nan * np.ones_like(tef_q1)
 tef_qs0_lp = np.nan * np.ones_like(tef_qs0)
 tef_qs1_lp = np.nan * np.ones_like(tef_qs1)
-tef_qsv0_lp = np.nan * np.ones_like(tef_qsv0)
-tef_qsv1_lp = np.nan * np.ones_like(tef_qsv1)
 for ii in range(ns):
     tef_q0_lp[ii,:] = zfun.filt_godin(tef_q0[ii,:])
     tef_q1_lp[ii,:] = zfun.filt_godin(tef_q1[ii,:])
     tef_qs0_lp[ii,:] = zfun.filt_godin(tef_qs0[ii,:])
     tef_qs1_lp[ii,:] = zfun.filt_godin(tef_qs1[ii,:])
-    tef_qsv0_lp[ii,:] = zfun.filt_godin(tef_qsv0[ii,:])
-    tef_qsv1_lp[ii,:] = zfun.filt_godin(tef_qsv1[ii,:])
-    
 if False:
-    # this way is BAD: it is sensitive the the number of bins
-    # during less-stratified conditions!!
     qin = tef_q0_lp.copy()
     qout = tef_q0_lp.copy()
     qsin = tef_qs0_lp.copy()
     qsout = tef_qs0_lp.copy()
-    qsvin = tef_qsv0_lp.copy()
-    qsvout = tef_qsv0_lp.copy()
     # then mask for in and out parts (ocean end)
     qin[tef_q0_lp<0] = 0
     qout[tef_q0_lp>0] = 0
     qsin[tef_q0_lp<0] = 0
     qsout[tef_q0_lp>0] = 0
-    qsvin[tef_q0_lp<0] = 0
-    qsvout[tef_q0_lp>0] = 0
     # and integrate over salinity
     Qin0 = qin.sum(axis=0)
     Qout0 = qout.sum(axis=0)
     QSin0 = qsin.sum(axis=0)
     QSout0 = qsout.sum(axis=0)
-    QSVin0 = qsvin.sum(axis=0)
-    QSVout0 = qsvout.sum(axis=0)
 else:
     # alternate method using cumulative sum of the transport
     # to identify the salinity dividing inflow and outflow
     # RESULT: this way is not sensitive to the number of
     # salinity bins.
-    #
-    # start by making the low-passed flux arrays sorted
-    # from high to low salinity
     rq0 = np.flipud(tef_q0_lp)
     rqs0 = np.flipud(tef_qs0_lp)
-    rqsv0 = np.flipud(tef_qsv0_lp)
-    # then form the cumulative sum (the functon Q(s))
     qcs = np.cumsum(rq0, axis=0)
-    # and find its maximum: this is Qin, and the salinity
-    # at which it occurs is the "dividing salinity" between
-    # inflow and outflow that we will use to calculate
-    # all TEF quantities
     imax = np.argmax(qcs, axis=0)
     Qin0 = np.zeros(nt)
     QSin0 = np.zeros(nt)
-    QSVin0 = np.zeros(nt)
     Qout0 = np.zeros(nt)
     QSout0 = np.zeros(nt)
-    QSVout0 = np.zeros(nt)
     for tt in range(nt):
         Qin0[tt] = np.sum(rq0[:imax[tt], tt])
         Qout0[tt] = np.sum(rq0[imax[tt]:, tt])
         QSin0[tt] = np.sum(rqs0[:imax[tt], tt])
         QSout0[tt] = np.sum(rqs0[imax[tt]:, tt])
-        QSVin0[tt] = np.sum(rqsv0[:imax[tt], tt])
-        QSVout0[tt] = np.sum(rqsv0[imax[tt]:, tt])
-    # then fix masking so that the nan's from the low-pass are retained
+    # then fix masking
     nmask = np.isnan(tef_q0_lp[0,:])
     Qin0[nmask] = np.nan
     QSin0[nmask] = np.nan
-    QSVin0[nmask] = np.nan
     Qout0[nmask] = np.nan
     QSout0[nmask] = np.nan
-    QSVout0[nmask] = np.nan
 
 # form derived quantities
 Sin0 = QSin0/Qin0
 Sout0 = QSout0/Qout0
-SVin0 = QSVin0/Qin0
-SVout0 = QSVout0/Qout0
 
 # same steps for the river end
-# OK in this case to do this the original way because
-# it is all freshwater.
 qin = tef_q1_lp.copy()
 qout = tef_q1_lp.copy()
 qsin = tef_qs1_lp.copy()
 qsout = tef_qs1_lp.copy()
-qsvin = tef_qsv1_lp.copy()
-qsvout = tef_qsv1_lp.copy()
 #
 qin[tef_q1_lp>0] = 0 # switch signs compared to open boundary 0
 qout[tef_q1_lp<0] = 0
 qsin[tef_q1_lp>0] = 0
 qsout[tef_q1_lp<0] = 0
-qsvin[tef_q1_lp>0] = 0
-qsvout[tef_q1_lp<0] = 0
 #
 Qin1 = qin.sum(axis=0)
 Qout1 = qout.sum(axis=0)
 QSin1 = qsin.sum(axis=0)
 QSout1 = qsout.sum(axis=0)
-QSVin1 = qsvin.sum(axis=0)
-QSVout1 = qsvout.sum(axis=0)
 #
 Sin1 = QSin1/Qin1
 #Sout1 = QSout1/Qout1 # Qout1 = 0
-SVin1 = QSVin1/Qin1
-#SVout1 = QSVout1/Qout1
 
 # Save results for plotting
 D = dict()
-D_list = ['T_arr', 'V_arr', 'Salt_arr', 'SV_arr', 'Mix_arr', 'sbar_arr',
-    'q0_arr', 'qs0_arr', 'qsv0_arr',
-    'q1_arr', 'qs1_arr', 'qsv1_arr',
-    'Qin0', 'Qout0', 'Sin0', 'Sout0', 'SVin0', 'SVout0',
-    'Qin1', 'Sin1', 'SVin1']
+D_list = ['T_arr', 'V_arr', 'Salt_arr',
+    'q0_arr', 'qs0_arr',
+    'q1_arr', 'qs1_arr',
+    'Qin0', 'Qout0', 'Sin0', 'Sout0',
+    'Qin1', 'Sin1']
 for vn in D_list:
     D[vn] = locals()[vn]
 
 out_dir = Ldir['parent'] + 'ptools_output/svar/'
 Lfun.make_dir(out_dir)
-out_fn = out_dir + 'svar_0.p'
+out_fn = out_dir + 'tef_0.p'
 pickle.dump(D, open(out_fn, 'wb'))
 
