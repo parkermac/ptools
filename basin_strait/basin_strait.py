@@ -134,35 +134,33 @@ for nt in range(NT):
 Socn = SOCN[0]
 s1 = Socn-2; s2 = Socn-1; s1_p = Socn-3; s2_p = Socn-2
 # make an equilibrated initial condition
+rev = False
+rev_p = False
 if testing == False:
     for nt in range(NT-1):
-        s1, s2, s1_p, s2_p, junk, junk = bsf.advance_s(
+        s1, s2, s1_p, s2_p, junk, junk, rev, rev_p = bsf.advance_s(
             QR[0], QR_p[0], UT[0], UT_p[0], SOCN[0], SSFC[0],
             dims, params, s1, s2, s1_p, s2_p, dt,
-            do_check=do_check, landward_basin=landward_basin)
+            do_check=do_check, landward_basin=landward_basin, prev_rev=rev, prev_rev_p=rev_p)
 # reset the initial condition to equilibrated state
 S1[0] = s1; S2[0] = s2; S1_p[0] = s1_p; S2_p[0] = s2_p
 #
 # actual time integration
 for nt in range(NT-1):
-    
-    # if nt == 400:
-    #     params['Socn'] = 25
-    #     params['Ssfc'] = 24
         
-    S1[nt+1], S2[nt+1], S1_p[nt+1], S2_p[nt+1], Qbot[nt], Qbot_p[nt] = bsf.advance_s(
+    S1[nt+1], S2[nt+1], S1_p[nt+1], S2_p[nt+1], Qbot[nt], Qbot_p[nt], rev, rev_p = bsf.advance_s(
         QR[nt+1], QR_p[nt+1], UT[nt+1], UT_p[nt+1], SOCN[nt+1], SSFC[nt+1],
         dims, params,
         S1[nt], S2[nt], S1_p[nt], S2_p[nt], dt,
-        do_check=do_check, landward_basin=landward_basin)
+        do_check=do_check, landward_basin=landward_basin, prev_rev=rev, prev_rev_p=rev_p)
 #
 # finishing up (we already have all the S1-4 final points)
 nt = NT-1
-junk, junk, junk, junk, Qbot[nt], Qbot_p[nt] = bsf.advance_s(
+junk, junk, junk, junk, Qbot[nt], Qbot_p[nt], rev, rev_p = bsf.advance_s(
         QR[nt], QR_p[nt], UT[nt], UT_p[nt], SOCN[nt], SSFC[nt],
         dims, params,
         S1[nt], S2[nt], S1_p[nt], S2_p[nt], dt,
-        do_check=do_check, landward_basin=landward_basin)
+        do_check=do_check, landward_basin=landward_basin, prev_rev=rev, prev_rev_p=rev_p)
     
 # PLOTTING
 

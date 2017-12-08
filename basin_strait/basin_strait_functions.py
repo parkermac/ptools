@@ -80,7 +80,7 @@ def fSQ_rev(Stopp, Sbotm, Qr, Ut, L, H, A, params, Socn):
     
 def advance_s(Qr, Qr_p, Ut, Ut_p, Socn, Ssfc,
         dims, params, S1, S2, S1_p, S2_p, dt,
-        do_check=False, landward_basin=True):
+        do_check=False, landward_basin=True, prev_rev=False, prev_rev_p=False):
     
     # make easier access to dicts
     dm = Bunch(dims)
@@ -94,12 +94,14 @@ def advance_s(Qr, Qr_p, Ut, Ut_p, Socn, Ssfc,
     # which gradient is biggest?
     gr_norm_p = Sbotp_p - Stopm_p
     gr_rev_p = Sbotm_p - Stopp_p
-    rev_p = False
-    ff = 2
+    
+    ff = 1.5 # factor to damp oscillations in the straits
+    rev_p = prev_rev_p
     # if gr_norm_p >= ff*gr_rev_p:
-    #     rev_p = False
-    if gr_rev_p > ff*gr_norm_p:
+    if (gr_rev_p > ff*gr_norm_p) and prev_rev_p==False :
         rev_p = True
+    elif (gr_norm_p > ff*gr_rev_p) and prev_rev_p==True :
+        rev_p = False
         
     if landward_basin == False:
         S1_pn = 0
@@ -136,11 +138,12 @@ def advance_s(Qr, Qr_p, Ut, Ut_p, Socn, Ssfc,
     # which gradient is biggest?
     gr_norm = Sbotp - Stopm
     gr_rev = Sbotm - Stopp
-    if gr_norm >= gr_rev:
-        rev = False
-    elif gr_rev > gr_norm:
+    rev = prev_rev
+    if (gr_rev > ff*gr_norm) and prev_rev==False :
         rev = True
-    
+    elif (gr_norm > ff*gr_rev) and prev_rev==True :
+        rev = False
+            
     if rev == False:
         # Normal case
         Sbotm, Stopp, Qbot, Qtop = fSQ(Stopm, Sbotp, Qrr, Ut, dm.L, dm.H, dm.A, params, Socn)
@@ -177,7 +180,7 @@ def advance_s(Qr, Qr_p, Ut, Ut_p, Socn, Ssfc,
         print('F landward end = ' + str(Fl))
         print('F seaward end = ' + str(Fs))
         
-    return S1n, S2n, S1_pn, S2_pn, Qbot, Qbot_p
+    return S1n, S2n, S1_pn, S2_pn, Qbot, Qbot_p, rev, rev_p
     
 # RC SETUP (plotting defaults)
 def set_rc(fs_big, fs_small, lw_big, lw_small):
