@@ -33,108 +33,151 @@ def get_dims():
     params['beta'] = 7.7e-4
     params['g'] = 9.8
     params['Cd'] = 2.6e-3
-    params['Socn'] = 32
-    params['Ssfc'] = 31
+    # params['Socn'] = 32
+    # params['Ssfc'] = 31
     params['k1'] = 1/(4*48)
     params['k2'] = 6.6/(80*48)
     return dims, params
     
     
-def fSQ(Soutm, Sinp, Qr, Ut, L, H, A, params):
+def fSQ(Stopm, Sbotp, Qr, Ut, L, H, A, params, Socn):
     pr = Bunch(params)
-    c = np.sqrt(pr.g*pr.beta*pr.Socn*H)
+    c = np.sqrt(pr.g*pr.beta*Socn*H)
     K = 0.028 * pr.Cd * Ut * H
     T = H**2 / K
     # find G = dsdx/Socn
     aa = pr.k2*c**2*T**2
-    G = (-L + np.sqrt(L**2 + 8*aa*(Sinp-Soutm)/pr.Socn))/(4*aa)
+    G = (-L + np.sqrt(L**2 + 8*aa*(Sbotp-Stopm)/Socn))/(4*aa)
     dq = A*pr.k1*c**2*T*G
-    Qin = dq
-    Qout = -(Qin + Qr)
+    Qbot = dq
+    Qtop = -dq - Qr
     # adjust salinities to conserve salt flux
-    ds = pr.Socn*aa*G**2
-    eps = Qr*(Sinp-Soutm-2*ds)/(2*Qin+Qr)
-    Sinm = Soutm + 2*ds - eps
-    Soutp = Sinp - 2*ds - eps
-    return Sinm, Soutp, Qin, Qout
+    ds = Socn*aa*G**2
+    eps = Qr*(Sbotp-Stopm-2*ds)/(2*Qbot+Qr)
+    Sbotm = Stopm + 2*ds - eps
+    Stopp = Sbotp - 2*ds - eps
+    return Sbotm, Stopp, Qbot, Qtop
     
-def advance_s(Qr, Qr_p, Ut, Ut_p, dims, params, S1, S2, S1_p, S2_p, dt, do_check=False, landward_basin=True):
+def fSQ_rev(Stopp, Sbotm, Qr, Ut, L, H, A, params, Socn):
+    # for the case of reversed flow
+    pr = Bunch(params)
+    c = np.sqrt(pr.g*pr.beta*Socn*H)
+    K = 0.028 * pr.Cd * Ut * H
+    T = H**2 / K
+    # find G = dsdx/Socn
+    aa = pr.k2*c**2*T**2
+    G = -(-L + np.sqrt(L**2 + 8*aa*(Sbotm-Stopp)/Socn))/(4*aa)
+    # note that G is now negative, so dq is negative as well
+    dq = A*pr.k1*c**2*T*G
+    Qbot = dq # so this is negative: a sink from the basin
+    Qtop = -dq - Qr
+    # adjust salinities to conserve salt flux
+    ds = Socn*aa*G**2
+    eps = Qr*(Sbotm-Stopp-2*ds)/(2*Qbot+Qr)
+    Sbotp = Stopp + 2*ds - eps
+    Stopm = Sbotm - 2*ds - eps
+    return Sbotp, Stopm, Qbot, Qtop
+    
+def advance_s(Qr, Qr_p, Ut, Ut_p, Socn, Ssfc,
+        dims, params, S1, S2, S1_p, S2_p, dt,
+        do_check=False, landward_basin=True):
     
     # make easier access to dicts
     dm = Bunch(dims)
     pr = Bunch(params)
     
     # landward basin
-    Soutm_p = S1_p
-    Sinp_p = S2
-    
-    Sinm_p, Soutp_p, Qin_p, Qout_p = fSQ(Soutm_p, Sinp_p, Qr_p, Ut_p, dm.L_p, dm.H_p, dm.A_p, params)
-    
-    S1_pn = S1_p + dt*(S1_p*Qout_p + S2_p*Qin_p)/dm.V1_p
-    S2_pn = S2_p + dt*(Sinm_p*Qin_p - S2_p*Qin_p)/dm.V2_p
-    
+    Stopm_p = S1_p
+    Sbotp_p = S2
+    Stopp_p = S1
+    Sbotm_p = S2_p
+    # which gradient is biggest?
+    gr_norm_p = Sbotp_p - Stopm_p
+    gr_rev_p = Sbotm_p - Stopp_p
+    rev_p = False
+    ff = 2
+    # if gr_norm_p >= ff*gr_rev_p:
+    #     rev_p = False
+    if gr_rev_p > ff*gr_norm_p:
+        rev_p = True
+        
     if landward_basin == False:
         S1_pn = 0
         S2_pn = 0
-        Soutp_p = 0
-        Qout_p = -Qr
-        Qin_p = 0
+        Stopp_p = 0
+        Qtop_p = -Qr
+        Qbot_p = 0
+    else:
+        if rev_p == False:
+            # Normal case
+            Sbotm_p, Stopp_p, Qbot_p, Qtop_p = fSQ(Stopm_p, Sbotp_p, Qr_p, Ut_p,
+                dm.L_p, dm.H_p, dm.A_p, params, Socn)
+            S1_pn = S1_p + dt*(S1_p*Qtop_p + S2_p*Qbot_p)/dm.V1_p
+            S2_pn = S2_p + dt*(Sbotm_p*Qbot_p - S2_p*Qbot_p)/dm.V2_p
+        elif rev_p == True:
+            # Reversed case
+            Stopp_p = S1
+            Sbotm_p = S2_p
+            Sbotp_p, Stopm_p, Qbot_p, Qtop_p = fSQ_rev(Stopp_p, Sbotm_p, Qr_p, Ut_p,
+                dm.L_p, dm.H_p, dm.A_p, params, Socn)
+            S1_pn = S1_p + dt*(Stopm_p*Qtop_p + S1_p*Qbot_p)/dm.V1_p
+            S2_pn = S2_p + dt*(S2_p*Qbot_p - S1_p*Qbot_p)/dm.V2_p
         
     # seaward basin
-    Soutm = S1
-    Sinp = pr.Socn
+    Stopm = S1
+    Sbotp = Socn
     Qrr = Qr + Qr_p
-    Sinm, Soutp, Qin, Qout = fSQ(Soutm, Sinp, Qrr, Ut, dm.L, dm.H, dm.A, params)
-        
-    Q21 = Qin-Qin_p
-    if Q21 >= 0:
-        F21 = Q21*S2
-    else:
-        F21 = Q21*S1
-    S1n = S1 + dt*(S1*Qout - Soutp_p*Qout_p + F21)/dm.V1
-    S2n = S2 + dt*(Sinm*Qin - S2*Qin_p  - F21)/dm.V2
+    
+    # landward basin
+    Stopm = S1
+    Sbotp = Socn
+    Stopp = Ssfc
+    Sbotm = S2
+    # which gradient is biggest?
+    gr_norm = Sbotp - Stopm
+    gr_rev = Sbotm - Stopp
+    if gr_norm >= gr_rev:
+        rev = False
+    elif gr_rev > gr_norm:
+        rev = True
+    
+    if rev == False:
+        # Normal case
+        Sbotm, Stopp, Qbot, Qtop = fSQ(Stopm, Sbotp, Qrr, Ut, dm.L, dm.H, dm.A, params, Socn)
+        Q21 = Qbot-Qbot_p
+        if Q21 >= 0:
+            F21 = Q21*S2
+        else:
+            F21 = Q21*S1
+        S1n = S1 + dt*(S1*Qtop - Stopp_p*Qtop_p + F21)/dm.V1
+        S2n = S2 + dt*(Sbotm*Qbot - S2*Qbot_p  - F21)/dm.V2
+    elif rev == True:
+        # Reversed case
+        Stopp = Ssfc
+        Sbotm = S2
+        Sbotp, Stopm, Qbot, Qtop = fSQ_rev(Stopp, Sbotm, Qrr, Ut, dm.L, dm.H, dm.A, params, Socn)
+        Q21 = Qbot-Qbot_p
+        if Q21 >= 0:
+            F21 = Q21*S2
+        else:
+            F21 = Q21*S1
+        if rev_p == True:
+            S1n = S1 + dt*(Stopm*Qtop - S1*Qtop_p + F21)/dm.V1
+            S2n = S2 + dt*(S2*Qbot - Sbotp_p*Qbot_p  - F21)/dm.V2
+        elif rev_p == False:
+            S1n = S1 + dt*(Stopm*Qtop - Stopp_p*Qtop_p + F21)/dm.V1
+            S2n = S2 + dt*(S2*Qbot - S2*Qbot_p  - F21)/dm.V2
     
     if do_check:
         # Checking on salt flux conservation at both ends
         # of the seaward strait
         # RESULT: it works perfectly now.
-        Fl = Qin*Sinm + Qout*Soutm
-        Fs = Qin*Sinp + Qout*Soutp
+        Fl = Qbot*Sbotm + Qtop*Stopm
+        Fs = Qbot*Sbotp + Qtop*Stopp
         print('F landward end = ' + str(Fl))
         print('F seaward end = ' + str(Fs))
         
-    return S1n, S2n, S1_pn, S2_pn, Qin, Qin_p
-
-def cubic_solver(a,b,c,d):
-    """
-    This gives the real root of a cubic polynomial of the form
-    a*x**3 + b*x**2 + c*x + d = 0
-    Parker MacCready 12/5/2002, recoded in python 10/25/2017
-    """
-    b3a = b/(3*a)
-    b3a2 = b3a * b3a
-    b3a3 = b3a * b3a * b3a
-    p = 3*b3a2 - 2*(b/a)*b3a + c/a
-    q = -b3a3 + (b/a)*b3a2 - (c/a)*b3a + d/a
-    D = (p/3)**3 + (q/2)**2
-    if D > 0:
-        # calculate u and v (use the part of cube root)
-        u_inn = -q/2 + np.sqrt(D)
-        u = np.sign(u_inn)*np.abs(complex(u_inn)**(1/3))
-        v_inn = -q/2 - np.sqrt(D)
-        v = np.sign(v_inn)*np.abs(complex(v_inn)**(1/3))
-    else:
-        # calculate u and v (use an imaginary part of the cube root)
-        u_inn = -q/2 + np.sqrt(complex(D))
-        u = complex(u_inn)**(1/3)
-        v_inn = -q/2 - np.sqrt(complex(D))
-        v = complex(v_inn)**(1/3)
-    # there are three roots, but we return only the first
-    F1 = u + v 
-    #F2 = -(u + v)/2 + (u - v)*i*np.sqrt(3)/2
-    #F3 = -(u + v)/2 - (u - v)*i*np.sqrt(3)/2
-    the_root = np.real(F1 - b3a)
-    return the_root
+    return S1n, S2n, S1_pn, S2_pn, Qbot, Qbot_p
     
 # RC SETUP (plotting defaults)
 def set_rc(fs_big, fs_small, lw_big, lw_small):

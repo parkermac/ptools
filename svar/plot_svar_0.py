@@ -108,7 +108,7 @@ def add_sn(ax, y=0):
 #figsize = (18, 12)
 figsize = (14, 8)
 
-if True:
+if False:
     # three estimates of mixing
     fig4 = plt.figure(figsize=(14,12))
     scl = 1e6
@@ -245,7 +245,7 @@ if True:
     add_sn(ax, y=26)
     
     
-if True:
+if False:
     # Variance Budget
     fig2 = plt.figure(figsize=(14,12))
     

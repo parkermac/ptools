@@ -53,7 +53,7 @@ qsv1_arr = np.nan * np.ones(nt)
 sbar_arr = np.nan * np.ones(nt)
 
 # initialize intermediate results arrays for TEF quantities
-sedges = np.linspace(0, 35, 35*20 + 1)
+sedges = np.linspace(0, 35, 35*20 + 1) # original was 35*20
 sbins = sedges[:-1] + np.diff(sedges)/2
 ns = len(sbins) # number of salinity bins
 tef_q0 = np.zeros((ns, nt))
@@ -126,7 +126,7 @@ for f_dir in f_list:
         ds.close()
         tt += 1
         
-    # next get arrays fro flux claculations from the averages
+    # next get arrays for flux claculations from the averages
     a_list = os.listdir(dir0 + f_dir)
     a_list.sort()
     a_list = [x for x in a_list if x[:9]=='ocean_avg']

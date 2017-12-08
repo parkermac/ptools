@@ -110,11 +110,11 @@ ax1.axis(aa)
 
 # create control buttons
 # list is organized from bottom to top
-blist = ['start', 'pause','polyInfo', 'lineLength', 'startPoly',
+blist = ['start', 'pause','polyInfo', 'lineInfo', 'startPoly',
          'done']
 # nicer names
 Blist = ['Start', 'Pause','Polygon Info',
-         'Line Length', 'Start Polygon\nLine',
+         'Line Info', 'Start Polygon\nLine',
          'Done']
 NB = len(blist) # number of buttons
 ybc = np.arange(NB+1) - .5
@@ -247,7 +247,7 @@ while flag_get_ginput:
             inp = input('Push Return to continue\n')
             remove_poly()
             ax1.set_title('PAUSED')
-        elif (bdict[nb]=='lineLength') and not flag_start:
+        elif (bdict[nb]=='lineInfo') and not flag_start:
             flag_continue = False
             x = plon_poly
             y = plat_poly
@@ -256,6 +256,17 @@ while flag_get_ginput:
                 dist += np.sqrt( (xm[y[ii+1],x[ii+1]]-xm[y[ii],x[ii]])**2
                     + (ym[y[ii+1],x[ii+1]]-ym[y[ii],x[ii]])**2 )
             print('Line length = %0.1f km' % (dist/1e3))
+            
+            # also find the sectional area under the line
+            # nseg = 100
+            # area = 0
+            # for ii in range(len(x)-1):
+            #     x0 = x[ii]; x1 = x[ii+1]
+            #     y0 = y[ii]; y1 = y[ii+1]
+            #     xx = np.linspace(x0, x1, nseg)
+            #     yy = np.linspace(y0, y1, nseg)
+            #     ix0, ix1, xfr = zfun.get_interpolant(xx, lon)
+                
             inp = input('Push Return to continue\n')
             remove_poly()
             ax1.set_title('PAUSED')
