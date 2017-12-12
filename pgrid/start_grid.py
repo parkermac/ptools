@@ -109,6 +109,19 @@ elif Gr['gridname'] == 'cas2': # Another extended version of cascadia1
     plon_vec, plat_vec = gfu.simple_grid(aa, res)
     dch['nudging_edges'] = ['south', 'west']
 
+elif Gr['gridname'] == 'cas3': # a stretched MoSSea-like grid
+    maxres = 1500
+    minres = 500
+    lon_list = [-127.4, -124, -122]
+    x_res_list = [maxres, minres, minres]
+    lat_list = [42, 47, 49, 50]
+    y_res_list = [maxres, minres, minres, maxres]
+    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+    dch['nudging_edges'] = ['south', 'west']
+    # new: a list of good masks to work from
+    dch['maskfiles'] = ['cas2/grid_m05_r01_s01_x01.nc', 'sal0/grid_m06_r03_s05_x02.nc']
+
 elif Gr['gridname'] == 'aestus1': # idealized model
     lon_list = [-1, 0, 1, 2, 3]
     x_res_list = [5000, 1000, 1000, 5000, 5000]

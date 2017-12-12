@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'cas2'
+gridname = 'cas3'
 
 import os
 dir0 = os.environ.get('HOME') + '/Documents/'
@@ -65,6 +65,8 @@ def default_choices(Gr, wet_dry=False):
              'ttp_patch/TTP_Regional_27m_patch.nc']
  
     # MASKING
+    # list of existing masks to work from
+    dch['maskfiles'] = []
     # set z position of INITIAL dividing line (positive up)
     dch['z_land'] = 0        
     # Set alternate z position of initial dividing line; could be

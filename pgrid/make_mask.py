@@ -41,6 +41,25 @@ plat_vec = plat[:,0]
 # load the default choices
 dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 
+def mask_from_existing(in_fn, maskfiles, pgdir):
+    ds = nc.Dataset(in_fn)
+    lonr = ds['lon_rho'][:]
+    latr = ds['lat_rho'][:]
+    ds.close()
+    m10 = np.zeros_like(lonr)
+    for mf in maskfiles:
+        print(' - using ' + pgdir + mf)
+        ds = nc.Dataset(pgdir + mf)
+        xx = ds['lon_rho'][:]
+        yy = ds['lat_rho'][:]
+        mm = ds['mask_rho'][:]
+        # mask_rho = 1. = water, and 0. = land
+        m_part = zfun.interp2(lonr, latr, xx, yy, mm)
+        m10[m_part>.5] = 1
+        ds.close()
+    m = m10 == 0 # boolean array (False = water, True = land)
+    return m
+
 # PROCESSING
 
 # Create a boolean mask array (True where masked = land)
@@ -49,8 +68,15 @@ dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
 # where mask_rho = 1. over water, and 0. over land.
 if mask_rho_orig.all() == 1:    
     print('Original mask all ones')
-    # set z position of initial dividing line (positive up)
-    m = z >= dch['z_land']
+    if len(dch['maskfiles']) == 0:
+        # set z position of initial dividing line (positive up)
+        m = z >= dch['z_land']
+    else:
+        print('using maskfiles')
+        m = mask_from_existing(in_fn, dch['maskfiles'], Gr['pgdir'])
+        print(m.shape)
+        print(np.sum(m))
+        print(np.sum(~m))
 elif dch['do_cell_average']:
     # This branch applies when we created the grid using
     # do_cell_ave = True
