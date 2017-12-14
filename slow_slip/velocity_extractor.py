@@ -42,7 +42,7 @@ if Ldir['env'] == 'pm_mac':
 elif Ldir['env'] == 'fjord':
     whichyear = 2013
     dt0 = datetime(whichyear,1,1)
-    dt1 = datetime(whichyear,1,31)
+    dt1 = datetime(whichyear,12,31)
 #
 if list_type == 'hourly':
     fn_list = []
