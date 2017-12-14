@@ -46,7 +46,9 @@ def mask_from_existing(in_fn, maskfiles, pgdir):
     lonr = ds['lon_rho'][:]
     latr = ds['lat_rho'][:]
     ds.close()
-    m10 = np.zeros_like(lonr)
+    
+    m10 = np.ones_like(lonr)
+        
     for mf in maskfiles:
         print(' - using ' + pgdir + mf)
         ds = nc.Dataset(pgdir + mf)
@@ -55,7 +57,7 @@ def mask_from_existing(in_fn, maskfiles, pgdir):
         mm = ds['mask_rho'][:]
         # mask_rho = 1. = water, and 0. = land
         m_part = zfun.interp2(lonr, latr, xx, yy, mm)
-        m10[m_part>.5] = 1
+        m10[m_part < .5] = 0
         ds.close()
     m = m10 == 0 # boolean array (False = water, True = land)
     return m
@@ -74,9 +76,12 @@ if mask_rho_orig.all() == 1:
     else:
         print('using maskfiles')
         m = mask_from_existing(in_fn, dch['maskfiles'], Gr['pgdir'])
+        m[z >= dch['z_land']] = True
+        
         print(m.shape)
         print(np.sum(m))
         print(np.sum(~m))
+        
 elif dch['do_cell_average']:
     # This branch applies when we created the grid using
     # do_cell_ave = True

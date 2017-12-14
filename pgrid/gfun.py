@@ -57,7 +57,7 @@ def default_choices(Gr, wet_dry=False):
     # using 1=water, 0=land.
     dch['do_cell_average'] = False
     # specify topography files to use
-    dch['t_dir'] = Gr['dir0'] + 'tools_data/geo_data/topo/'    
+    dch['t_dir'] = Gr['dir0'] + 'ptools_data/topo/'    
     # list of topo files: coarsest to finest
     dch['t_list'] = ['srtm15/topo15.nc',
               'cascadia/cascadia_gridded.nc',

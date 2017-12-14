@@ -12,6 +12,8 @@ import netCDF4 as nc
 import numpy as np
 import os
 
+dir0 = os.environ.get('HOME') + '/Desktop/'
+
 # function to check results
 def check(fn, hstr):
     print('\n** ' + hstr + '\n' + 60*'=')
@@ -21,8 +23,8 @@ def check(fn, hstr):
         print(vn + str(ds[vn].dimensions) + ': ' + str(ds[vn][:]))
     ds.close()
 
-# output file name        
-fn = '/Users/PM5/Desktop/test1.nc'
+# output file name
+fn = dir0 + 'run test_n test1.nc'
 try:
     os.remove(fn)
 except FileNotFoundError:
@@ -60,6 +62,12 @@ ds = nc.Dataset(fn, 'a')
 ds.createDimension('d3', N)
 vv = ds.createVariable('data3', float, 'd3')
 vv[:] = range(N)
+ds.close()
+check(fn, hstr)
+
+hstr = 'Replace a variable with zeros.\n  NOTE that you cannot delete a variable.'
+ds = nc.Dataset(fn, 'a')
+ds['data3'][:] = 0.
 ds.close()
 check(fn, hstr)
 

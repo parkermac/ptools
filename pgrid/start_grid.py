@@ -114,7 +114,7 @@ elif Gr['gridname'] == 'cas3': # a stretched MoSSea-like grid
     minres = 500
     lon_list = [-127.4, -124, -122]
     x_res_list = [maxres, minres, minres]
-    lat_list = [42, 47, 49, 50]
+    lat_list = [42, 47, 49, 50.3]
     y_res_list = [maxres, minres, minres, maxres]
     plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
                                         lat_list, y_res_list)
