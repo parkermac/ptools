@@ -12,7 +12,15 @@ Organizational functions for pgrid.
 gridname = 'cas3'
 
 import os
-dir0 = os.environ.get('HOME') + '/Documents/'
+
+which_home = os.environ.get("HOME") # This works even when called by cron.
+if which_home == '/Users/pm7': # mac version
+    dir0 = os.environ.get('HOME') + '/Documents/'
+elif which_home == '/home/parker': # fjord version
+    dir0 = '/data1/parker/'
+else:
+    print('Trouble filling out environment variables')
+
 pgdir = dir0 + 'ptools_output/pgrid/'
 
 if 'aestus' in gridname:
