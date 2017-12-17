@@ -37,17 +37,25 @@ dir0 = dir00 + 'ptools_output/tide/'
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 # select a subset
-# name_list = ['Neah Bay', 'Tacoma']
-# name_list = ['La Push', 'Vancouver']
-name_list = ['La Push', 'Tacoma']
-# name_list = ['La Push', 'Campbell River']
+#name_list = ['Neah Bay', 'Tacoma']
+#name_list = ['Neah Bay', 'Port Townsend']
+#name_list = ['Neah Bay', 'Point Atkinson']
+#name_list = ['Neah Bay', 'Port Angeles']
+#name_list = ['South Beach', 'Tofino']
+#name_list = ['La Push', 'Vancouver']
+#name_list = ['La Push', 'Tacoma']
+#name_list = ['La Push', 'Campbell River']
+#name_list = ['La Push', 'Victoria Harbour']
+name_list = ['La Push', 'Seattle']
+
 a = dict()
 for name in name_list:
     a[name] = sn_dict[name]
 sn_dict = a
 
 # select several model runs
-run_list = ['cascadia1_base_lobio1', 'cas2_regulartide_lo6', 'cas2_v0_lo6']
+#run_list = ['cascadia1_base_lobio1', 'cas2_regulartide_lo6', 'cas2_v0_lo6', 'cas3_v0_lo6']
+run_list = ['cas2_v0_lo6', 'cas3_v0_lo6']
 
 # load observational data
 year  = 2013
@@ -160,18 +168,22 @@ fig = plt.figure(figsize=(12,8))
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 
+dt0 = datetime(year,1,5)
+dt1 = datetime(year,1,10)
+
+
 count = 0
 for name in sn_dict.keys():
     tobs = Tobs[name]
     tcomb = tobs.copy()
     tcomb = tcomb.rename(columns={'eta':'eta_obs'})
-    tcomb['eta_obs'] -= tcomb['eta_obs'].mean()
+    tcomb['eta_obs'] -= tcomb.loc[dt0:dt1, 'eta_obs'].mean()
     
     for gtagex in run_list:
         Tmod = Tmod_dict[gtagex]
         tmod = Tmod[name]
         tcomb[gtagex] = tmod['eta']
-        tcomb[gtagex] -= tcomb[gtagex].mean()
+        tcomb[gtagex] -= tcomb.loc[dt0:dt1, gtagex].mean()
         
     if count == 0:
         ax = ax1
@@ -179,8 +191,6 @@ for name in sn_dict.keys():
         ax = ax2
         
     tcomb.plot(ax = ax, title=name)
-    dt0 = datetime(year,1,10)
-    dt1 = datetime(year,1,16)
     ax.set_xlim(dt0, dt1)
     ax.set_ylim(-3,2)
     ax.grid()
