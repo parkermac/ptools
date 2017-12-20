@@ -110,26 +110,27 @@ for inname in m_list:
     for p in p_list:
         if counter == 0:
             
-            # write a file of grid info
-            dsh = nc4.Dataset('/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/ocean_his_0025.nc')
-            dsg = nc4.Dataset(outdir + 'grid.nc', 'w')
-            # lists of variables to process
-            dlist = ['xi_rho', 'eta_rho', 'xi_psi', 'eta_psi']
-            vn_list2 = [ 'lon_rho', 'lat_rho', 'lon_psi', 'lat_psi', 'mask_rho', 'h']
-            # Copy dimensions
-            for dname, the_dim in dsh.dimensions.items():
-                if dname in dlist:
-                    dsg.createDimension(dname, len(the_dim))
-            # Copy variables
-            for vn in vn_list2:
-                varin = dsh[vn]
-                vv = dsg.createVariable(vn, varin.dtype, varin.dimensions)
-                vv.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
-                vv[:] = dsh[vn][:]
-            dsh.close()
-            dsg.close()
-            print('Wrote grid file.')
-            sys.stdout.flush()
+            if not os.path.isfile(outdir + 'grid.nc'):
+                # write a file of grid info
+                dsh = nc4.Dataset('/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/ocean_his_0025.nc')
+                dsg = nc4.Dataset(outdir + 'grid.nc', 'w')
+                # lists of variables to process
+                dlist = ['xi_rho', 'eta_rho', 'xi_psi', 'eta_psi']
+                vn_list2 = [ 'lon_rho', 'lat_rho', 'lon_psi', 'lat_psi', 'mask_rho', 'h']
+                # Copy dimensions
+                for dname, the_dim in dsh.dimensions.items():
+                    if dname in dlist:
+                        dsg.createDimension(dname, len(the_dim))
+                # Copy variables
+                for vn in vn_list2:
+                    varin = dsh[vn]
+                    vv = dsg.createVariable(vn, varin.dtype, varin.dimensions)
+                    vv.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
+                    vv[:] = dsh[vn][:]
+                dsh.close()
+                dsg.close()
+                print('Wrote grid file.')
+                sys.stdout.flush()
                 
             # day 0 contains P, Ldir, and the grid data
             P, G, S, PLdir = pickle.load(open(indir + dirname + inname + '/' + p, 'rb'))

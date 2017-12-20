@@ -22,7 +22,6 @@ import pickle
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-
 import netCDF4 as nc
 
 plp = os.path.abspath('../../LiveOcean/plotting')
@@ -40,7 +39,11 @@ elif Ldir['env'] == 'fjord': # fjord version
 import matplotlib.pyplot as plt
 
 indir = odir00 = Ldir['parent'] + 'ptools_output/rockfish/'
-datadir = '/data1/bbartos/LiveOcean_data/tracker/'
+
+if Ldir['env'] == 'fjo':
+    datadir = '/data1/bbartos/LiveOcean_data/tracker/'
+elif Ldir['env'] == 'pm_mac':
+    datadir = Ldir['parent'] + 'ptools_data/rockfish/'
 
 # create the list of run files
 m_list_raw = os.listdir(indir)
@@ -86,50 +89,55 @@ for inname in m_list:
     ax.grid()
     
     # tracks
-    ax.plot(ds['lon'], ds['lat'], '-r', linewidth=0.5, alpha=0.5)
+    NP = 100
+    
+    lon = ds['lon'][:,:NP]
+    lat = ds['lat'][:,:NP]
+    z = ds['z'][:,:NP]
+    ax.plot(lon, lat, '-r', linewidth=0.5, alpha=0.5)
     # ending points
-    ax.plot(ds['lon'][-1,:],ds['lat'][-1,:],'ob', markersize=4, label='End')
+    ax.plot(lon[-1,:], lat[-1,:],'ob', markersize=4, label='End')
     # starting points
-    ax.plot(ds['lon'][0,:], ds['lat'][0,:], '^y', markersize=10, label='Start')
+    ax.plot(lon[0,0], lat[0,0], '^y', markersize=10, label='Start')
     ax.legend()
         
     # TIME SERIES
     tdays = (ds['ot'] - ds['ot'][0])/86400.
     # Depth
     ax = fig.add_subplot(3,2,2)
-    ax.plot(tdays, ds['z'],'-', alpha=0.25)
+    ax.plot(tdays, z,'-', alpha=0.25)
     ax.set_ylabel('Z (m)')
 
-    # Distance from Start
-    dis = np.zeros(ds['z'].shape)
-    for tind in np.arange(1,len(tdays)):
-    # change in lat/lon and total distance=sqrt(lat^2+lon^2)
-        lat_dis = (ds['lat'][tind,:] - ds['lat'][tind-1,:]) * 111
-        lon_dis = ((ds['lon'][tind,:] - ds['lon'][tind-1,:]) * 111 *
-                        np.cos(np.nanmean(ds['lat'][tind,:])*np.pi/180))
-        dis[tind,:] = dis[tind-1,:] + np.sqrt(lat_dis**2 + lon_dis**2)
-    # remove dead larvae
-    dis_alive = np.where(np.isfinite(ds['z']), dis, np.nan)
-    ax = fig.add_subplot(3,2,4)
-    ax.plot(tdays, dis_alive, '-', alpha=0.25)
-    ax.set_ylabel('Distance Traveled (km)')
-    ax.grid()
+    # # Distance from Start
+    # dis = np.zeros(z.shape)
+    # for tind in np.arange(1,len(tdays)):
+    # # change in lat/lon and total distance=sqrt(lat^2+lon^2)
+    #     lat_dis = (lat[tind,:] - lat[tind-1,:]) * 111
+    #     lon_dis = ((ds['lon'][tind,:np] - ds['lon'][tind-1,:np]) * 111 *
+    #                     np.cos(np.nanmean(ds['lat'][tind,:])*np.pi/180))
+    #     dis[tind,:] = dis[tind-1,:] + np.sqrt(lat_dis**2 + lon_dis**2)
+    # # remove dead larvae
+    # dis_alive = np.where(np.isfinite(ds['z']), dis, np.nan)
+    # ax = fig.add_subplot(3,2,4)
+    # ax.plot(tdays, dis_alive, '-', alpha=0.25)
+    # ax.set_ylabel('Distance Traveled (km)')
+    # ax.grid()
     
-    # Net Distance from Start
-    ndis = np.zeros(ds['z'].shape)
-    for tind in np.arange(1,len(tdays)):
-    # change in lat/lon and total distance=sqrt(lat^2+lon^2)
-        lat_ndis = (ds['lat'][tind,:] - ds['lat'][0,:]) * 111
-        lon_ndis = ((ds['lon'][tind,:] - ds['lon'][0,:]) * 111 *
-                        np.cos(np.nanmean(ds['lat'][tind,:])*np.pi/180))
-        ndis[tind,:] = np.sqrt(lat_ndis**2 + lon_ndis**2)
-    # remove dead larvae
-    ndis_alive = np.where(np.isfinite(ds['z']), ndis, np.nan)
-    ax = fig.add_subplot(3,2,6)
-    ax.plot(tdays, ndis_alive, '-', alpha=0.25)
-    ax.set_ylabel('Distance From Release(km)')
-    ax.set_xlabel('Days')
-    ax.grid()
+    # # Net Distance from Start
+    # ndis = np.zeros(ds['z'].shape)
+    # for tind in np.arange(1,len(tdays)):
+    # # change in lat/lon and total distance=sqrt(lat^2+lon^2)
+    #     lat_ndis = (ds['lat'][tind,:] - ds['lat'][0,:]) * 111
+    #     lon_ndis = ((ds['lon'][tind,:] - ds['lon'][0,:]) * 111 *
+    #                     np.cos(np.nanmean(ds['lat'][tind,:])*np.pi/180))
+    #     ndis[tind,:] = np.sqrt(lat_ndis**2 + lon_ndis**2)
+    # # remove dead larvae
+    # ndis_alive = np.where(np.isfinite(ds['z']), ndis, np.nan)
+    # ax = fig.add_subplot(3,2,6)
+    # ax.plot(tdays, ndis_alive, '-', alpha=0.25)
+    # ax.set_ylabel('Distance From Release(km)')
+    # ax.set_xlabel('Days')
+    # ax.grid()
 
     # save figures
     outfn = indir + inname + '.png'
