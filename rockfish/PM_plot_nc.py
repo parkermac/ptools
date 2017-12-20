@@ -58,12 +58,6 @@ if my_ndt == 99:
 else:
     m_list = [m_list[my_ndt],]
 
-# output directory
-odir0 = Ldir['parent'] + 'ptools_output/'
-Lfun.make_dir(odir0)
-outdir = odir0 + 'tracks_bb/'
-Lfun.make_dir(outdir)
-
 # retrieve experimental data
 exdf = pd.read_csv(datadir + 'rockfish_latlon.csv', index_col = 0)
 
@@ -71,6 +65,7 @@ for inname in m_list:
     
     # compile list of day files
     ds = nc.Dataset(inname)
+    dsg = nc.Dataset(indir + 'grid.nc')
     
     # PLOTTING
     
@@ -81,6 +76,7 @@ for inname in m_list:
     ax.set_ylabel('Latitude')
     
     pfun.add_coast(ax)
+    aa = [-125, -122, 47, 49]
     ax.axis(aa)
     pfun.dar(ax)
     ax.grid()
@@ -132,7 +128,7 @@ for inname in m_list:
     ax.grid()
 
     # save figures
-    outfn = outdir + inname + '.png'
+    outfn = indir + inname + '.png'
     plt.savefig(outfn)
     plt.close('all')
 
