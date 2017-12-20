@@ -49,6 +49,13 @@ else:
 
 Ldir = Lfun.Lstart()
 
+if Ldir['env'] == 'pm_mac': # mac version
+    pass
+elif Ldir['env'] == 'fjord': # fjord version
+    import matplotlib as mpl
+    mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 indir = '/data1/bbartos/LiveOcean_output/tracks/'
 datadir = '/data1/bbartos/LiveOcean_data/tracker/'
 
@@ -93,7 +100,7 @@ exdf = pd.read_csv(datadir + 'rockfish_latlon.csv', index_col = 0)
 
 # create plots for each run in the run directory
 # if my_ndt == 99:
-plt.ioff() # use this to supress plot output
+#plt.ioff() # use this to supress plot output
 
 for inname in m_list:
     
@@ -205,10 +212,10 @@ for inname in m_list:
     outfn = outdir + inname + '.png'
     plt.savefig(outfn)
     
-    if my_ndt == 99:
-        plt.close('all')
-    else:
-        plt.show()
+    # if my_ndt == 99:
+    #     plt.close('all')
+    # else:
+    #     plt.show()
         
-plt.ion()
+#plt.ion()
 
