@@ -156,7 +156,6 @@ for inname in m_list:
                     print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
-            #print(ds['lon'].shape)
             ds.close()
             
         else:
@@ -165,13 +164,15 @@ for inname in m_list:
             P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
             # save the results
             ds = nc4.Dataset(out_fn, 'a')
+            print(ds['lon'].shape)
             NTx, NPx = ds['lon'].shape
+            print(NTx)
             for vn in vlist: #P.keys():
                 if vn in ['ot','age']:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
                     ds[vn][NTx:,:] = P[vn][1:,:]
-            #print(ds['lon'].shape)
+            print(ds['lon'].shape)
             ds.close()
         counter += 1
         #print('Finished ' + p)
