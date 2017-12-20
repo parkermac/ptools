@@ -38,8 +38,14 @@ if plp not in sys.path:
     sys.path.append(plp)
 import pfun
 
-# set sample size
-sampsize = 100
+testing = True
+
+if testing:
+    sampsize = 100
+    limit_days = True
+else:
+    sampsize = 1000 # 100000?
+    limit_days = False
 
 Ldir = Lfun.Lstart()
 
@@ -51,8 +57,8 @@ print('\n%s\n' % '** Choose mooring file to plot **')
 d_list_raw = os.listdir(indir)
 d_list = []
 for d in d_list_raw:
-#    if d[-4:] == 'days':
         d_list.append(d)
+d_list.sort()
 Ndt = len(d_list)
 for ndt in range(Ndt):
     print(str(ndt) + ': ' + d_list[ndt])
@@ -64,6 +70,7 @@ m_list_raw = os.listdir(indir + dirname)
 m_list = []
 for m in m_list_raw:
     m_list.append(m)
+m_list.sort()
 Npt = len(m_list)
 for npt in range(Npt):
     print(str(npt) + ': ' + m_list[npt])
@@ -93,6 +100,10 @@ for inname in m_list:
     # compile list of day files
     p_list = os.listdir(indir + dirname + inname)
     p_list.sort()
+    
+    if limit_days == True:
+        p_list = p_list[:20]
+        
     # run through all days, concatenating the P dictionary in each
     counter = 0
     P = dict()
@@ -125,10 +136,7 @@ for inname in m_list:
     # set map range
     aa = [np.min(P['lon'])-.1, np.max(P['lon'])+.1, np.min(P['lat'])-.1, 
           np.max(P['lat'])+.1]
-    
-    # get coastline
-    cmat = matfun.loadmat(fn_coast)
-    
+        
     # retrieve relevant experimental information
     exind = inname[25:28]
     species = exdf['species'].loc[exind]
@@ -142,13 +150,9 @@ for inname in m_list:
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     
-    # Coastline
     pfun.add_coast(ax)
-    # Set axis limits
     ax.axis(aa)
-    # Configure axis scales
     pfun.dar(ax)
-    # Make lat/lon grid
     ax.grid()
     
     # tracks
@@ -159,7 +163,6 @@ for inname in m_list:
     ax.plot(P['lon'][0,:], P['lat'][0,:], '^y', markersize=10, label='Start')
     ax.legend()
         
-    
     # TIME SERIES
     tdays = (P['ot'] - P['ot'][0])/86400.
     # Depth
