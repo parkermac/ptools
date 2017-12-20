@@ -154,25 +154,21 @@ for inname in m_list:
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
             ds.close()
-            reopen_nc = True
             
         else:
             # non-zero days only contain P and Ldir
             # first row overlaps with last row of previous day, so we remove it
             P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
             # save the results
-            if reopen_nc == True:
-                # only open it the first time
-                ds = nc4.Dataset(out_fn, 'a')
-                reopen_nc == False
+            ds = nc4.Dataset(out_fn, 'a')
             NTx, NPx = ds['lon'].shape
+            print(NTx)
             for vn in vlist: #P.keys():
                 if vn in ['ot','age']:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
                     ds[vn][NTx:,:] = P[vn][1:,:]
-            #ds.close()
+            ds.close()
         counter += 1
         print('Finished ' + p)
         sys.stdout.flush()
-    ds.close()
