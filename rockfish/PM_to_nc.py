@@ -134,10 +134,9 @@ for inname in m_list:
                 
             # day 0 contains P, Ldir, and the grid data
             P, G, S, PLdir = pickle.load(open(indir + dirname + inname + '/' + p, 'rb'))
-            junk, NP = P['lon'].shape
+            NT, NP = P['lon'].shape
             ds = nc4.Dataset(out_fn, 'w')
             ds.createDimension('Time', None)
-            ds.createDimension('Day', None)
             ds.createDimension('Particle', NP)
             # Copy variables
             # for reference here is the full list
@@ -148,13 +147,14 @@ for inname in m_list:
             for vn in vlist: #P.keys():
                 if vn == 'ot':
                     vv = ds.createVariable(vn, float, ('Time'))
-                elif vn == 'age':
-                    vv = ds.createVariable(vn, float, ('Day', 'Particle'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
                 print(vn)
                 print(P[vn].shape)
-                vv[:] = P[vn]
+                if vn == 'age':
+                    vv[:] = np.ones(NP,1) * P[vn]
+                else:
+                    vv[:] = P[vn]
                 print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn]
@@ -175,11 +175,13 @@ for inname in m_list:
             for vn in vlist: #P.keys():
                 if vn == 'ot':
                     ds[vn][NTx:] = P[vn][1:]
-                elif vn == 'age':
-                    ds[vn][counter,:] = P[vn]
                 else:
-                    ds[vn][NTx:,:] = P[vn][1:,:]
-            print(ds['lon'].shape)
+                    if vn == 'age':
+                        ds[vn][NTx:,:] = np.ones(NP-1,1) * P[vn]
+                    else:
+                        ds[vn][NTx:,:] = P[vn][1:,:]
+                print(vn)
+                print(ds[vn].shape)
             ds.close()
         counter += 1
         #print('Finished ' + p)
