@@ -76,7 +76,7 @@ odir00 = Ldir['parent'] + 'ptools_output/'
 Lfun.make_dir(odir00)
 odir0 = odir00 + 'rockfish/'
 Lfun.make_dir(odir0)
-outdir = odir0 + dirname
+outdir = odir0
 Lfun.make_dir(outdir)
 
 # info for NetCDF output
