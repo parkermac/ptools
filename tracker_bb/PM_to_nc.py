@@ -130,7 +130,7 @@ for inname in m_list:
             P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
             # save the results
             ds = nc4.Dataset(out_fn, 'a')
-            NTx, NPx = ds['lon'][:].shape
+            NTx, NPx = ds['lon'].shape
             for vn in P.keys():
                 varin = P[vn]
                 if vn in ['ot','age']:
