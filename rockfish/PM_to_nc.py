@@ -152,7 +152,7 @@ for inname in m_list:
                 print(vn)
                 print(P[vn].shape)
                 if vn == 'age':
-                    vv[:] = np.ones(NP,1) * P[vn]
+                    vv[:] = np.ones((NT,1)) * P[vn]
                 else:
                     vv[:] = P[vn]
                 print(ds[vn].shape)
@@ -177,7 +177,7 @@ for inname in m_list:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
                     if vn == 'age':
-                        ds[vn][NTx:,:] = np.ones(NP-1,1) * P[vn]
+                        ds[vn][NTx:,:] = np.ones((NT-1,1)) * P[vn]
                     else:
                         ds[vn][NTx:,:] = P[vn][1:,:]
                 print(vn)
