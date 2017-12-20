@@ -155,8 +155,10 @@ for inname in m_list:
                     vv[:] = P[vn]
                     print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
-                vv.units = name_unit_dict[vn][1]
+                vv.units = name_unit_dict[vn]
+            print('**')
             print(ds['lon'].shape)
+            print('**')
             ds.close()
             
         else:
