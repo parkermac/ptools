@@ -63,6 +63,10 @@ exdf = pd.read_csv(datadir + 'rockfish_latlon.csv', index_col = 0)
 
 for inname in m_list:
     
+    exind = inname[-6:-3]
+    species = exdf['species'].loc[exind]
+    location = exdf['Site'].loc[exind]
+    
     # compile list of day files
     ds = nc.Dataset(indir + inname)
     dsg = nc.Dataset(indir + 'grid.nc')
