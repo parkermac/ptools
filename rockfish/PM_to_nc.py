@@ -72,7 +72,7 @@ else:
 # output directory
 odir00 = Ldir['parent'] + 'ptools_output/'
 Lfun.make_dir(odir00)
-odir0 = odir00 + 'tracks_bb/'
+odir0 = odir00 + 'rockfish/'
 Lfun.make_dir(odir0)
 outdir = odir0 + dirname
 Lfun.make_dir(outdir)
@@ -137,7 +137,7 @@ for inname in m_list:
             ds.createDimension('Particle', NP)
             # Copy variables
             for vn in P.keys():
-                varin = P[vn]
+                #varin = P[vn]
                 if vn in ['ot','age']:
                     vv = ds.createVariable(vn, float, ('Time'))
                 else:
@@ -159,7 +159,8 @@ for inname in m_list:
                 reopen_nc == False
             NTx, NPx = ds['lon'].shape
             for vn in P.keys():
-                varin = P[vn]
+                print(vn)
+                #varin = P[vn]
                 if vn in ['ot','age']:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
