@@ -150,10 +150,13 @@ for inname in m_list:
                     vv[:] = P[vn][:]
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
-                    vv[:,:] = P[vn][:,:]
+                    print(vn)
+                    print(P[vn].shape)
+                    vv[:] = P[vn]
+                    print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
-            print(ds['lon'].shape)
+            #print(ds['lon'].shape)
             ds.close()
             
         else:
@@ -168,8 +171,8 @@ for inname in m_list:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
                     ds[vn][NTx:,:] = P[vn][1:,:]
-            print(ds['lon'].shape)
+            #print(ds['lon'].shape)
             ds.close()
         counter += 1
-        print('Finished ' + p)
+        #print('Finished ' + p)
         sys.stdout.flush()
