@@ -107,8 +107,30 @@ for inname in m_list:
     #P = dict()
     for p in p_list:
         if counter == 0:
+            
+            # write a file of grid info
+            dsh = nc4.Dataset('/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/ocean_his_0025.nc')
+            dsg = nc4.Dataset(outdir + 'grid.nc', 'w')
+            # lists of variables to process
+            dlist = ['xi_rho', 'eta_rho', 'xi_psi', 'eta_psi']
+            vn_list2 = [ 'lon_rho', 'lat_rho', 'lon_psi', 'lat_psi', 'mask_rho', 'h']
+            # Copy dimensions
+            for dname, the_dim in dsh.dimensions.items():
+                if dname in dlist:
+                    dsg.createDimension(dname, len(the_dim))
+            # Copy variables
+            for vn in vn_list2:
+                varin = dsh[vn]
+                vv = dsg.createVariable(vn, varin.dtype, varin.dimensions)
+                vv.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
+                vv[:] = dsh[vn][:]
+            dsh.close()
+            dsg.close()
+            print('Wrote grid file.')
+            sys.stdout.flush()
+                
             # day 0 contains P, Ldir, and the grid data
-            P, G, S, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
+            P, G, S, PLdir = pickle.load(open(indir + dirname + inname + '/' + p, 'rb'))
             junk, NP = P['lon'].shape
             ds = nc4.Dataset(out_fn, 'w')
             ds.createDimension('Time', None)
@@ -122,14 +144,19 @@ for inname in m_list:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
-                vv[:] = P[vn][:] # [:] not needed?
+                vv[:] = P[vn] # [:] not needed?
             ds.close()
+            reopen_nc = True
+            
         else:
             # non-zero days only contain P and Ldir
             # first row overlaps with last row of previous day, so we remove it
             P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
             # save the results
-            ds = nc4.Dataset(out_fn, 'a')
+            if reopen_nc == True:
+                # only open it the first time
+                ds = nc4.Dataset(out_fn, 'a')
+                reopen_nc == False
             NTx, NPx = ds['lon'].shape
             for vn in P.keys():
                 varin = P[vn]
@@ -137,7 +164,8 @@ for inname in m_list:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
                     ds[vn][NTx:,:] = P[vn][1:,:]
-            ds.close()
+            #ds.close()
         counter += 1
         print('Finished ' + p)
         sys.stdout.flush()
+    ds.close()
