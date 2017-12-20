@@ -156,6 +156,7 @@ for inname in m_list:
                     print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
+            print(ds['lon'].shape)
             ds.close()
             
         else:
