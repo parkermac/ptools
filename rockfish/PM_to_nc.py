@@ -147,11 +147,12 @@ for inname in m_list:
             for vn in vlist: #P.keys():
                 if vn in ['ot','age']:
                     vv = ds.createVariable(vn, float, ('Time'))
+                    vv[:] = P[vn]
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
+                    vv[:,:] = P[vn]
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
-                vv[:] = P[vn]
             ds.close()
             reopen_nc = True
             
@@ -166,7 +167,6 @@ for inname in m_list:
                 reopen_nc == False
             NTx, NPx = ds['lon'].shape
             for vn in vlist: #P.keys():
-                #print(vn)
                 if vn in ['ot','age']:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
