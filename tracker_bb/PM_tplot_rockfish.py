@@ -63,6 +63,7 @@ print('\n%s\n' % '** Choose mooring file to plot **')
 d_list_raw = os.listdir(indir)
 d_list = []
 for d in d_list_raw:
+    if 'MoSSea' in d:
         d_list.append(d)
 d_list.sort()
 Ndt = len(d_list)
@@ -96,10 +97,6 @@ Lfun.make_dir(outdir)
 
 # retrieve experimental data
 exdf = pd.read_csv(datadir + 'rockfish_latlon.csv', index_col = 0)
-
-# create plots for each run in the run directory
-# if my_ndt == 99:
-#plt.ioff() # use this to supress plot output
 
 for inname in m_list:
     
@@ -210,11 +207,5 @@ for inname in m_list:
     # save figures
     outfn = outdir + inname + '.png'
     plt.savefig(outfn)
-    
-    # if my_ndt == 99:
-    #     plt.close('all')
-    # else:
-    #     plt.show()
-        
-#plt.ion()
+    plt.close('all')
 
