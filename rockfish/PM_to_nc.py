@@ -147,13 +147,12 @@ for inname in m_list:
             for vn in vlist: #P.keys():
                 if vn in ['ot','age']:
                     vv = ds.createVariable(vn, float, ('Time'))
-                    vv[:] = P[vn][:]
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
-                    print(vn)
-                    print(P[vn].shape)
-                    vv[:] = P[vn]
-                    print(ds[vn].shape)
+                print(vn)
+                print(P[vn].shape)
+                vv[:] = P[vn]
+                print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn]
             print('**')
