@@ -85,7 +85,7 @@ name_unit_dict = {'lon':('Longitude','degrees'), 'lat':('Latitude','degrees'),
     'u':('EW Velocity','meters s-1'), 'v':('NS Velocity','meters s-1'),
     'w':('Vertical Velocity','meters s-1'),
     'Uwind':('EW Wind Velocity','meters s-1'), 'Vwind':('NS Velocity','meters s-1'),
-    'h':('Bottom Depth','m')}
+    'h':('Bottom Depth','m'), 'age':('Age','days')}
 
 for inname in m_list:
     
