@@ -26,34 +26,12 @@ from datetime import datetime, timedelta
 
 import netCDF4 as nc4
 
-testing = True
-
-if testing:
-    sampsize = 100
-    limit_days = True
-else:
-    sampsize = 1000 # 100000?
-    limit_days = False
+limit_days = False
 
 Ldir = Lfun.Lstart()
 
 indir = '/data1/bbartos/LiveOcean_output/tracks/'
 datadir = '/data1/bbartos/LiveOcean_data/tracker/'
-
-# choose the run directory
-# print('\n%s\n' % '** Choose mooring file to plot **')
-# d_list_raw = os.listdir(indir)
-# d_list = []
-# for d in d_list_raw:
-#     if 'MoSSea' in d:
-#         d_list.append(d)
-# d_list.sort()
-# Ndt = len(d_list)
-# for ndt in range(Ndt):
-#     print(str(ndt) + ': ' + d_list[ndt])
-# my_ndt = int(input('-- Input number -- '))
-# dirname = d_list[my_ndt] + '/'
-
 dirname = 'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boundaryreflect/'
 
 # create the list of run files
@@ -149,18 +127,18 @@ for inname in m_list:
                     vv = ds.createVariable(vn, float, ('Time'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
-                print(vn)
-                print(P[vn].shape)
+                #print(vn)
+                #print(P[vn].shape)
                 if vn == 'age':
                     vv[:] = np.ones((NT,1)) * P[vn]
                 else:
                     vv[:] = P[vn]
-                print(ds[vn].shape)
+                #print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
-                vv.units = name_unit_dict[vn]
-            print('**')
-            print(ds['lon'].shape)
-            print('**')
+                vv.units = name_unit_dict[vn][1]
+            #print('**')
+            #print(ds['lon'].shape)
+            #print('**')
             ds.close()
             
         else:
@@ -169,9 +147,9 @@ for inname in m_list:
             P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
             # save the results
             ds = nc4.Dataset(out_fn, 'a')
-            print(ds['lon'].shape)
+            #print(ds['lon'].shape)
             NTx, NPx = ds['lon'].shape
-            print(NTx)
+            #print(NTx)
             for vn in vlist: #P.keys():
                 if vn == 'ot':
                     ds[vn][NTx:] = P[vn][1:]
@@ -180,8 +158,8 @@ for inname in m_list:
                         ds[vn][NTx:,:] = np.ones((NT-1,1)) * P[vn]
                     else:
                         ds[vn][NTx:,:] = P[vn][1:,:]
-                print(vn)
-                print(ds[vn].shape)
+                #print(vn)
+                #print(ds[vn].shape)
             ds.close()
         counter += 1
         #print('Finished ' + p)

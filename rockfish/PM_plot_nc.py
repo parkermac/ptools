@@ -140,7 +140,11 @@ for inname in m_list:
     # ax.grid()
 
     # save figures
-    outfn = indir + inname + '.png'
-    plt.savefig(outfn)
-    plt.close('all')
+    outfn = indir + inname.strip('.nc') + '.png'
+    if Ldir['env'] == 'fjo':
+        plt.savefig(outfn)
+    elif Ldir['env'] == 'pm_mac':
+        plt.show()
+
+    
 
