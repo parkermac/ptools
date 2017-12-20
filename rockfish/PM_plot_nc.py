@@ -86,7 +86,7 @@ for inname in m_list:
     ax.grid()
     
     # tracks
-    ax.plot(ds['lon'][:], ds['lat'][:], '-r', linewidth=0.5, alpha=0.5)
+    ax.plot(ds['lon'], ds['lat'], '-r', linewidth=0.5, alpha=0.5)
     # ending points
     ax.plot(ds['lon'][-1,:],ds['lat'][-1,:],'ob', markersize=4, label='End')
     # starting points
