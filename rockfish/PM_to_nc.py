@@ -145,7 +145,7 @@ for inname in m_list:
             # but we will only carry these
             vlist = ['lon', 'lat', 'ot', 'z', 'h', 'age']
             for vn in vlist: #P.keys():
-                if vn in ['ot','age']:
+                if vn == 'ot':
                     vv = ds.createVariable(vn, float, ('Time'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
