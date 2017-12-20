@@ -137,6 +137,7 @@ for inname in m_list:
             junk, NP = P['lon'].shape
             ds = nc4.Dataset(out_fn, 'w')
             ds.createDimension('Time', None)
+            ds.createDimension('Day', None)
             ds.createDimension('Particle', NP)
             # Copy variables
             # for reference here is the full list
@@ -147,6 +148,8 @@ for inname in m_list:
             for vn in vlist: #P.keys():
                 if vn == 'ot':
                     vv = ds.createVariable(vn, float, ('Time'))
+                elif vn == 'age':
+                    vv = ds.createVariable(vn, float, ('Day', 'Particle'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
                 print(vn)
@@ -170,8 +173,10 @@ for inname in m_list:
             NTx, NPx = ds['lon'].shape
             print(NTx)
             for vn in vlist: #P.keys():
-                if vn in ['ot','age']:
+                if vn == 'ot':
                     ds[vn][NTx:] = P[vn][1:]
+                elif vn == 'age':
+                    ds[vn][counter,:] = P[vn]
                 else:
                     ds[vn][NTx:,:] = P[vn][1:,:]
             print(ds['lon'].shape)
