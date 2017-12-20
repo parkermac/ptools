@@ -41,18 +41,20 @@ indir = '/data1/bbartos/LiveOcean_output/tracks/'
 datadir = '/data1/bbartos/LiveOcean_data/tracker/'
 
 # choose the run directory
-print('\n%s\n' % '** Choose mooring file to plot **')
-d_list_raw = os.listdir(indir)
-d_list = []
-for d in d_list_raw:
-    if 'MoSSea' in d:
-        d_list.append(d)
-d_list.sort()
-Ndt = len(d_list)
-for ndt in range(Ndt):
-    print(str(ndt) + ': ' + d_list[ndt])
-my_ndt = int(input('-- Input number -- '))
-dirname = d_list[my_ndt] + '/'
+# print('\n%s\n' % '** Choose mooring file to plot **')
+# d_list_raw = os.listdir(indir)
+# d_list = []
+# for d in d_list_raw:
+#     if 'MoSSea' in d:
+#         d_list.append(d)
+# d_list.sort()
+# Ndt = len(d_list)
+# for ndt in range(Ndt):
+#     print(str(ndt) + ': ' + d_list[ndt])
+# my_ndt = int(input('-- Input number -- '))
+# dirname = d_list[my_ndt] + '/'
+
+dirname = 'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boundaryreflect/'
 
 # create the list of run files
 m_list_raw = os.listdir(indir + dirname)

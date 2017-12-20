@@ -39,12 +39,11 @@ elif Ldir['env'] == 'fjord': # fjord version
     mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-indir = '/data1/bbartos/LiveOcean_output/tracks/'
+indir = odir00 = Ldir['parent'] + 'ptools_output/rockfish/'
 datadir = '/data1/bbartos/LiveOcean_data/tracker/'
-dirname = 'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boundaryreflect/'
 
 # create the list of run files
-m_list_raw = os.listdir(indir + dirname)
+m_list_raw = os.listdir(indir)
 m_list = []
 for m in m_list_raw:
     if '.nc' in m:
