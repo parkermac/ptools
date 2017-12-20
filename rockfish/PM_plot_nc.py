@@ -46,7 +46,7 @@ datadir = '/data1/bbartos/LiveOcean_data/tracker/'
 m_list_raw = os.listdir(indir)
 m_list = []
 for m in m_list_raw:
-    if '.nc' in m:
+    if ('.nc' in m) and ('grid' not in m):
         m_list.append(m)
 m_list.sort()
 Npt = len(m_list)
@@ -64,7 +64,7 @@ exdf = pd.read_csv(datadir + 'rockfish_latlon.csv', index_col = 0)
 for inname in m_list:
     
     # compile list of day files
-    ds = nc.Dataset(inname)
+    ds = nc.Dataset(indir + inname)
     dsg = nc.Dataset(indir + 'grid.nc')
     
     # PLOTTING
