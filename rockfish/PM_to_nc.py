@@ -136,15 +136,19 @@ for inname in m_list:
             ds.createDimension('Time', None)
             ds.createDimension('Particle', NP)
             # Copy variables
-            for vn in P.keys():
-                #varin = P[vn]
+            # for reference here is the full list
+            vlist_full = ['lon', 'lat', 'cs', 'ot', 'z', 'zeta', 'zbot',
+            'salt', 'temp', 'u', 'v', 'w', 'Uwind', 'Vwind', 'h', 'age']
+            # but we will only carry these
+            vlist = ['lon', 'lat', 'ot', 'z', 'h', 'age']
+            for vn in vlist: #P.keys():
                 if vn in ['ot','age']:
                     vv = ds.createVariable(vn, float, ('Time'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
-                vv[:] = P[vn] # [:] not needed?
+                vv[:] = P[vn]
             ds.close()
             reopen_nc = True
             
@@ -158,9 +162,8 @@ for inname in m_list:
                 ds = nc4.Dataset(out_fn, 'a')
                 reopen_nc == False
             NTx, NPx = ds['lon'].shape
-            for vn in P.keys():
-                print(vn)
-                #varin = P[vn]
+            for vn in vlist: #P.keys():
+                #print(vn)
                 if vn in ['ot','age']:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
