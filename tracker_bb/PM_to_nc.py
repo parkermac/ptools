@@ -89,7 +89,7 @@ name_unit_dict = {'lon':('Longitude','degrees'), 'lat':('Latitude','degrees'),
 
 for inname in m_list:
     
-    out_fn = outdir + inname + '/tracks.nc'
+    out_fn = outdir + inname + '.nc'
     try:
         os.remove(out_fn)
     except OSError:
