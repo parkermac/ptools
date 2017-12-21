@@ -87,7 +87,7 @@ for inname in m_list:
     print('** Working on ' + inname)
     tt0 = time.time()
     out_fn = outdir + inname + '.nc'
-    print(' ' + outfn)
+    print(' ' + out_fn)
     try:
         os.remove(out_fn)
     except OSError:
