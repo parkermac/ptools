@@ -27,10 +27,15 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import time
-
+import argparse
 import netCDF4 as nc4
 
-limit_days = False
+limit_days = True
+
+# optional command line arguments, can be input in any order
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--exp_num', nargs='?', type=int, default=0)
+args = parser.parse_args()
 
 Ldir = Lfun.Lstart()
 
@@ -47,18 +52,20 @@ dirname = 'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boun
 m_list_raw = os.listdir(indir + dirname)
 m_list = []
 for m in m_list_raw:
-    m_list.append(m)
+    if 'Experiment' in m:
+        m_list.append(m)
 m_list.sort()
-Npt = len(m_list)
-for npt in range(Npt):
-    print(str(npt) + ': ' + m_list[npt])
-my_ndt = int(input('-- Input number (99 for all) -- '))
-if my_ndt == 99:
+
+if args.exp_num == 99:
     # leaves m_list intact so it does the all
     pass
 else:
     # just a single item in the list
-    m_list = [m_list[my_ndt],]
+    m_list = [m_list[args.exp_num]]
+    
+for m in m_list:
+    print(m)
+print('')
 
 # output directory
 odir0 = Ldir['parent'] + 'ptools_output/'
@@ -80,6 +87,7 @@ for inname in m_list:
     print('** Working on ' + inname)
     tt0 = time.time()
     out_fn = outdir + inname + '.nc'
+    print(' ' + outfn)
     try:
         os.remove(out_fn)
     except OSError:
@@ -88,7 +96,7 @@ for inname in m_list:
     p_list = os.listdir(indir + dirname + inname)
     p_list.sort()
     if limit_days == True:
-        p_list = p_list[:5]
+        p_list = p_list[:3]
         
     counter = 0
     for p in p_list:
