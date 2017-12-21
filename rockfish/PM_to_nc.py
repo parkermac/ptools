@@ -30,7 +30,7 @@ import time
 import argparse
 import netCDF4 as nc4
 
-limit_days = True
+limit_days = False
 
 # optional command line arguments, can be input in any order
 parser = argparse.ArgumentParser()
