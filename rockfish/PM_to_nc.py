@@ -7,7 +7,10 @@ Created on Tue Feb  2 14:03:12 2016
 
 """
 Save results of Bradley Bartos' Rockfish experiments
-to NetCDF.
+to NetCDF.  Can limit the variables to save space.
+
+Takes about 2 minutes to make the .nc file for an experiment (all 180 days)
+and the resulting file is 17GB, which takes me 1/2 hour to download at home.
 
 """
 
@@ -23,6 +26,7 @@ import pickle
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
+import time
 
 import netCDF4 as nc4
 
@@ -30,8 +34,13 @@ limit_days = False
 
 Ldir = Lfun.Lstart()
 
+# these paths ASSUME we are running on fjord
 indir = '/data1/bbartos/LiveOcean_output/tracks/'
 datadir = '/data1/bbartos/LiveOcean_data/tracker/'
+
+# here we hardwire a single SET OF EXPERIMENTS because I believe these are the only
+# ones we want to work with (all other things like mortality can be
+# treated in post-processing of these NetCDF files)
 dirname = 'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boundaryreflect/'
 
 # create the list of run files
@@ -45,16 +54,16 @@ for npt in range(Npt):
     print(str(npt) + ': ' + m_list[npt])
 my_ndt = int(input('-- Input number (99 for all) -- '))
 if my_ndt == 99:
+    # leaves m_list intact so it does the all
     pass
 else:
+    # just a single item in the list
     m_list = [m_list[my_ndt],]
 
 # output directory
-odir00 = Ldir['parent'] + 'ptools_output/'
-Lfun.make_dir(odir00)
-odir0 = odir00 + 'rockfish/'
+odir0 = Ldir['parent'] + 'ptools_output/'
 Lfun.make_dir(odir0)
-outdir = odir0
+outdir = odir0 + 'rockfish/'
 Lfun.make_dir(outdir)
 
 # info for NetCDF output
@@ -68,26 +77,24 @@ name_unit_dict = {'lon':('Longitude','degrees'), 'lat':('Latitude','degrees'),
     'h':('Bottom Depth','m'), 'age':('Age','days')}
 
 for inname in m_list:
-    
+    print('** Working on ' + inname)
+    tt0 = time.time()
     out_fn = outdir + inname + '.nc'
     try:
         os.remove(out_fn)
     except OSError:
         pass # assume error was because the file did not exist
-    
     # compile list of day files
     p_list = os.listdir(indir + dirname + inname)
     p_list.sort()
-    
     if limit_days == True:
         p_list = p_list[:5]
         
-    # run through all days, concatenating the P dictionary in each
     counter = 0
-    #P = dict()
     for p in p_list:
+        #print(p)
+        sys.stdout.flush()
         if counter == 0:
-            
             if not os.path.isfile(outdir + 'grid.nc'):
                 # write a file of grid info
                 dsh = nc4.Dataset('/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/ocean_his_0025.nc')
@@ -109,7 +116,6 @@ for inname in m_list:
                 dsg.close()
                 print('Wrote grid file.')
                 sys.stdout.flush()
-                
             # day 0 contains P, Ldir, and the grid data
             P, G, S, PLdir = pickle.load(open(indir + dirname + inname + '/' + p, 'rb'))
             NT, NP = P['lon'].shape
@@ -122,35 +128,26 @@ for inname in m_list:
             'salt', 'temp', 'u', 'v', 'w', 'Uwind', 'Vwind', 'h', 'age']
             # but we will only carry these
             vlist = ['lon', 'lat', 'ot', 'z', 'h', 'age']
-            for vn in vlist: #P.keys():
+            for vn in vlist:
                 if vn == 'ot':
                     vv = ds.createVariable(vn, float, ('Time'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
-                #print(vn)
-                #print(P[vn].shape)
                 if vn == 'age':
                     vv[:] = np.ones((NT,1)) * P[vn]
                 else:
                     vv[:] = P[vn]
-                #print(ds[vn].shape)
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
-            #print('**')
-            #print(ds['lon'].shape)
-            #print('**')
             ds.close()
-            
         else:
             # non-zero days only contain P and Ldir
             # first row overlaps with last row of previous day, so we remove it
             P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
             # save the results
             ds = nc4.Dataset(out_fn, 'a')
-            #print(ds['lon'].shape)
             NTx, NPx = ds['lon'].shape
-            #print(NTx)
-            for vn in vlist: #P.keys():
+            for vn in vlist:
                 if vn == 'ot':
                     ds[vn][NTx:] = P[vn][1:]
                 else:
@@ -158,9 +155,7 @@ for inname in m_list:
                         ds[vn][NTx:,:] = np.ones((NT-1,1)) * P[vn]
                     else:
                         ds[vn][NTx:,:] = P[vn][1:,:]
-                #print(vn)
-                #print(ds[vn].shape)
             ds.close()
         counter += 1
-        #print('Finished ' + p)
-        sys.stdout.flush()
+    print('  - took %0.1f seconds' % (time.time() - tt0))
+    sys.stdout.flush()
