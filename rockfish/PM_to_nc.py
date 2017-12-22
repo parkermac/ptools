@@ -30,7 +30,6 @@ import time
 import argparse
 import netCDF4 as nc4
 
-limit_days = True
 
 # optional command line arguments, can be input in any order
 parser = argparse.ArgumentParser()
@@ -39,31 +38,37 @@ args = parser.parse_args()
 
 Ldir = Lfun.Lstart()
 
-# these paths ASSUME we are running on fjord
-indir = '/data1/bbartos/LiveOcean_output/tracks/'
-datadir = '/data1/bbartos/LiveOcean_data/tracker/'
-
-# here we hardwire a single SET OF EXPERIMENTS because I believe these are the only
-# ones we want to work with (all other things like mortality can be
-# treated in post-processing of these NetCDF files)
-dirname = 'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boundaryreflect/'
-
-# create the list of run files
-m_list_raw = os.listdir(indir + dirname)
-m_list = []
-for m in m_list_raw:
-    if 'Experiment' in m:
-        m_list.append(m)
-m_list.sort()
+daylim = 6
+if Ldir['env'] == 'fjord':
+    limit_days = False
+    pstep = 10 # subsamepling factor for number of particles
+    # here we hardwire a single SET OF EXPERIMENTS because I believe these are the only
+    # ones we want to work with (all other things like mortality can be
+    # treated in post-processing of these NetCDF files)
+    expdir0 = ('/data1/bbartos/LiveOcean_output/tracks/' +
+        'MoSSea_rockfish_rk4_ndiv1_forward_surfaceFalse_turbTrue_windage0_boundaryreflect/')
+    # create the list of experiment directories
+    exp_list_raw = os.listdir(expdir0)
+    exp_list = []
+    for m in exp_list_raw:
+        if 'Experiment' in m:
+            exp_list.append(m)
+    exp_list.sort()
+elif Ldir['env'] == 'pm_mac':
+    limit_days = True
+    pstep = 100
+    expdir0 = Ldir['parent'] + 'ptools_data/rockfish/'
+    exp_list = ['rockfish_2006_Experiment_3_1']
+    args.exp_num = 0
 
 if args.exp_num == 99:
-    # leaves m_list intact so it does the all
+    # leaves expdir_list intact so it does the all
     pass
 else:
     # just a single item in the list
-    m_list = [m_list[args.exp_num]]
+    exp_list = [exp_list[args.exp_num]]
     
-for m in m_list:
+for m in exp_list:
     print(m)
 print('')
 
@@ -83,24 +88,23 @@ name_unit_dict = {'lon':('Longitude','degrees'), 'lat':('Latitude','degrees'),
     'Uwind':('EW Wind Velocity','meters s-1'), 'Vwind':('NS Velocity','meters s-1'),
     'h':('Bottom Depth','m'), 'age':('Age','days')}
 
-for inname in m_list:
-    print('** Working on ' + inname)
+for exp in exp_list:
+    print('** Working on ' + exp)
     tt0 = time.time()
-    out_fn = outdir + inname + '.nc'
+    out_fn = outdir + exp + '.nc'
     print(' ' + out_fn)
     try:
         os.remove(out_fn)
     except OSError:
         pass # assume error was because the file did not exist
     # compile list of day files
-    p_list = os.listdir(indir + dirname + inname)
+    p_list = os.listdir(expdir0 + exp)
     p_list.sort()
     if limit_days == True:
-        p_list = p_list[:3]
-        
+        p_list = p_list[:daylim]
     counter = 0
     for p in p_list:
-        #print(p)
+        print(p)
         sys.stdout.flush()
         if counter == 0:
             if not os.path.isfile(outdir + 'grid.nc'):
@@ -125,9 +129,8 @@ for inname in m_list:
                 print('Wrote grid file.')
                 sys.stdout.flush()
             # day 0 contains P, Ldir, and the grid data
-            P, G, S, PLdir = pickle.load(open(indir + dirname + inname + '/' + p, 'rb'))
-            step = 100
-            NT, NP = P['lon'][:,::step].shape
+            P, G, S, PLdir = pickle.load(open(expdir0 + exp + '/' + p, 'rb'))
+            NT, NP = P['lon'][:,::pstep].shape
             ds = nc4.Dataset(out_fn, 'w')
             ds.createDimension('Time', None)
             ds.createDimension('Particle', NP)
@@ -145,26 +148,26 @@ for inname in m_list:
                 if vn == 'ot':
                     vv[:] = P[vn]
                 elif vn == 'age':
-                    vv[:] = np.ones((NT,1)) * P[vn][::step]
+                    vv[:] = np.ones((NT,1)) * P[vn][::pstep]
                 else:
-                    vv[:] = P[vn][:,::step]
+                    vv[:] = P[vn][:,::pstep]
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
             ds.close()
         else:
             # non-zero days only contain P and Ldir
-            # first row overlaps with last row of previous day, so we remove it
-            P, PLdir = pickle.load( open( indir + dirname + inname + '/' + p, 'rb' ) )
+            P, PLdir = pickle.load( open( expdir0 + exp + '/' + p, 'rb' ) )
             # save the results
             ds = nc4.Dataset(out_fn, 'a')
             NTx, NPx = ds['lon'].shape
+            NT, NP = P['lon'][:,::pstep].shape
             for vn in vlist:
                 if vn == 'ot':
                     ds[vn][NTx:] = P[vn][1:]
                 elif vn == 'age':
-                    ds[vn][NTx:,:] = np.ones((NTx-1,1)) * P[vn][::step]
+                    ds[vn][NTx:,:] = np.ones((NT-1,1)) * P[vn][::pstep]
                 else:
-                    ds[vn][NTx:,:] = P[vn][1:,::step]
+                    ds[vn][NTx:,:] = P[vn][1:,::pstep]
             ds.close()
         counter += 1
     print('  - took %0.1f seconds' % (time.time() - tt0))
