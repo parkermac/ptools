@@ -142,7 +142,9 @@ for inname in m_list:
                     vv = ds.createVariable(vn, float, ('Time'))
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
-                if vn == 'age':
+                if vn == 'ot':
+                    vv[:] = P[vn]
+                elif vn == 'age':
                     vv[:] = np.ones((NT,1)) * P[vn][::step]
                 else:
                     vv[:] = P[vn][:,::step]
@@ -159,11 +161,10 @@ for inname in m_list:
             for vn in vlist:
                 if vn == 'ot':
                     ds[vn][NTx:] = P[vn][1:]
+                elif vn == 'age':
+                    ds[vn][NTx:,:] = np.ones((NTx-1,1)) * P[vn][::step]
                 else:
-                    if vn == 'age':
-                        ds[vn][NTx:,:] = np.ones((NTx-1,1)) * P[vn][::step]
-                    else:
-                        ds[vn][NTx:,:] = P[vn][1:,::step]
+                    ds[vn][NTx:,:] = P[vn][1:,::step]
             ds.close()
         counter += 1
     print('  - took %0.1f seconds' % (time.time() - tt0))
