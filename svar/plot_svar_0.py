@@ -68,6 +68,7 @@ MM = np.nanmean(zfun.filt_godin(Mix_arr))
 MM_full = np.nanmean(MixFull_lp)
 SSin = np.nanmean(Qin0*Sin0)/np.nanmean(Qin0)
 SSout = np.nanmean(Qout0*Sout0)/np.nanmean(Qout0)
+print('SSin = %0.2f and SSout = %0.2f' % (SSin, SSout))
 QQr = np.nanmean(Qr)
 MM_alt = QQr * SSin * SSout
 print('MM_full = %0.2f, Qr*Sin*Sout = %0.2f (1e6 (g/kg)^2 m3/s)' % (MM_full/1e6, MM_alt/1e6))
@@ -107,7 +108,7 @@ def add_sn(ax, y=0):
 
 figsize = (14, 12)
 
-if True:
+if False:
     # TEF Salt Budget
     fig0 = plt.figure(figsize=figsize)
     
@@ -181,9 +182,9 @@ if True:
     l3, = ax.plot(td, -zfun.filt_godin(Mixa_arr)/scl, 'g')
     l3.set_label('-Mixing')
     l4, = ax.plot(td, zfun.filt_godin(dSV_dt - qsv + Mixa_arr)/scl, '-k')
-    l4.set_label('Error = -Numerical Mixing')
+    l4.set_label('-Numerical Mixing')
     ax.legend(ncol=4, loc='upper center')
-    ax.set_title('(a) d(Net Variance)/dt = Advection - Mixing + Error')
+    ax.set_title('(a) d(Net Variance)/dt = Advection - Mixing - Numerical Mixing')
     ax.grid()
     ylab = '$10^6\ (g/kg)^2\ m^3s^{-1}$'
     ax.set_ylabel(ylab)
@@ -217,7 +218,7 @@ if True:
     ax = fig2.add_subplot(3,1,3)
     ax.plot(td, SV/V, '-k')
     ax.grid()
-    ax.set_title('(c) Volume-Average Variance')
+    ax.set_title('(c) Volume-Averaged Variance')
     ax.set_xlabel('Time (days)')
     ax.set_ylabel('$(g/kg)^2$')
     ax.set_xlim(td0, td1)
@@ -227,7 +228,7 @@ if True:
     # add spring-neap labels
     add_sn(ax, y=20)
     
-if True:
+if False:
     # three estimates of mixing
     fig4 = plt.figure(figsize=figsize)
     scl = 1e6

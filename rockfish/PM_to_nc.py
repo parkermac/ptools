@@ -30,7 +30,7 @@ import time
 import argparse
 import netCDF4 as nc4
 
-limit_days = False
+limit_days = True
 
 # optional command line arguments, can be input in any order
 parser = argparse.ArgumentParser()
@@ -126,7 +126,8 @@ for inname in m_list:
                 sys.stdout.flush()
             # day 0 contains P, Ldir, and the grid data
             P, G, S, PLdir = pickle.load(open(indir + dirname + inname + '/' + p, 'rb'))
-            NT, NP = P['lon'].shape
+            step = 100
+            NT, NP = P['lon'][:,::step].shape
             ds = nc4.Dataset(out_fn, 'w')
             ds.createDimension('Time', None)
             ds.createDimension('Particle', NP)
@@ -142,9 +143,9 @@ for inname in m_list:
                 else:
                     vv = ds.createVariable(vn, float, ('Time', 'Particle'))
                 if vn == 'age':
-                    vv[:] = np.ones((NT,1)) * P[vn]
+                    vv[:] = np.ones((NT,1)) * P[vn][::step]
                 else:
-                    vv[:] = P[vn]
+                    vv[:] = P[vn][:,::step]
                 vv.long_name = name_unit_dict[vn][0]
                 vv.units = name_unit_dict[vn][1]
             ds.close()
@@ -160,9 +161,9 @@ for inname in m_list:
                     ds[vn][NTx:] = P[vn][1:]
                 else:
                     if vn == 'age':
-                        ds[vn][NTx:,:] = np.ones((NT-1,1)) * P[vn]
+                        ds[vn][NTx:,:] = np.ones((NTx-1,1)) * P[vn][::step]
                     else:
-                        ds[vn][NTx:,:] = P[vn][1:,:]
+                        ds[vn][NTx:,:] = P[vn][1:,::step]
             ds.close()
         counter += 1
     print('  - took %0.1f seconds' % (time.time() - tt0))
