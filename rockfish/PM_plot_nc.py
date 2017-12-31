@@ -19,9 +19,8 @@ import pfun
 
 import numpy as np
 import netCDF4 as nc
-from warnings import filterwarnings
-filterwarnings('ignore') # skip some warning messages
-
+# from warnings import filterwarnings
+# filterwarnings('ignore') # skip some warning messages
 
 if Ldir['env'] == 'pm_mac': # mac version
     pass
@@ -48,13 +47,43 @@ inname = m_list[my_ndt]
 ds = nc.Dataset(indir + inname)
 
 # get data
-NP = 100
-lon = ds['lon'][:,:NP]
-lat = ds['lat'][:,:NP]
-z = ds['z'][:,:NP]
-age = ds['age'][:,:NP]
+pstep = 100
+
+lon = ds['lon'][:,::pstep]
+lat = ds['lat'][:,::pstep]
+z = ds['z'][:,::pstep]
+h = ds['h'][:,::pstep]
+age = ds['age'][:,::pstep]
 ot = ds['ot'][:]
 ds.close()
+
+NT, NP = lon.shape
+zmat = np.nan * np.ones((119*24, NP))
+Lon = zmat.copy()
+Lat = zmat.copy()
+Z = zmat.copy()
+H = zmat.copy()
+Age = zmat.copy()
+
+for Np in range(NP):
+    plon = lon[:,Np]
+    plat = lat[:,Np]
+    pz = z[:,Np]
+    ph = h[:,Np]
+    page = age[:,Np]
+    mask = (page>0) & (page<120)
+    Nm = sum(mask)
+    Lon[:Nm,Np] = plon[mask]
+    Lat[:Nm,Np] = plat[mask]
+    Z[:Nm,Np] = pz[mask]
+    H[:Nm,Np] = ph[mask]
+    Age[:Nm,Np] = page[mask]
+
+# apply a mask
+mask = (Z < -H)
+Lon[mask] = np.nan
+Lat[mask] = np.nan
+Z[mask] = np.nan
 
 # PLOTTING
 plt.close('all')
@@ -65,22 +94,25 @@ ax = fig.add_subplot(1,2,1)
 ax.set_xlabel('Longitude')
 ax.set_ylabel('Latitude')
 pfun.add_coast(ax)
-aa = [-125, -122, 47, 49]
+aa = [-123.5, -122, 47, 48.5]
 ax.axis(aa)
 pfun.dar(ax)
 ax.grid()
-
-ax.plot(lon, lat, '-', linewidth=0.5, alpha=0.5)
+ax.plot(Lon, Lat, '-', linewidth=0.5, alpha=0.5)
 # ending points
-ax.plot(lon[-1], lat[-1],'ob', markersize=3, label='End')
+ax.plot(Lon[-1,:], Lat[-1,:],'ob', markersize=3, label='End')
 # starting points
-ax.plot(lon[0,0], lat[0,0], '*m', markersize=5, label='Start')
+ax.plot(Lon[0,0], Lat[0,0], '*m', markersize=5, label='Start')
     
 # TIME SERIES
 tdays = (ot - ot[0])/86400.
-ax = fig.add_subplot(1,2,2)
+ax = fig.add_subplot(2,2,2)
 ax.plot(tdays, z,'-', alpha=0.25)
 ax.set_ylabel('Z (m)')
+
+ax = fig.add_subplot(2,2,4)
+ax.plot(Age, Z,'.')
+
 
 # save or plot figures
 outfn = indir + inname.strip('.nc') + '.png'
