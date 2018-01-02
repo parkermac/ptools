@@ -43,8 +43,8 @@ parser.add_argument('-0', '--date_string0', nargs='?', type=str, default=date_st
 parser.add_argument('-1', '--date_string1', nargs='?', type=str, default=date_string1)
 args = parser.parse_args()
 #
-Ldir = Lfun.Lstart(gridname, tag)
-Ldir['ex_name'] = ex_name
+Ldir = Lfun.Lstart(args.gridname, args.tag)
+Ldir['ex_name'] = args.ex_name
 Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
 
 dt0 = datetime.strptime(args.date_string0, dsf)
