@@ -132,6 +132,8 @@ else:#
     NT = len(fn_list)
     tt = 0
     for fn in fn_list:
+        print(fn)
+        sys.stdout.flush()
         ds = nc.Dataset(fn)
         ds2['ocean_time'][tt] = ds['ocean_time'][0].squeeze()
         ds2['zeta'][tt,:,:] = ds['zeta'][0, :, :].squeeze()

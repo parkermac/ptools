@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 import os
 import shutil
+import pickle
 
 import Lfun
 Ldir = Lfun.Lstart()
@@ -66,6 +67,8 @@ lat = ds.variables['lat_rho'][:]
 DA = (1/ds['pm'][:]) * (1/ds['pn'][:])
 DA[mask_rho==0] = np.nan
 H[mask_rho==0] = np.nan
+Hm = np.ma.masked_where(mask_rho==0, H)
+aa0 = pfun.get_aa(ds)
 ds.close()
 
 # get distances
@@ -77,6 +80,8 @@ da = np.flipud(DA)
 xm = np.flipud(XM)
 ym = np.flipud(YM)
 m = np.flipud(mask_rho) # mask_rho: 1 = water, 0 = land
+lonvec = lon[0,:] # no need to flip
+latvec = np.flipud(lat[:,0])
 
 NR, NC = h.shape
 
@@ -84,38 +89,35 @@ NR, NC = h.shape
 
 # set up the axes
 plt.close('all')
-fig = plt.figure(figsize=(13,8)) # (13,8) is good for my laptop
-ax1 = plt.subplot2grid((1,3), (0,0), colspan=2) # map
-ax2 = plt.subplot2grid((1,3), (0,2), colspan=1) # buttons
+fig = plt.figure(figsize=(22,12)) # (13,8) is good for my laptop
+ax1 = plt.subplot2grid((1,5), (0,0), colspan=2) # map
+ax2 = plt.subplot2grid((1,5), (0,2), colspan=1) # buttons
+ax3 = plt.subplot2grid((1,5), (0,3), colspan=2) # buttons
 
 #%% initialize the data plot
-
 cmap1 = plt.get_cmap(name='rainbow_r') # terrain
 tvmin = -20
 tvmax = 200
 cs = ax1.imshow(h, interpolation='nearest', vmin=tvmin, vmax=tvmax, cmap = cmap1)
 fig.colorbar(cs, ax=ax1, extend='both')
 aa = ax1.axis()
-
 # add the coastline
 clon, clat = pfun.get_coast()
 cx0, cx1, cxf = zfun.get_interpolant(clon, lon[0,:], extrap_nan=True)
 cy0, cy1, cyf = zfun.get_interpolant(clat, lat[:,0], extrap_nan=True)
 ax1.plot(cx0 + cxf, NR - (cy0 + cyf) - 1, '-k')
-
 # add rivers
 gfp.edit_mask_river_tracks(Gr, NR, ax1)
-
 ax1.axis(aa)
 
 # create control buttons
 # list is organized from bottom to top
 blist = ['start', 'pause','polyInfo', 'lineInfo', 'startPoly',
-         'done']
+         'polySave', 'done']
 # nicer names
 Blist = ['Start', 'Pause','Polygon Info',
          'Line Info', 'Start Polygon\nLine',
-         'Done']
+         'Save Polygon', 'Done']
 NB = len(blist) # number of buttons
 ybc = np.arange(NB+1) - .5
 offset = 1e5 # kludgey way to distinguish buttons from topography
@@ -125,6 +127,15 @@ ZB = np.arange(1,NB+1).reshape(NB,1)
 cmap2 = plt.get_cmap(name='viridis')
 ax2.pcolormesh(XBC,YBC,ZB, vmin=0, vmax=NB, cmap = cmap2)
 ax2.set_axis_off()
+
+# initialize the lat,lon map plot
+ax3.pcolormesh(plon, plat, Hm,
+    vmin=tvmin, vmax=tvmax, cmap = cmap1)
+pfun.add_coast(ax3)
+ax3.axis(aa0)
+pfun.dar(ax3)
+ax3.set_xlabel('Longitude')
+ax3.set_ylabel('Latitude')
 
 def addButtonLabel(ax, plon, plat, nb, lab, tcol='k'):
     # draw and label buttons
@@ -215,7 +226,7 @@ while flag_get_ginput:
             flag_start = False
             flag_continue = False
             cs.set_data(h)
-            ax1.set_title('PAUSED: Initial Mask')
+            ax1.set_title('PAUSED')
             # reset button colors
             for bnum in bdict.keys():
                 if bdict[bnum] == 'start':
@@ -241,12 +252,28 @@ while flag_get_ginput:
             ap = np.nansum(dap)
             vp = np.nansum(dvp)
             hp = vp/ap
+            print('- all values are for unmasked area -')
             print('Volume inside polygon = %0.1f km3' % (vp/1e9) )
             print('Area inside polygon = %0.1f km2' % (ap/1e6) )
             print('Mean Depth inside polygon = %0.1f m' % (hp) )
             inp = input('Push Return to continue\n')
             remove_poly()
             ax1.set_title('PAUSED')
+        elif (bdict[nb]=='polySave') and not flag_start:
+            flag_continue = False
+            pname = input('Name for saved polygon: ')
+            poutdir = Ldir['parent'] + 'ptools_output/polygons/'
+            Lfun.make_dir(poutdir)
+            lon_poly = lonvec[plon_poly]
+            lat_poly = latvec[plat_poly]
+            pdict = {'lon_poly': lon_poly, 'lat_poly': lat_poly}
+            poutfn = poutdir + pname.replace(' ','') + '.p'
+            pickle.dump(pdict, open(poutfn, 'wb'))
+            print(' - saved to ' + poutfn)
+            #remove_poly()
+            ax1.set_title('PAUSED')
+            ax3.plot(lon_poly, lat_poly, '-*k', linewidth=1)
+            ax3.text(np.array(lon_poly).mean(),np.array(lat_poly).mean(),pname)
         elif (bdict[nb]=='lineInfo') and not flag_start:
             flag_continue = False
             x = plon_poly
