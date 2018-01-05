@@ -55,7 +55,7 @@ sn_dict = a
 
 # select several model runs
 #run_list = ['cascadia1_base_lobio1', 'cas2_regulartide_lo6', 'cas2_v0_lo6', 'cas3_v0_lo6']
-run_list = ['cas2_v0_lo6', 'cas3_v0_lo6']
+run_list = ['cas2_v0_lo6', 'cas3_v0_lo6', 'cas3_v0_lo6m']
 
 # load observational data
 year  = 2013
@@ -168,9 +168,8 @@ fig = plt.figure(figsize=(12,8))
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 
-dt0 = datetime(year,1,5)
-dt1 = datetime(year,1,10)
-
+dt0 = datetime(year,1,1)
+dt1 = datetime(year,2,1)
 
 count = 0
 for name in sn_dict.keys():
@@ -199,7 +198,7 @@ for name in sn_dict.keys():
 plt.show()
 
     
-if False:
+if True:
     #
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
@@ -213,6 +212,7 @@ if False:
         yo = Mobs[name]['lat']
         ax.plot(xo, yo, '*r')
         ax.text(xo, yo, name)
+        Mmod = Mmod_dict[run_list[0]]
         xm = Mmod[name]['lon']
         ym = Mmod[name]['lat']
         ax.plot(xm, ym, '*b')

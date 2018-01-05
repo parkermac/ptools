@@ -39,7 +39,7 @@ if Ldir['env'] == 'pm_mac':
     whichyear = 2017
     dt0 = datetime(whichyear,8,5)
     dt1 = datetime(whichyear,8,9)
-elif Ldir['env'] == 'fjord':
+elif Ldir['env'] == 'pm_fjord':
     whichyear = 2013
     dt0 = datetime(whichyear,1,1)
     dt1 = datetime(whichyear,12,31)
@@ -73,7 +73,7 @@ itag = Ldir['gtagex'] + '_' + str(whichyear)
 
 if Ldir['env'] == 'pm_mac':
     etag = '_mac'
-elif Ldir['env'] == 'fjord':
+elif Ldir['env'] == 'pm_fjord':
     etag = ''
 
 # prepare a directory for results

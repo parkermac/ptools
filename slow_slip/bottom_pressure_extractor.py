@@ -46,7 +46,7 @@ if model_type == 'LiveOcean':
     if Ldir['env'] == 'pm_mac':
         dt0 = datetime(2017,8,5)
         dt1 = datetime(2017,8,9)
-    elif Ldir['env'] == 'fjord':
+    elif Ldir['env'] == 'pm_fjord':
         dt0 = datetime(2013,1,2)
         dt1 = datetime(2015,12,31)
     #
@@ -92,7 +92,7 @@ elif model_type == 'Kurapov':
     fn_list = []
     if Ldir['env'] == 'pm_mac':
         frange = range(1,5+1)
-    elif Ldir['env'] == 'fjord':
+    elif Ldir['env'] == 'pm_fjord':
         # we have 1-2276, so use range(1,2276+1)
         frange = range(1,2276+1)
         #frange = range(1,20+1)
@@ -116,7 +116,7 @@ elif model_type == 'Kurapov':
 
 if Ldir['env'] == 'pm_mac':
     etag = '_mac'
-elif Ldir['env'] == 'fjord':
+elif Ldir['env'] == 'pm_fjord':
     etag = ''
     
 NT = len(fn_list)

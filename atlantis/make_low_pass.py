@@ -25,7 +25,7 @@ whichyear = 2005
 
 if Ldir['env'] == 'pm_mac': # mac version
     in_dir = Ldir['parent'] + 'roms/output/salish_2006_4/'
-elif Ldir['env'] == 'fjord': # fjord version
+elif Ldir['env'] == 'pm_fjord': # fjord version
     if whichyear == 2006:
         in_dir = '/pmr3/pmraid1/daves/runs/salish_2006_4/OUT/'
         out_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'

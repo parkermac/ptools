@@ -117,7 +117,7 @@ blist = ['start', 'pause','polyInfo', 'lineInfo', 'startPoly',
 # nicer names
 Blist = ['Start', 'Pause','Polygon Info',
          'Line Info', 'Start Polygon\nLine',
-         'Save Polygon', 'Done']
+         'Save Polygon\nLine', 'Done']
 NB = len(blist) # number of buttons
 ybc = np.arange(NB+1) - .5
 offset = 1e5 # kludgey way to distinguish buttons from topography
@@ -261,7 +261,7 @@ while flag_get_ginput:
             ax1.set_title('PAUSED')
         elif (bdict[nb]=='polySave') and not flag_start:
             flag_continue = False
-            pname = input('Name for saved polygon: ')
+            pname = input('Name for saved polygon or line: ')
             poutdir = Ldir['parent'] + 'ptools_output/polygons/'
             Lfun.make_dir(poutdir)
             lon_poly = lonvec[plon_poly]
