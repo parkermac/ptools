@@ -35,10 +35,10 @@ Ldir = Lfun.Lstart(gridname, tag)
 Ldir['ex_name'] = ex_name
 Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
 
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     dt0 = datetime(2017,8,5)
     dt1 = datetime(2017,8,9)    
-elif Ldir['env'] == 'pm_fjord':
+elif Ldir['lo_env'] == 'pm_fjord':
     dt0 = datetime(2013,1,2)
     dt1 = datetime(2015,12,31)    
 

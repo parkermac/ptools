@@ -35,11 +35,11 @@ Ldir = Lfun.Lstart(gridname, tag)
 Ldir['ex_name'] = ex_name
 Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
 #
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     whichyear = 2017
     dt0 = datetime(whichyear,8,5)
     dt1 = datetime(whichyear,8,9)
-elif Ldir['env'] == 'pm_fjord':
+elif Ldir['lo_env'] == 'pm_fjord':
     whichyear = 2013
     dt0 = datetime(whichyear,1,1)
     dt1 = datetime(whichyear,12,31)
@@ -71,9 +71,9 @@ NT = len(fn_list)
 
 itag = Ldir['gtagex'] + '_' + str(whichyear)
 
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     etag = '_mac'
-elif Ldir['env'] == 'pm_fjord':
+elif Ldir['lo_env'] == 'pm_fjord':
     etag = ''
 
 # prepare a directory for results
@@ -175,7 +175,7 @@ if os.path.isfile(out_fn):
 else:
     result_dict['result'] = 'fail'
 
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     # testing
     zfun.ncd(out_fn)
     #

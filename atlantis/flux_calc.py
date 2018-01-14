@@ -30,14 +30,14 @@ if testing == True:
 #%% setup input locations
 
 whichyear = 2005
-if Ldir['env'] == 'pm_mac': # mac version
+if Ldir['lo_env'] == 'pm_mac': # mac version
     if whichyear == 2006:
         R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
         out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2006/'
     elif whichyear == 2005:
         R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2005_1_lp/'
         out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2005/'
-elif Ldir['env'] == 'pm_fjord': # fjord version
+elif Ldir['lo_env'] == 'pm_fjord': # fjord version
     if whichyear == 2006:
         R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
         out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2006/'
@@ -63,11 +63,11 @@ NLAY = len(z_dict) - 1
 
 dt0 = datetime(whichyear,1,1)
 
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     # have 2006.07.01-31 = days 181 to 211
     # big convergence errors for 7/29, 7/30 = 209, 210
     day_list = [208, 209] #range(181,211+1)
-elif Ldir['env'] == 'pm_fjord':
+elif Ldir['lo_env'] == 'pm_fjord':
     # in /data1/parker/roms/output/salish_2006_4_lp
     # we have f2006.01.04 through 2016.12.29
     # = days 3 to 362

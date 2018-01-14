@@ -22,9 +22,9 @@ import netCDF4 as nc
 # from warnings import filterwarnings
 # filterwarnings('ignore') # skip some warning messages
 
-if Ldir['env'] == 'pm_mac': # mac version
+if Ldir['lo_env'] == 'pm_mac': # mac version
     pass
-elif Ldir['env'] == 'fjord': # fjord version
+elif Ldir['lo_env'] == 'pm_fjord': # fjord version
     import matplotlib as mpl
     mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -116,9 +116,9 @@ ax.plot(Age, Z,'.')
 
 # save or plot figures
 outfn = indir + inname.strip('.nc') + '.png'
-if Ldir['env'] == 'fjo':
+if Ldir['lo_env'] == 'pm_fjord':
     plt.savefig(outfn)
-elif Ldir['env'] == 'pm_mac':
+elif Ldir['lo_env'] == 'pm_mac':
     plt.show()
 
 # EXTRA
@@ -126,9 +126,9 @@ elif Ldir['env'] == 'pm_mac':
 if False:
     
     # retrieve experimental data
-    if Ldir['env'] == 'fjo':
+    if Ldir['lo_env'] == 'pm_fjord':
         datadir = '/data1/bbartos/LiveOcean_data/tracker/'
-    elif Ldir['env'] == 'pm_mac':
+    elif Ldir['lo_env'] == 'pm_mac':
         datadir = Ldir['parent'] + 'ptools_data/rockfish/'
     exdf = pd.read_csv(datadir + 'rockfish_latlon.csv', index_col = 0)
     exind = inname[-6:-3]

@@ -43,10 +43,10 @@ if model_type == 'LiveOcean':
     Ldir['gtagex'] = Ldir['gtag'] + '_' + Ldir['ex_name']
     tag = Ldir['gtagex']
     #
-    if Ldir['env'] == 'pm_mac':
+    if Ldir['lo_env'] == 'pm_mac':
         dt0 = datetime(2017,8,5)
         dt1 = datetime(2017,8,9)
-    elif Ldir['env'] == 'pm_fjord':
+    elif Ldir['lo_env'] == 'pm_fjord':
         dt0 = datetime(2013,1,2)
         dt1 = datetime(2015,12,31)
     #
@@ -90,9 +90,9 @@ elif model_type == 'Kurapov':
         
     # make file list
     fn_list = []
-    if Ldir['env'] == 'pm_mac':
+    if Ldir['lo_env'] == 'pm_mac':
         frange = range(1,5+1)
-    elif Ldir['env'] == 'pm_fjord':
+    elif Ldir['lo_env'] == 'pm_fjord':
         # we have 1-2276, so use range(1,2276+1)
         frange = range(1,2276+1)
         #frange = range(1,20+1)
@@ -114,9 +114,9 @@ elif model_type == 'Kurapov':
     z0 = z[n_layer,:,:].squeeze()
     ds.close()
 
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     etag = '_mac'
-elif Ldir['env'] == 'pm_fjord':
+elif Ldir['lo_env'] == 'pm_fjord':
     etag = ''
     
 NT = len(fn_list)
@@ -305,7 +305,7 @@ else:
 if True:
     zfun.ncd(out_fn)
     
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     import matplotlib.pyplot as plt
     plt.close('all')
     

@@ -42,14 +42,14 @@ import pickle
 #%% setup output location
 
 whichyear = 2005
-if Ldir['env'] == 'pm_mac': # mac version
+if Ldir['lo_env'] == 'pm_mac': # mac version
     if whichyear == 2006:
         R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2006_4_lp/'
         out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2006/'
     elif whichyear == 2005:
         R_in_dir0 = Ldir['parent'] + 'roms/output/salish_2005_1_lp/'
         out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_mac_2005/'
-elif Ldir['env'] == 'pm_fjord': # fjord version
+elif Ldir['lo_env'] == 'pm_fjord': # fjord version
     if whichyear == 2006:
         R_in_dir0 = '/boildat1/parker/roms/output/salish_2006_4_lp/'
         out_dir0 = Ldir['parent'] + 'ptools_output/atlantis_fjord_2006/'

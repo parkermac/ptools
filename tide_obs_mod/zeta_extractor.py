@@ -85,7 +85,7 @@ if list_type == 'hourly':
 else:
     print('Other list types not implemented yet.')
     
-if Ldir['env'] == 'pm_mac':
+if Ldir['lo_env'] == 'pm_mac':
     pass
     print(fn_list[0])
     print(fn_list[-1])

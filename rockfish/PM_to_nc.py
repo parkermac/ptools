@@ -39,7 +39,7 @@ args = parser.parse_args()
 Ldir = Lfun.Lstart()
 
 daylim = 6
-if Ldir['env'] == 'fjord':
+if Ldir['lo_env'] == 'pm_fjord':
     limit_days = False
     pstep = 10 # subsamepling factor for number of particles
     # here we hardwire a single SET OF EXPERIMENTS because I believe these are the only
@@ -54,7 +54,7 @@ if Ldir['env'] == 'fjord':
         if 'Experiment' in m:
             exp_list.append(m)
     exp_list.sort()
-elif Ldir['env'] == 'pm_mac':
+elif Ldir['lo_env'] == 'pm_mac':
     limit_days = True
     pstep = 100
     expdir0 = Ldir['parent'] + 'ptools_data/rockfish/'

@@ -21,7 +21,7 @@ reload(ndf)
 
 # **** USER EDITS ****
 
-# choos station(s) (a list of strings) and a year (int)
+# choose station(s) (a list of strings) and a year (int)
 
 sn_list = ['46005']; yr = 2003
 
