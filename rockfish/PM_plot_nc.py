@@ -19,8 +19,10 @@ import pfun
 
 import numpy as np
 import netCDF4 as nc
-# from warnings import filterwarnings
-# filterwarnings('ignore') # skip some warning messages
+import pickle
+
+from warnings import filterwarnings
+filterwarnings('ignore') # skip some warning messages
 
 if Ldir['lo_env'] == 'pm_mac': # mac version
     pass
@@ -31,100 +33,94 @@ import matplotlib.pyplot as plt
 
 # create the list of run files
 indir = odir00 = Ldir['parent'] + 'ptools_output/rockfish/'
-m_list_raw = os.listdir(indir)
-m_list = []
-for m in m_list_raw:
-    if ('.nc' in m) and ('grid' not in m):
-        m_list.append(m)
-m_list.sort()
-if False:
-    Npt = len(m_list)
-    for npt in range(Npt):
-        print(str(npt) + ': ' + m_list[npt])
-else:
-    my_ndt = 0
-inname = m_list[my_ndt]
-ds = nc.Dataset(indir + inname)
+ex_list_raw = os.listdir(indir)
+ex_list = []
+for ex in ex_list_raw:
+    if ('.nc' in ex) and ('grid' not in ex):
+        ex_list.append(ex)
+ex_list.sort()
+
+# testing
+ex = 'rockfish_2006_Experiment_4_4.nc'
 
 # get data
-pstep = 100
-
-lon = ds['lon'][:,::pstep]
-lat = ds['lat'][:,::pstep]
-z = ds['z'][:,::pstep]
-h = ds['h'][:,::pstep]
-age = ds['age'][:,::pstep]
+ds = nc.Dataset(indir + ex)
+# tracks are stored (time, particle)
+Lon = ds['lon'][:]
+Lat = ds['lat'][:]
+Z = ds['z'][:]
+H = ds['h'][:]
+Age = ds['age'][:]
 ot = ds['ot'][:]
 ds.close()
 
+# subsample the number of particles
+pstep = 100
+lon = Lon[:,::pstep]
+lat = Lat[:,::pstep]
+z = Z[:,::pstep]
+h = H[:,::pstep]
+age = Age[:,::pstep]
 NT, NP = lon.shape
-zmat = np.nan * np.ones((119*24, NP))
-Lon = zmat.copy()
-Lat = zmat.copy()
-Z = zmat.copy()
-H = zmat.copy()
-Age = zmat.copy()
 
-for Np in range(NP):
-    plon = lon[:,Np]
-    plat = lat[:,Np]
-    pz = z[:,Np]
-    ph = h[:,Np]
-    page = age[:,Np]
-    mask = (page>0) & (page<120)
-    Nm = sum(mask)
-    Lon[:Nm,Np] = plon[mask]
-    Lat[:Nm,Np] = plat[mask]
-    Z[:Nm,Np] = pz[mask]
-    H[:Nm,Np] = ph[mask]
-    Age[:Nm,Np] = page[mask]
+# find time indices that define an
+# age range (e.g. 0-120 days)
+ndays0 = 0
+ndays1 = 120
+age_ind0 = (age == ndays0).sum(axis=0)
+age_ind1 = (age <= ndays1).sum(axis=0)
 
-# apply a mask
-mask = (Z < -H)
-Lon[mask] = np.nan
-Lat[mask] = np.nan
-Z[mask] = np.nan
+# repackage to all have the same age
+nt = age_ind1[0] - age_ind0[0]
+llon = np.nan * np.ones((nt, NP))
+llat = np.nan * np.ones((nt, NP))
+for np in range(NP):
+    nt0 = age_ind1[0]
+    nt1 = nt0 + nt
+    llon[:nt,np] = lon[nt0:nt1, np]
+    llat[:nt,np] = lat[nt0:nt1, np]
 
 # PLOTTING
 plt.close('all')
-fig = plt.figure(figsize=(16,8))
+fig = plt.figure(figsize=(13,7))
 
 # MAP
 ax = fig.add_subplot(1,2,1)
 ax.set_xlabel('Longitude')
 ax.set_ylabel('Latitude')
 pfun.add_coast(ax)
-aa = [-123.5, -122, 47, 48.5]
+# automatically plot region of particles, with padding
+pad = .02
+aa = [lon.min() - pad, lon.max() + pad,
+    lat.min() - pad, lat.max() + pad]
+#aa = [-123.5, -122, 47, 48.5]
 ax.axis(aa)
 pfun.dar(ax)
 ax.grid()
-ax.plot(Lon, Lat, '-', linewidth=0.5, alpha=0.5)
-# ending points
-ax.plot(Lon[-1,:], Lat[-1,:],'ob', markersize=3, label='End')
-# starting points
-ax.plot(Lon[0,0], Lat[0,0], '*m', markersize=5, label='Start')
-    
+ax.plot(llon, llat,
+    '-', linewidth=0.5, alpha=0.5)
+# ax.plot(lon[age_ind0[np],np], lat[age_ind0[np],np],
+#     '*m', markersize=5) # start
+# ax.plot(lon[age_ind1[np],np], lat[age_ind1[np],np],
+#     'ob', markersize=3) # end
+
 # TIME SERIES
 tdays = (ot - ot[0])/86400.
 ax = fig.add_subplot(2,2,2)
 ax.plot(tdays, z,'-', alpha=0.25)
 ax.set_ylabel('Z (m)')
 
-ax = fig.add_subplot(2,2,4)
-ax.plot(Age, Z,'.')
-
+# ax = fig.add_subplot(2,2,4)
+# ax.plot(age, z,'.')
 
 # save or plot figures
-outfn = indir + inname.strip('.nc') + '.png'
 if Ldir['lo_env'] == 'pm_fjord':
-    plt.savefig(outfn)
+    out_fn = indir + ex.strip('.nc') + '.png'
+    plt.savefig(out_fn)
 elif Ldir['lo_env'] == 'pm_mac':
     plt.show()
 
-# EXTRA
-
 if False:
-    
     # retrieve experimental data
     if Ldir['lo_env'] == 'pm_fjord':
         datadir = '/data1/bbartos/LiveOcean_data/tracker/'

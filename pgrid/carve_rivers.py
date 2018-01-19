@@ -82,7 +82,8 @@ for rn in df.index:
             # river crosses a tile
             #
             # and we jiggle a little to make sure paths are not blocked
-            nudge_list = [(.003,0), (0,.003), (0,0)]
+            #nudge_list = [(.003,0), (0,.003), (0,0)]
+            nudge_list = [(.0002,0), (0,.0002), (0,0)]
             #nudge_list = [(0,0)]
             x_orig = x.copy()
             y_orig = y.copy()

@@ -240,7 +240,7 @@ while flag_get_ginput:
             flag_continue = True
             flag_e = 'p'
             ax1.set_title('Click to Add Poly Points')
-            remove_poly()
+            #remove_poly()
             pline = []
             plon_poly = []
             plat_poly = []
