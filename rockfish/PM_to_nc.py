@@ -21,11 +21,8 @@ alp = os.path.abspath('../../LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 import Lfun
-import matfun
 import pickle
 import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
 import time
 import argparse
 import netCDF4 as nc4
@@ -41,7 +38,7 @@ Ldir = Lfun.Lstart()
 daylim = 6
 if Ldir['lo_env'] == 'pm_fjord':
     limit_days = False
-    pstep = 10 # subsamepling factor for number of particles
+    pstep = 10 # subsampling factor for number of particles
     # here we hardwire a single SET OF EXPERIMENTS because I believe these are the only
     # ones we want to work with (all other things like mortality can be
     # treated in post-processing of these NetCDF files)

@@ -37,7 +37,8 @@ ex_list.sort()
 # make shorter names for experiments
 ex_dict = dict()
 for ex in ex_list:
-    ex_short = ex.replace('rockfish_2006_Experiment', 'ex')
+    ex_short = ex.replace('rockfish_2006_Experiment_', '')
+    ex_short = ex_short.replace('.nc','')
     ex_dict[ex] = ex_short
 
 # polygons
@@ -61,6 +62,7 @@ for pn in poly_list:
 df = pd.DataFrame(columns=poly_list)
 
 for ex in ex_list:
+    print('Working on ' + ex_dict[ex])
     # get data
     ds = nc.Dataset(indir + ex)
     # tracks are stored (time, particle)
@@ -71,28 +73,39 @@ for ex in ex_list:
     Age = ds['age'][:]
     ot = ds['ot'][:]
     ds.close()
-    # subsample the number of particles
-    pstep = 1
-    lon = Lon[:,::pstep]
-    lat = Lat[:,::pstep]
-    z = Z[:,::pstep]
-    h = H[:,::pstep]
-    age = Age[:,::pstep]
-    NT, NP = lon.shape
 
+    NT, NP = Lon.shape
+    
     # select particles that are 120 days old
-    age_ind = (age <= 120).sum(axis=0)
+    age_ind = (Age <= 120).sum(axis=0)
     # and find particle locations at that time
     # using fancy indexing
-    lon1 = lon[age_ind, np.arange(NP)]
-    lat1 = lat[age_ind, np.arange(NP)]
+    lon1 = Lon[age_ind, np.arange(NP)]
+    lat1 = Lat[age_ind, np.arange(NP)]
+    h1 = H[age_ind, np.arange(NP)]
+
+    # Drop particles that end up deeper than 50 m
+    # because the shallow ones are typically stuck on land.
+    # Also drop particles that escape the domain.
+    mask1 = h1 > 50
+    mask2 = lon1 > -126.5
+    mask3 = lat1 > 45.5
+    mask = mask1 & mask2 & mask3
+    lon1 = lon1[mask]
+    lat1 = lat1[mask]
+ 
     xy1 = np.stack((lon1,lat1), axis=1)
+    
     # count the number of particles that ended up in each polygon
     for pn in poly_list:
         p = p_dict[pn]
         p_in = p.contains_points(xy1) # boolean
         #print("%s has %d points" % (pn, p_in.sum()))
         df.loc[ex_dict[ex], pn] = p_in.sum()
+        
+df.index.name = 'Exp'
+df['total'] = df.sum(axis=1)
+df.to_csv(indir + 'counted_by_region.csv')
     
 
 

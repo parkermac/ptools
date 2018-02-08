@@ -34,7 +34,7 @@ else:
 
 # END USER EDITS
 
-# make sure ouput directory structure exists
+# make sure output directory structure exists
 data_dir00 = '../../ptools_data/'
 data_dir0 = data_dir00 + 'ndbc/'
 ndf.make_dir(data_dir00)

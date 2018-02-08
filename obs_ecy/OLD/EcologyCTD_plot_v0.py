@@ -15,7 +15,7 @@ https://fortress.wa.gov/ecy/eap/marinewq/mwdataset.asp
 # where are the data csv files
 # NOTE: Windows users use double forward slashes
 # e.g dir0 = 'C://Users//Julie//Downloads//'
-dir0 = '/Users/PM5/Documents/tools_data/obs_data/ctd_bottles/DOE_csv/'
+dir0 = '/Users/pm7/Documents/tools_data/obs_data/ctd_bottles/DOE_csv/'
 
 # choose which stations to plot by commenting out parts of this list
 # names ending in _0 are multi-year 1990-2014
@@ -27,7 +27,8 @@ sta_to_plot = [
     #'DNA001_0', # deep T bad in July 2001
                 # 2002 shallow S low value Feb, shallow T spike Oct
                 # 2006 lots of little T & s spikes all depths, many months
-    'HCB003_0',
+    #'HCB003_0',
+    'HCB010_0',
     #'HCB004_0',
     #'BUD005_0'
     ]
@@ -59,7 +60,7 @@ do_csv = False
 
 # if this is multi_year data, you can choose to plot a single year
 # by making this true, and selecting the year
-focus_year = False
+focus_year = True
 fyear = 2013
 
 ## END USER INPUT ##
