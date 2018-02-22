@@ -32,8 +32,8 @@ def get_sn_dicts():
         'Victoria Harbour': 7120,
         'Bamfield': 8545,
         'Tofino': 8615,
-        'Winter Harbour': 8735,
-        'Port Hardy': 8408,
+        #'Winter Harbour': 8735,
+        #'Port Hardy': 8408,
         'Campbell River': 8074,
         'New Westminster': 7654}
     sn_dict = {}

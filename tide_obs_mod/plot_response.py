@@ -10,20 +10,14 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-import zfun
-import zrfun
 
 pth = os.path.abspath('../../LiveOcean/plotting')
 if pth not in sys.path:
     sys.path.append(pth)
 import pfun
 
-import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-import numpy as np
 import pickle
-import netCDF4 as nc
 
 import obsfun as ofn
 
@@ -34,7 +28,7 @@ dir0 = dir00 + 'ptools_output/tide/'
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 # load observational data
-year  = 2013
+year  = 2017
 
 obs_dir = dir0 + 'obs_data/'
 Tobs = dict()
@@ -50,7 +44,7 @@ for name in sn_dict.keys():
     Mobs[name] = Lfun.csv_to_dict(mfn)
     Hobs[name] = pickle.load(open(hfn, 'rb'))
     
-mod_dir = dir0 + 'mod_data/'
+mod_dir = dir0 + 'mod_data/cas3_v0_lo6m/'
 Tmod = dict()
 Mmod = dict()
 Hmod = dict()
@@ -85,8 +79,8 @@ plt.close('all')
 
 # OFFSHORE
 #name0 = 'Westport'
-#name0 = 'La Push'
-name0 = 'Neah Bay'
+name0 = 'La Push'
+#name0 = 'Neah Bay'
 #name0 = 'Bamfield'
 #name0 = 'Garibaldi'
 
@@ -94,7 +88,7 @@ name0 = 'Neah Bay'
 #name1 = 'Campbell River'
 #name1 = 'Point Atkinson'
 #name1 = 'Vancouver'
-name1 = 'Tacoma'
+name1 = 'Seattle'
 #name1 = 'Seattle'
 #name1 = 'Friday Harbor'
 
@@ -139,7 +133,7 @@ for hn in hn_list:
     
 ax3 = fig.add_subplot(223)
 ax3.set_xlim(flo, fhi)
-ax3.set_ylim(0, 1)
+ax3.set_ylim(0, 1.3)
 ax3.grid()
 ax3.set_xlabel('Frequency (cycles/day)')
 ax3.text(.05,.9, 'OCEAN Amplitude (m)', weight='bold', color='k',
@@ -147,11 +141,20 @@ ax3.text(.05,.9, 'OCEAN Amplitude (m)', weight='bold', color='k',
 
 ax4 = fig.add_subplot(224)
 ax4.set_xlim(flo, fhi)
-ax4.set_ylim(0, 360)
+ax4.set_ylim(0, 1.3)
 ax4.grid()
 ax4.set_xlabel('Frequency (cycles/day)')
-ax4.text(.05,.9, 'OCEAN Phase (deg G)', weight='bold', color='k',
+ax4.text(.05,.9, 'INLAND Amplitude (m)', weight='bold', color='k',
     transform=ax4.transAxes)
+
+# the ocean phase looks good, so no need to plot
+#ax4 = fig.add_subplot(224)
+#ax4.set_xlim(flo, fhi)
+#ax4.set_ylim(0, 360)
+#ax4.grid()
+#ax4.set_xlabel('Frequency (cycles/day)')
+#ax4.text(.05,.9, 'OCEAN Phase (deg G)', weight='bold', color='k',
+#    transform=ax4.transAxes)
 
 hn_list = ['M2','S2','N2','O1','P1','K1']
 for hn in hn_list:
@@ -159,8 +162,8 @@ for hn in hn_list:
     Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
     ax3.text(Fo0, Ao0, hn, color='r', weight='bold')
     ax3.text(Fm0, Am0, hn, color='b', weight='bold')
-    ax4.text(Fo0, Go0, hn, color='r', weight='bold')
-    ax4.text(Fm0, Gm0, hn, color='b', weight='bold')
+    ax4.text(Fo1, Ao1, hn, color='r', weight='bold')
+    ax4.text(Fm1, Am1, hn, color='b', weight='bold')
     
 if True:
     # Plot station locations

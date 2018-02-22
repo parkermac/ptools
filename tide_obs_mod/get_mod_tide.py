@@ -12,8 +12,10 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
+Ldir = Lfun.Lstart(gridname='cas3', tag='v0')
+Ldir['gtagex'] = Ldir['gtag'] + '_lo6m'
+
 import zfun
-import zrfun
 
 pth = os.path.abspath('../../LiveOcean/plotting')
 if pth not in sys.path:
@@ -22,7 +24,6 @@ import pfun
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
 import numpy as np
 import pickle
 import netCDF4 as nc
@@ -45,7 +46,7 @@ if testing == True:
     sn_dict = a
 
 # load observational data
-year  = 2013
+year  = 2017
 obs_dir = dir0 + 'obs_data/'
 Tobs = dict()
 Mobs = dict()
@@ -97,8 +98,8 @@ def get_ij_good(lon, lat, xvec, yvec, i0, j0):
     return igood, jgood
 
 # load model data
-mod_dir = dir0 + 'mod_data/'
-fn = mod_dir + 'cascadia1_base_lobio1/eta_' + str(year) + '.nc'
+mod_dir = dir0 + 'mod_data/' + Ldir['gtagex'] + '/'
+fn = mod_dir + 'eta_' + str(year) + '.nc'
 ds = nc.Dataset(fn)
 lon = ds['lon_rho'][:]
 lat = ds['lat_rho'][:]

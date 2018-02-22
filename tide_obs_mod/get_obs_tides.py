@@ -11,18 +11,7 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-import zfun
-import zrfun
 
-pth = os.path.abspath('../../LiveOcean/plotting')
-if pth not in sys.path:
-    sys.path.append(pth)
-import pfun
-
-import pandas as pd
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-import numpy as np
 import pickle
 
 from importlib import reload
@@ -36,7 +25,7 @@ dir0 = dir00 + 'ptools_output/tide/'
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 # extract and save data
-year  = 2013
+year  = 2017
 outdir = dir0 + 'obs_data/'
 Lfun.make_dir(outdir)
 

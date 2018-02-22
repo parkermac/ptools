@@ -10,7 +10,6 @@ if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
 import zfun
-import zrfun
 
 Ldir = Lfun.Lstart()
 
@@ -21,9 +20,8 @@ import pfun
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
-import pickle
 import netCDF4 as nc
 
 from importlib import reload
@@ -55,10 +53,10 @@ sn_dict = a
 
 # select several model runs
 #run_list = ['cascadia1_base_lobio1', 'cas2_regulartide_lo6', 'cas2_v0_lo6', 'cas3_v0_lo6']
-run_list = ['cas2_v0_lo6', 'cas3_v0_lo6', 'cas3_v0_lo6m']
+run_list = ['cas3_v0_lo6m']
 
 # load observational data
-year  = 2013
+year  = 2017
 obs_dir = dir0 + 'obs_data/'
 Tobs = dict()
 Mobs = dict()
@@ -169,7 +167,7 @@ ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 
 dt0 = datetime(year,1,1)
-dt1 = datetime(year,2,1)
+dt1 = datetime(year,12,31)
 
 count = 0
 for name in sn_dict.keys():
