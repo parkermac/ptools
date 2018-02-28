@@ -29,13 +29,13 @@ import pfun
 n_layer = 0 # 0 = deepest
 do_press = True
 
-#model_type = 'LiveOcean'
-model_type = 'Kurapov'
+model_type = 'LiveOcean'
+#model_type = 'Kurapov'
 
 if model_type == 'LiveOcean':
     gridname = 'cascadia1'
     tag = 'base'
-    ex_name = 'lobio1'
+    ex_name = 'lobio5'
     list_type = 'low_passed'
     #
     Ldir = Lfun.Lstart(gridname, tag)
@@ -47,8 +47,8 @@ if model_type == 'LiveOcean':
         dt0 = datetime(2017,8,5)
         dt1 = datetime(2017,8,9)
     elif Ldir['lo_env'] == 'pm_fjord':
-        dt0 = datetime(2013,1,2)
-        dt1 = datetime(2015,12,31)
+        dt0 = datetime(2017,1,1)
+        dt1 = datetime(2017,12,31)
     #
     if list_type == 'low_passed':
         fn_list = []

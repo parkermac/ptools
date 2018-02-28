@@ -28,7 +28,7 @@ import pfun
 
 gridname = 'cascadia1'
 tag = 'base'
-ex_name = 'lobio1'
+ex_name = 'lobio5'
 list_type = 'hourly'
 #
 Ldir = Lfun.Lstart(gridname, tag)
@@ -40,7 +40,7 @@ if Ldir['lo_env'] == 'pm_mac':
     dt0 = datetime(whichyear,8,5)
     dt1 = datetime(whichyear,8,9)
 elif Ldir['lo_env'] == 'pm_fjord':
-    whichyear = 2013
+    whichyear = 2017
     dt0 = datetime(whichyear,1,1)
     dt1 = datetime(whichyear,12,31)
 #

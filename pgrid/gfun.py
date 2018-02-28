@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'hc0'
+gridname = 'hc1'
 
 import os
 

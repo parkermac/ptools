@@ -90,6 +90,15 @@ elif Gr['gridname'] == 'hc0':
     dch['t_list'] = ['psdem/PS_27m.nc']
     dch['nudging_edges'] = ['north', 'west']
     dch['nudging_days'] = (0.1, 1.0)
+
+elif Gr['gridname'] == 'hc1':
+    # mid Hood Canal nest
+    aa = [-123, -122.55, 47.5, 47.9]
+    res = 100 # target resolution (m)
+    plon_vec, plat_vec = gfu.simple_grid(aa, res)
+    dch['t_list'] = ['psdem/PS_27m.nc']
+    dch['nudging_edges'] = ['north', 'west']
+    dch['nudging_days'] = (0.1, 1.0)
              
 elif Gr['gridname'] == 'cas1': # An extended version of cascadia1
     maxres = 5000
