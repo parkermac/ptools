@@ -3,56 +3,66 @@
 """
 Created on Wed Feb 28 10:04:20 2018
 
-@author: pm7
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Created on Wed Feb  7 15:44:00 2018
 
-Plots data from a Department of Ecology csv file, for flight CTD stations.
+Plots data from a Department of Ecology, for all CTD stations.
 
-Designed to work with the new  2017 data I asked for.
+Designed to work only with the new  2017 data I requested.
 
 """
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
-#import netCDF4 as nc4
 
-## USER INPUT ##
+import os
+import sys
+pth = os.path.abspath('../../LiveOcean/alpha')
+if pth not in sys.path:
+    sys.path.append(pth)
+import Lfun
+Ldir = Lfun.Lstart()
 
-# where are the data csv files
-dir0 = '/Users/pm7/Documents/ptools_data/ecology/'
+# where the data is
+dir0 = Ldir['parent'] + 'ptools_data/ecology/'
+fn = dir0 + 'ParkerMacCready2017CTDDataFeb2018.xlsx'
 
-sta_df = pd.read_pickle(dir0 + 'sta_df.p')
+# where to put plots
+dir11 = Ldir['parent'] + 'ptools_output/ecology/'
+Lfun.make_dir(dir11)
+dir1 = dir11 + 'casts2017/'
+Lfun.make_dir(dir1, clean=True)
 
-# choose which station to plot
-sta = 'ParkerMacCready2017CTDDataFeb2018'
+# set to True to save pngs, False to see on screen
+save_fig = True
 
-fn = dir0 + sta + '.xlsx'
-
+# load station location and depth info
+sta_info_fn = dir0 + 'ParkerMacCreadyCoreStationInfoFeb2018.xlsx'
+sta_df = pd.read_excel(sta_info_fn)
+sta_df = sta_df.set_index('Station')
+# get locations in decimal degrees
+for sta in sta_df.index:
+    lat_str = sta_df.loc[sta, 'Lat_NAD83 (deg / dec_min)']
+    lat_deg = float(lat_str.split()[0]) + float(lat_str.split()[1])/60
+    sta_df.loc[sta,'Latitude'] = lat_deg
+    #
+    lon_str = sta_df.loc[sta, 'Long_NAD83 (deg / dec_min)']
+    lon_deg = float(lon_str.split()[0]) + float(lon_str.split()[1])/60
+    sta_df.loc[sta,'Longitude'] = -lon_deg    
+sta_df.pop('Lat_NAD83 (deg / dec_min)')
+sta_df.pop('Long_NAD83 (deg / dec_min)')
+    
 # choose which data fields to plot by commenting out parts of this list
 data_to_plot = [
     'Salinity',
     'Temperature',
-#    'Sigma',
-#    'Chl',
-#    'DO',
-#    'Turb',
+    'Sigma',
+    'Chl',
+    'DO',
+    'Turb',
     ]
 
-year = 2017 # integer year, or None to plot all years
-
-## END USER INPUT ##
-
-# lists of data properties
-
-# data long names
-# and we retain only these fields
+# data long names; we retain only these fields
 data_long_names = ['Salinity', 'Temp', 'Density',
                    'Chla_adjusted', 'DO_raw',
                    'Turbidity', 'Z']
@@ -60,39 +70,45 @@ data_long_names = ['Salinity', 'Temp', 'Density',
 # data short names, units, and plot ranges
 data_names =  ['Salinity','Temperature','Sigma', 'Chl', 'DO',   'Turb', 'Z']
 data_units =  ['psu',     'deg C',      'kg/m3', 'ug/l', 'mg/l', '',    'm']
-data_ranges = [(14,34),   (4,25),       (14,26), (0,40), (0,18), (0,3),(-100,0)]
+data_ranges = [(14,34),   (4,25),       (14,26), (0,40), (0,18), (0,4),(-50,0)]
 
 # dictionaries to look up data attributes using names
 data_name_dict = dict(zip(data_long_names, data_names))
 data_unit_dict = dict(zip(data_names, data_units))
 data_range_dict = dict(zip(data_names, data_ranges))
 
-# more useful lists and dictionaries for plotting different months
+# lists and dictionaries for plotting different months
 
 months = range(1,13) # a list of 1 to 12
-
 month_color_dict = dict(zip(months,
     ['mediumblue', 'royalblue', 'cadetblue', 'aquamarine',
     'lightgreen', 'greenyellow', 'gold', 'orange',
     'lightsalmon', 'mediumorchid', 'slateblue', 'purple']))
-
 month_name_dict = dict(zip(months,
     ['Jan','Feb','Mar','Apr','May','Jun',
      'Jul','Aug','Sep','Oct','Nov','Dec']))
 
 
-all_casts = pd.read_excel(fn, sheet_name='2017Provisional_CTDResults', parse_dates = ['Date'])
+# read in the data (all stations, all casts)
+all_casts = pd.read_excel(fn, sheet_name='2017Provisional_CTDResults',
+                          parse_dates = ['Date'])
 
-# setup
+# plotting setup
 plt.close('all')
-figsize = (18,7)
+figsize = (12,7)
+if save_fig:
+    plt.ioff()
 
-for station in sta_df.index:
-    
-    casts = all_casts[all_casts['Station'] == station]
-    
-    casts = casts.set_index('Date')
+# trim the station list uf desired
+if False:
+    sta_list = [sta for sta in sta_df.index if 'HCB' in sta]
+else:
+    sta_list = [sta for sta in sta_df.index]
 
+for station in sta_list:
+    print(' - plotting: ' + station)           
+    casts = all_casts[all_casts['Station'] == station]   
+    casts = casts.set_index('Date')    
     casts['Z'] = -casts['Depth'] # and make a Z column
     casts = casts[data_long_names] # keep only selected columns
     casts = casts.rename(columns=data_name_dict) # and rename them
@@ -103,24 +119,30 @@ for station in sta_df.index:
     alldates = casts.index
     castdates = alldates.unique() # a short list of unique dates (1 per cast)
     
-    title = sta
-    if year != None:
-        title = sta + ': ' + str(year)
-        dt0 = datetime(year,1,1)
-        dt1 = datetime(year,12,31)
-        castdates = castdates[castdates >= dt0]
-        castdates = castdates[castdates <= dt1] 
-        casts = casts.loc[dt0:dt1,:]
-        
+    title = station + ': ' + sta_df.loc[station,'Descrip']
+    Max_z = -float(sta_df.loc[station, 'Max_Depth'])
+            
     # set up the plot axes (an array)
     NR = 2
-    NC = len(castdates)
+    NC = int(np.ceil(len(data_to_plot)/NR))
+    nrnc = dict()
+    nr = 0
+    nc = 0
+    for name in data_to_plot:
+        nrnc[name] = (nr,nc)
+        if nc < NC-1:
+            nc+=1
+        else:
+            nr += 1
+            nc = 0
     
     fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
-                             figsize=figsize, squeeze=False)    
+                         figsize=figsize, squeeze=False)
+    
     for cd in castdates:
-        print('\'' + datetime.strftime(cd, '%Y.%m.%d') + '\',')
-            
+        pass
+        #print('\'' + datetime.strftime(cd, '%Y.%m.%d') + '\',')
+
     # plot the CTD cast data for this station
     for cdate in castdates:
         imo = cdate.month
@@ -131,37 +153,34 @@ for station in sta_df.index:
         mask = zdf != 0
         cast = cast[mask]
         cast = cast[:-5] # drop bottom values (sometimes bad)
-            
+    
         for fld in data_to_plot:
-            if fld == 'Salinity':
-                nr = 0
-            elif fld == 'Temperature':
-                nr = 1
-                
-            nc = imo-1
-            
+            nr, nc = nrnc[fld]
             ax = axes[nr,nc]
-            cast.plot(x=fld, y = 'Z', style='--', grid=True,
+            ylim = data_range_dict['Z']
+            #ylim = (Max_z, 0)
+            cast.plot(x=fld, y = 'Z', style='-', grid=True,
                       color=month_color_dict[imo], ax=ax, legend=False,
-                      xlim=data_range_dict[fld], ylim=data_range_dict['Z'])
-            
-            #ax.plot(m_dict[fld], m_dict['Z'], '-', color=month_color_dict[imo])
-            
-            ax.set_xlabel(fld + ' (' + data_unit_dict[fld] + ')')
-            
-    
-    # set more things about the cast plots
-    
+                      xlim=data_range_dict[fld], ylim=ylim)
+            ax_str = fld + ' (' + data_unit_dict[fld] + ')'
+            ax.set_xlabel('')
+            if nc==0:
+                ax.set_ylabel('Z (m)')
+            ax.text(.95, .05, ax_str, fontsize=14, fontweight='bold',
+            horizontalalignment='right', transform=ax.transAxes)
+                
     # add month labels with colors
-    if nr == 0:
-        ax = axes[0, 0]
-        for imo in months:
-            ax.text(.05, 1 - imo/13.,
-                month_name_dict[imo], color=month_color_dict[imo],
-                fontsize=14, fontweight='bold',
-                verticalalignment='center', transform=ax.transAxes)
+    ax = axes[0, 0]
+    for imo in months:
+        ax.text(.05, 1 - imo/13.,
+            month_name_dict[imo], color=month_color_dict[imo],
+            fontsize=12,
+            verticalalignment='center', transform=ax.transAxes)
     
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=16, fontweight='bold')
 
-    
-    plt.show()
+    if save_fig:
+        plt.savefig(dir1 + station + '.png')
+        plt.close()
+    else:
+        plt.show()
