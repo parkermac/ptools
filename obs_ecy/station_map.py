@@ -48,9 +48,10 @@ sta_df.pop('Long_NAD83 (deg / dec_min)')
 
 # plotting
 plt.close('all')
-fig = plt.figure(figsize=(12,7))
-ax1 = fig.add_subplot(121)
-ax2 = fig.add_subplot(122)
+fig1 = plt.figure(figsize=(10,15))
+fig2 = plt.figure(figsize=(10,15))
+ax1 = fig1.add_subplot(111)
+ax2 = fig2.add_subplot(111)
 
 for station in sta_df.index:
     lon = sta_df.loc[station, 'Longitude']
@@ -61,7 +62,7 @@ for station in sta_df.index:
     else:
         ax = ax2
     ax.plot(lon, lat, '*r')
-    ax.text(lon, lat, station, color='b', fontsize=8)
+    ax.text(lon+.01, lat, station, color='b', fontsize=12, fontweight='bold')
     
 pfun.add_coast(ax1)
 pfun.dar(ax1)

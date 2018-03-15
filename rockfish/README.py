@@ -24,6 +24,23 @@ count_by_region.py is the real workhorse.  It figures out how many particles
 from each experiment ended up in a region (defined by a polygon in 
 ptools_data/polygons_rockfish) like Hood Canal.  It puts all the results
 in a DataFrame.
+
+NOTE: 2018.03.15 In response to this request from Kelly Andrews:
+   I was thinking it would be helpful to know the variation around
+   which basin each of the particles from each "born" date ended up in
+   for each "age" between age 90 and 120 days. For example, looking at
+   the spreadsheet I attached in the previous message, for each release
+   day (1-60), I want to know how many of those 167 particles are in each
+   of the basins at age 90-120. So, for each experiment, there should be
+   1,860 rows of data (60 release days x 31 settling days).
+   Does that make sense? Since we don't really know where in 90-120 larval
+   duration period these guys will settle out, I think it's best to
+   quantify a range or distribution across these days. And looking at the
+   data across the release dates might give us some hint of whether there
+   is variation in where the larvae end up depending on whether a female
+   releases larvae early in the period or late.
+   
+   I made count_by_region_2.py.
                                                           
 """
 

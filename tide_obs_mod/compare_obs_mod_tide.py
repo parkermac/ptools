@@ -162,9 +162,10 @@ for gtagex in run_list:
 # PLOTTING
 plt.close('all')
 
-fig = plt.figure(figsize=(12,8))
-ax1 = fig.add_subplot(211)
-ax2 = fig.add_subplot(212)
+fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True,
+                     figsize=(12,8), squeeze=False)
+ax1 = axes[0,0]
+ax2 = axes[1,0]
 
 dt0 = datetime(year,1,1)
 dt1 = datetime(year,12,31)

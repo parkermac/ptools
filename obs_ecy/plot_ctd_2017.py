@@ -14,6 +14,7 @@ Designed to work only with the new  2017 data I requested.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import netCDF4 as nc4
 
 import os
 import sys
@@ -27,14 +28,24 @@ Ldir = Lfun.Lstart()
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
 fn = dir0 + 'ParkerMacCready2017CTDDataFeb2018.xlsx'
 
+# set to True to save pngs, False to see on screen
+testing = False
+if testing:
+    save_fig = False
+else:
+    save_fig = True
+
+add_model = True
+
 # where to put plots
 dir11 = Ldir['parent'] + 'ptools_output/ecology/'
 Lfun.make_dir(dir11)
-dir1 = dir11 + 'casts2017/'
+if add_model:
+    Ldir['gtagex'] = 'cas3_v1_lo6m'
+    dir1 = dir11 + 'casts2017_'+ Ldir['gtagex'] + '/'
+else:
+    dir1 = dir11 + 'casts2017/'
 Lfun.make_dir(dir1, clean=True)
-
-# set to True to save pngs, False to see on screen
-save_fig = True
 
 # load station location and depth info
 sta_info_fn = dir0 + 'ParkerMacCreadyCoreStationInfoFeb2018.xlsx'
@@ -53,15 +64,17 @@ sta_df.pop('Lat_NAD83 (deg / dec_min)')
 sta_df.pop('Long_NAD83 (deg / dec_min)')
     
 # choose which data fields to plot by commenting out parts of this list
-data_to_plot = [
-    'Salinity',
-    'Temperature',
-    'Sigma',
-    'Chl',
-    'DO',
-    'Turb',
-    ]
-
+if add_model:
+    data_to_plot = ['Salinity', 'Temperature']
+else:
+    data_to_plot = [
+        'Salinity',
+        'Temperature',
+        'Sigma',
+        'Chl',
+        'DO',
+        'Turb']
+    
 # data long names; we retain only these fields
 data_long_names = ['Salinity', 'Temp', 'Density',
                    'Chla_adjusted', 'DO_raw',
@@ -70,7 +83,7 @@ data_long_names = ['Salinity', 'Temp', 'Density',
 # data short names, units, and plot ranges
 data_names =  ['Salinity','Temperature','Sigma', 'Chl', 'DO',   'Turb', 'Z']
 data_units =  ['psu',     'deg C',      'kg/m3', 'ug/l', 'mg/l', '',    'm']
-data_ranges = [(14,34),   (4,25),       (14,26), (0,40), (0,18), (0,4),(-50,0)]
+data_ranges = [(14,34),   (4,25),       (14,26), (0,40), (0,18), (0,4),(-125,0)]
 
 # dictionaries to look up data attributes using names
 data_name_dict = dict(zip(data_long_names, data_names))
@@ -100,7 +113,7 @@ if save_fig:
     plt.ioff()
 
 # trim the station list uf desired
-if False:
+if testing:
     sta_list = [sta for sta in sta_df.index if 'HCB' in sta]
 else:
     sta_list = [sta for sta in sta_df.index]
@@ -123,7 +136,10 @@ for station in sta_list:
     Max_z = -float(sta_df.loc[station, 'Max_Depth'])
             
     # set up the plot axes (an array)
-    NR = 2
+    if add_model:
+        NR = 1
+    else:
+        NR = 2
     NC = int(np.ceil(len(data_to_plot)/NR))
     nrnc = dict()
     nr = 0
@@ -136,8 +152,12 @@ for station in sta_list:
             nr += 1
             nc = 0
     
-    fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
-                         figsize=figsize, squeeze=False)
+    if add_model:
+        fig, axes = plt.subplots(nrows=NR+1, ncols=NC, sharey=True,
+                             figsize=figsize, squeeze=False)
+    else:
+        fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
+                             figsize=figsize, squeeze=False)
     
     for cd in castdates:
         pass
@@ -153,7 +173,25 @@ for station in sta_list:
         mask = zdf != 0
         cast = cast[mask]
         cast = cast[:-5] # drop bottom values (sometimes bad)
-    
+        
+        if add_model:
+            # also get the model fields for this day
+            date_string = cdate.strftime('%Y.%m.%d')
+            dir0m = '/Users/pm7/Documents/LiveOcean_output/casts/'
+            fnm = dir0m + Ldir['gtagex'] + '/' + station + '_' + date_string + '.nc'
+            try:
+                ds = nc4.Dataset(fnm)
+                m_dict = dict()
+                m_dict['Salinity'] = ds['salt'][:].squeeze()
+                m_dict['Temperature'] = ds['temp'][:].squeeze()
+                m_dict['Z'] = ds['z_rho'][:].squeeze()
+                ds.close()
+                plot_mod = True
+            except OSError:
+                plot_mod = False
+                pass
+
+        
         for fld in data_to_plot:
             nr, nc = nrnc[fld]
             ax = axes[nr,nc]
@@ -168,7 +206,18 @@ for station in sta_list:
                 ax.set_ylabel('Z (m)')
             ax.text(.95, .05, ax_str, fontsize=14, fontweight='bold',
             horizontalalignment='right', transform=ax.transAxes)
-                
+            
+            if add_model and plot_mod:
+                axm = axes[nr+1, nc]
+                axm.plot(m_dict[fld], m_dict['Z'], '-',
+                        color=month_color_dict[imo])
+                axm.set_xlim(data_range_dict[fld])
+                axm.set_ylim(ylim)
+                axm.grid(True)
+                if nc==0:
+                    axm.text(.05, .05, Ldir['gtagex'], fontsize=12,
+                             fontweight='bold', transform=axm.transAxes)
+            
     # add month labels with colors
     ax = axes[0, 0]
     for imo in months:

@@ -11,18 +11,12 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-import zfun
-import zrfun
 
 pth = os.path.abspath('../../LiveOcean/plotting')
 if pth not in sys.path:
     sys.path.append(pth)
 import pfun
-
-import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-import numpy as np
 import pickle
 
 from importlib import reload
@@ -57,15 +51,15 @@ plt.close('all')
 fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111)
 pfun.add_coast(ax)
-ax.set_xlim(-130, -122)
+ax.set_xlim(-130, -121)
 ax.set_ylim(42, 52)
 pfun.dar(ax)
 
 for name in sn_dict.keys():
-    lon = M[name]['lon']
-    lat = M[name]['lat']
+    lon = float(M[name]['lon'])
+    lat = float(M[name]['lat'])
     ax.plot(lon, lat, '*r')
-    ax.text(lon, lat, name)
+    ax.text(lon+.01, lat, name, fontsize=8, color='b')
     
 plt.show()
     
