@@ -8,8 +8,13 @@ Created on Thu Mar 15 14:08:58 2018
 Count the number of particles that end up in a number
 of basins, for all the rockfish experiments.
 
-It makes 1,860 rows of data (60 release days x 31 settling days [90-120])
-for each experiment.  Gack.
+It makes 1829 rows of data:
+59 release days [1-59] x 31 settling days [90-120] = 1829
+for each experiment.
+
+PERFORMANCE: takes about 14 seconds per experiment, and there are 33
+experiments, so this takes a total of 8 minutes.  Not bad.
+
 """
 
 # setup
@@ -26,12 +31,17 @@ import netCDF4 as nc
 import matplotlib.path as mpath
 import pickle
 import pandas as pd
+import time
+
+testing = False
 
 from warnings import filterwarnings
 filterwarnings('ignore') # skip some warning messages
 
 # create the list of run files
-indir = odir00 = Ldir['parent'] + 'ptools_output/rockfish/'
+indir = Ldir['parent'] + 'ptools_output/rockfish/'
+outdir = indir + 'counted_by_region_2/'
+Lfun.make_dir(outdir, clean=True)
 ex_list_raw = os.listdir(indir)
 ex_list = []
 for ex in ex_list_raw:
@@ -39,8 +49,8 @@ for ex in ex_list_raw:
         ex_list.append(ex)
 ex_list.sort()
 
-# testing
-ex_list = ex_list[:3]
+if testing:
+    ex_list = ex_list[:3] #[ex_list[0]]
 
 # make shorter names for experiments
 ex_dict = dict()
@@ -66,11 +76,15 @@ for pn in poly_list:
     v_dict[pn] = v
     p_dict[pn] = mpath.Path(v)
     
-# set up a DataFrame to store results
-df = pd.DataFrame(columns=poly_list)
-
 for ex in ex_list:
-    print('Working on ' + ex_dict[ex])
+    
+    tt0 = time.time()
+    
+    # set up a DataFrame to store results
+    df = pd.DataFrame(columns=['rel_day', 'age'] + poly_list + ['total'])
+    ex_short = ex_dict[ex]
+    
+    print('Working on ' + ex_short)
     # get data
     ds = nc.Dataset(indir + ex)
     # tracks are stored (time, particle)
@@ -83,37 +97,80 @@ for ex in ex_list:
     ds.close()
 
     NT, NP = Lon.shape
+    # NT = 4320 = 180*24 or hourly for 180 days [0:180]
+    # Age is always the integer day, so it repeats 24 times each day.
+    # Age gets to 180 for particle 0 and 121 for the last particle.
+    # I think 167 particles are released each day for the first 60 days,
+    # so I want to isolate these. Actually there are an irregular number
+    # of particles released, between 12 and 575 for the first experiment.
+    # Odd.
     
-    # select particles that are 120 days old
-    age_ind = (Age <= 120).sum(axis=0)
-    # and find particle locations at that time
-    # using fancy indexing
-    lon1 = Lon[age_ind, np.arange(NP)]
-    lat1 = Lat[age_ind, np.arange(NP)]
-    h1 = H[age_ind, np.arange(NP)]
+    # 1. Find release day of all particles
+    nzero = (Age==0).sum(axis=0)
+    release_day = nzero/24
+    rd_unique = np.unique(release_day)
+    Release_day = release_day * np.ones(shape=(NT,1))
+    
+    age0 = 90
+    age1 = 121
+    
+    if testing:
+        rd_unique = rd_unique[:3]
+        age0 = 115
+        age1 = 121
+                   
+    for age in range(age0, age1):
 
-    # Drop particles that end up deeper than 50 m
-    # because the shallow ones are typically stuck on land.
-    # Also drop particles that escape the domain.
-    mask1 = h1 > 50
-    mask2 = lon1 > -126.5
-    mask3 = lat1 > 45.5
-    mask = mask1 & mask2 & mask3
-    lon1 = lon1[mask]
-    lat1 = lat1[mask]
- 
-    xy1 = np.stack((lon1,lat1), axis=1)
+        age_ind = (Age <= age).sum(axis=0) 
+                   
+        # and find particle locations at that time
+        # using fancy indexing
+        lon1 = Lon[age_ind, np.arange(NP)]
+        lat1 = Lat[age_ind, np.arange(NP)]
+        h1 = H[age_ind, np.arange(NP)]
+        rd1 = Release_day[age_ind, np.arange(NP)]
     
-    # count the number of particles that ended up in each polygon
-    for pn in poly_list:
-        p = p_dict[pn]
-        p_in = p.contains_points(xy1) # boolean
-        #print("%s has %d points" % (pn, p_in.sum()))
-        df.loc[ex_dict[ex], pn] = p_in.sum()
+        # Drop particles that end up deeper than 50 m
+        # because the shallow ones are typically stuck on land.
+        # Also drop particles that escape the domain.
+        mask1 = h1 > 50
+        mask2 = lon1 > -126.5
+        mask3 = lat1 > 45.5
+        mask = mask1 & mask2 & mask3
+        lon1 = lon1[mask]
+        lat1 = lat1[mask]
+        rd1 = rd1[mask]
+     
+        xy1 = np.stack((lon1,lat1), axis=1)
         
-df.index.name = 'Exp'
-df['total'] = df.sum(axis=1)
-#df.to_csv(indir + 'counted_by_region_2.csv')
+        # count the number of particles that ended up in each polygon
+        # in age categories
+        for pn in poly_list:
+            p = p_dict[pn]
+            p_in = p.contains_points(xy1) # boolean
+            for rd in rd_unique:
+                rd_str = ('0' + str(int(rd)))[-2:]
+                age_str = ('00' + str(int(age)))[-3:]
+                istr = 'rd' + rd_str + '_age' + age_str
+                df.loc[istr, pn] = p_in[rd1==rd].sum()
+    
+    # add columns for release day and age, for convenience.
+    for istr in df.index:
+        rd = istr[2:4] 
+        age = istr[-3:]        
+        df.loc[istr, 'rel_day'] = int(rd)
+        df.loc[istr, 'age'] = int(age)
+            
+    df.index.name = 'Filter'
+    df['total'] = df[poly_list].sum(axis=1)
+    
+    # sort in a logical way
+    df = df.sort_values(by=['rel_day','age'])
+    
+    # and export to csv
+    df.to_csv(outdir + 'Exp_' + ex_short + '.csv')
+    
+    print('  took %0.1f seconds' % (time.time() - tt0))
     
 
 
