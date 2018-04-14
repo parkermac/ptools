@@ -12,21 +12,21 @@ def get_dims():
     # DIMENSIONS
     dims = dict()
     # seaward sill
-    dims['H'] = 56 # depth
-    dims['B'] = 9.7e3 # width
-    dims['L'] = 35e3 # length
+    dims['H'] = 30 # depth
+    dims['B'] = 3e3 # width
+    dims['L'] = 10e3 # length
     dims['A'] = dims['B'] * dims['H']
     # seaward basin
-    dims['V1'] = 77e9 * 0.2 # volume of upper basin box
-    dims['V2'] = 77e9 - dims['V1'] # volume of deeper basin box
+    dims['V1'] = 10e9 # volume of upper basin box
+    dims['V2'] = 20e9 # volume of deeper basin box
     # landward sill
-    dims['H_p'] = 49 # depth
-    dims['B_p'] = 1.4e3 # width
-    dims['L_p'] = 9e3 # length
+    dims['H_p'] = 30 # depth
+    dims['B_p'] = 3e3 # width
+    dims['L_p'] = 10e3 # length
     dims['A_p'] = dims['B_p'] * dims['H_p']
     # landward basin
-    dims['V1_p'] = 17e9 * 0.3 # volume of upper basin box
-    dims['V2_p'] = 17e9 - dims['V1_p'] # volume of deeper basin box
+    dims['V1_p'] = 10e9 # volume of upper basin box
+    dims['V2_p'] = 20e9 # volume of deeper basin box
     #
     # PARAMETERS
     params = dict()
@@ -66,6 +66,7 @@ def fSQ_rev(Stopp, Sbotm, Qr, Ut, L, H, A, params, Socn):
     T = H**2 / K
     # find G = dsdx/Socn
     aa = pr.k2*c**2*T**2
+    
     G = -(-L + np.sqrt(L**2 + 8*aa*(Sbotm-Stopp)/Socn))/(4*aa)
     # note that G is now negative, so dq is negative as well
     dq = A*pr.k1*c**2*T*G

@@ -108,14 +108,15 @@ def add_sn(ax, y=0):
 
 figsize = (14, 12)
 
-if True:
+if False:
     # TEF Salt Budget
     fig0 = plt.figure(figsize=figsize)
     
     ax = fig0.add_subplot(2,2,1)
     scl = 1e6
     Sstorage = zfun.filt_godin(dSalt_dt)
-    ax.plot(td, Sstorage/scl, '-r', label='d(Net Salt)/dt')
+    ax.plot(td, Sstorage/scl, '-r', label=r"$<\frac{d}{dt}\int{s\,dV}>$")
+    
     ax.plot(td, Qin0*Sin0/scl, '-m', label='$Q_{in}S_{in}$')
     ax.plot(td, Qout0*Sout0/scl, '--m', label='$Q_{out}S_{out}$')
     ax.plot(td, (Sstorage - Qin0*Sin0 - Qout0*Sout0)/scl, '-k', label='Error')

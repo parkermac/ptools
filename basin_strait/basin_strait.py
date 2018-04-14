@@ -14,7 +14,7 @@ testing = False
 
 if testing:
     ND = 20
-    do_check = True
+    do_check = False
 else:
     ND = 1000
     do_check = False
@@ -29,7 +29,7 @@ ff_dict = {1:'linear_ramp_Qr',
         7:'Qr_jump2'}
 # USER: run different cases by changing the number below,
 # e.g. ff_list[0] does the first example "linear_ramp_Qr"
-force_flag = ff_dict[7]
+force_flag = ff_dict[5]
 
 landward_basin = True
 
@@ -93,11 +93,11 @@ def fUt(t, force_flag):
 def fSo(t, force_flag):
     td = t/86400
     if td >= 400:
-        Socn = 22
-        Ssfc = 21
+        Socn = 30
+        Ssfc = 30
     else:
-        Socn = 32
-        Ssfc = 31
+        Socn = 30
+        Ssfc = 30
     return Socn, Ssfc
     
 # prepare result vectors

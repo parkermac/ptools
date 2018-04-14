@@ -8,12 +8,12 @@ if make_movie == 0
     ntt = 2;
 else
     %ntt = 30;
-    ntt = 73;
+    ntt = 25;
 end
 
 phome = '/Users/pm7/Documents/';
-indir = 'LiveOcean_roms/output/cascadia1_base_lobio1/f2017.08.05/';
-infile = [phome,indir,'ocean_his_0002.nc'];
+indir = 'LiveOcean_roms/output/cas3_v0_lo6m/f2017.03.29/';
+infile = [phome,indir,'ocean_his_0001.nc'];
 lon = nc_varget(infile,'lon_psi');
 lat = nc_varget(infile,'lat_psi');
 %%
@@ -22,7 +22,7 @@ set(gcf,'position',[100 100 1000.5 600]);
 
 [NR, NC] = size(lon);
 ttt = 0;
-for tt = 2:ntt
+for tt = 1:ntt
     disp(['working on tt = ',num2str(tt)])
     tts = ['0000',num2str(tt)];
     infile = [phome,indir,'ocean_his_',tts(end-3:end),'.nc'];
