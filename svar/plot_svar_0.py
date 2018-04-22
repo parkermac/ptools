@@ -108,7 +108,7 @@ def add_sn(ax, y=0):
 
 figsize = (14, 12)
 
-if False:
+if True:
     # TEF Salt Budget
     fig0 = plt.figure(figsize=figsize)
     
