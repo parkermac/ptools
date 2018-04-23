@@ -26,13 +26,13 @@ import zfun
 
 # set defaults
 gridname = 'cas3'
-tag = 'v0'
-ex_name = 'lo6m'
+tag = 'v1'
+ex_name = 'lo7m'
 list_type = 'hourly'
 # Example of date_string is 2015.09.19
 dsf = '%Y.%m.%d'
 date_string0 = datetime(2017,1,1).strftime(format=dsf)
-date_string1 = datetime(2017,12,31).strftime(format=dsf)
+date_string1 = datetime(2017,1,29).strftime(format=dsf)
 
 # optional command line arguments, can be input in any order
 parser = argparse.ArgumentParser()

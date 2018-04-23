@@ -8,6 +8,8 @@ and 2 = lower.
 import numpy as np
 from collections import OrderedDict as od
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 def make_BaSt(case, names):
     """
@@ -50,8 +52,8 @@ def make_BaSt(case, names):
     for name in names:
         if name == 's':
             v = pr['Socn']
-        else:
-            v = 0
+        elif name == 'c':
+            v = pr['Cocn']
         NAME = name.upper()
         for bk in Ba.keys():
             binfo = Ba[bk]
@@ -101,6 +103,7 @@ def get_pr():
     pr['g'] = 9.8; pr['beta'] = 7.7e-4; pr['Cd'] = 2.6e-3
     pr['k1'] = 1/(4*48); pr['k2'] = 6.6/(80*48);
     pr['Socn'] = 30; pr['Sriv'] = 0
+    pr['Cocn'] = 1; pr['Criv'] = 0
     pr['dt'] = int(86400) # integration time step (sec)
     return pr
 pr = get_pr() # make pr available to the other functions here
@@ -141,11 +144,14 @@ def make_St(ssdict):
         St[sk] = sinfo
     return St
     
-def make_BaSt_out(Ba, St, NT, names):
+def make_BaSt_out(Ba, St, ND, names):
     """
     Initialize the output arrays, and make dicts to specify
     which variable goes in which column.
     """
+    dt = pr['dt']
+    NT = int((ND+1)/(dt/86400))
+    
     v = ['Qr']
     for name in names:
         NAME = name.upper()
@@ -162,7 +168,7 @@ def make_BaSt_out(Ba, St, NT, names):
     cv = []
     for ii in range(len(cc)):
         cv.append((cc[ii],vv[ii]))
-    Ba_out_cols = dict(zip(cv, range(len(cc))))
+    Ba_oc = dict(zip(cv, range(len(cc))))
 
     v = ['Ut', 'q1', 'q2']
     for name in names:
@@ -181,9 +187,9 @@ def make_BaSt_out(Ba, St, NT, names):
     cv = []
     for ii in range(len(cc)):
         cv.append((cc[ii],vv[ii]))
-    St_out_cols = dict(zip(cv, range(len(cc))))
+    St_oc = dict(zip(cv, range(len(cc))))
 
-    return Ba_out, Ba_out_cols, St_out, St_out_cols
+    return Ba_out, Ba_oc, St_out, St_oc
     
 def strait(Qr_sum, sinfo, pr):
     """
@@ -243,18 +249,21 @@ def strait(Qr_sum, sinfo, pr):
     sinfo['rev'] = rev
     return sinfo
 
-def bcalc(Ba, St, Ba_out, Ba_out_cols, St_out, St_out_cols, NT, fcase, ic=False):
+def bcalc(Ba, St, Ba_out, Ba_oc, St_out, St_oc, v_list, ND, fcase, ic=False):
     """
-    This is the main calculate that integrates the state
+    This is the main function that integrates the state
     of all the basins forward over NT timesteps.
     
     """
-    sv_list = [k for (x,k) in St_out_cols.keys() if x=='ba']
-    bv_list = [k for (x,k) in Ba_out_cols.keys() if x=='a']
-    pr = get_pr()
-    TD = np.nan * np.ones(NT)
-    # time integration
     dt = pr['dt']
+    NT = int((ND+1)/(dt/86400))
+    TD = np.nan * np.ones(NT)
+
+    # get lists of all state variables (used for saving to output)
+    sv_list = [k for (x,k) in St_oc.keys() if x=='ba']
+    bv_list = [k for (x,k) in Ba_oc.keys() if x=='a']
+
+    # time integration
     t = 0
     ii = 0
     while ii < NT:
@@ -275,70 +284,128 @@ def bcalc(Ba, St, Ba_out, Ba_out_cols, St_out, St_out_cols, NT, fcase, ic=False)
             St[sk] = sinfo
             # save results
             for v in sv_list:
-                St_out[ii, St_out_cols[(sk,v)]] = sinfo[v]
-        # go through all the basins
-        for bk in Ba.keys():
-            binfo = Ba[bk]
-            V1 = binfo['V1']
-            V2 = binfo['V2']
-            # save results
-            for v in bv_list:
-                Ba_out[ii, Ba_out_cols[(bk,v)]] = binfo[v]
-            TD[ii] = t/86400
-            if bk == 'a':
-                pass
-            else:
-                # find all fluxes from straits
-                qin1 = 0
-                sqin1 = binfo['Qr'] * pr['Sriv']
-                # add river salt flux for generality
-                qin2 = 0
-                sqin2 = 0
-                for sk in St.keys():
-                    sinfo = St[sk]
-                    rev = sinfo['rev']
-                    if sk[0] == bk: # strait is seaward of basin
-                        if rev == False:
-                            qin1 += -sinfo['q1']
-                            sqin1 += -sinfo['q1']*binfo['S1']
-                            qin2 += -sinfo['q2']
-                            sqin2 += -sinfo['q2']*sinfo['s2m']
-                        elif rev == True:
-                            qin1 += -sinfo['q1']
-                            sqin1 += -sinfo['q1']*sinfo['s1m']
-                            qin2 += -sinfo['q2']
-                            sqin2 += -sinfo['q2']*binfo['S2']
-                    elif sk[1] == bk: # strait is landward of basin
-                        if rev == False:
-                            qin1 += sinfo['q1']
-                            sqin1 += sinfo['q1']*sinfo['s1p']
-                            qin2 += sinfo['q2']
-                            sqin2 += sinfo['q2']*binfo['S2']
-                        elif rev == True:
-                            qin1 += sinfo['q1']
-                            sqin1 += sinfo['q1']*binfo['S1']
-                            qin2 += sinfo['q2']
-                            sqin2 += sinfo['q2']*sinfo['s2p']
-                    else: # strait is not connected to basin
-                        pass
-                # calculate vertical salt transport in basin
-                #print('%s: qin1 = %d, qin2 = %d' % (bk, qin1, qin2))
-                if qin2 > 0:
-                    squp = qin2 * binfo['S2']
-                elif qin2 <= 0:
-                    squp = qin2 * binfo['S1']
-                # update basin salinity
-                Ba[bk]['S1'] = binfo['S1'] + dt*(sqin1 + squp)/V1
-                Ba[bk]['S2'] = binfo['S2'] + dt*(sqin2 - squp)/V2
-        # reset upstream values for all straits
-        for sk in St.keys():
-            sinfo = St[sk]
-            sinfo['s1m'] = Ba[sk[0]]['S1']
-            sinfo['s2m'] = Ba[sk[0]]['S2']
-            sinfo['s1p'] = Ba[sk[1]]['S1']
-            sinfo['s2p'] = Ba[sk[1]]['S2']
-            St[sk] = sinfo
+                St_out[ii, St_oc[(sk,v)]] = sinfo[v]
+        # loop over all variables and calculate advective fluxes
+        for vn in v_list:
+            vn = vn.lower()
+            VN = vn.upper()
+            # go through all the basins
+            for bk in Ba.keys():
+                binfo = Ba[bk]
+                V1 = binfo['V1']
+                V2 = binfo['V2']
+                # save results
+                for v in bv_list:
+                    Ba_out[ii, Ba_oc[(bk,v)]] = binfo[v]
+                TD[ii] = t/86400
+                if bk == 'a':
+                    pass
+                else:
+                    # find all fluxes from straits
+                    qin1 = 0
+                    sqin1 = binfo['Qr'] * pr[VN+'riv']
+                    # add river salt flux for generality
+                    qin2 = 0
+                    sqin2 = 0
+                    for sk in St.keys():
+                        sinfo = St[sk]
+                        rev = sinfo['rev']
+                        if sk[0] == bk: # strait is seaward of basin
+                            if rev == False:
+                                qin1 += -sinfo['q1']
+                                sqin1 += -sinfo['q1']*binfo[VN+'1']
+                                qin2 += -sinfo['q2']
+                                sqin2 += -sinfo['q2']*sinfo[vn+'2m']
+                            elif rev == True:
+                                qin1 += -sinfo['q1']
+                                sqin1 += -sinfo['q1']*sinfo[vn+'1m']
+                                qin2 += -sinfo['q2']
+                                sqin2 += -sinfo['q2']*binfo[VN+'2']
+                        elif sk[1] == bk: # strait is landward of basin
+                            if rev == False:
+                                qin1 += sinfo['q1']
+                                sqin1 += sinfo['q1']*sinfo[vn+'1p']
+                                qin2 += sinfo['q2']
+                                sqin2 += sinfo['q2']*binfo[VN+'2']
+                            elif rev == True:
+                                qin1 += sinfo['q1']
+                                sqin1 += sinfo['q1']*binfo[VN+'1']
+                                qin2 += sinfo['q2']
+                                sqin2 += sinfo['q2']*sinfo[vn+'2p']
+                        else: # strait is not connected to basin
+                            pass
+                    # calculate vertical salt transport in basin
+                    #print('%s: qin1 = %d, qin2 = %d' % (bk, qin1, qin2))
+                    if qin2 > 0:
+                        squp = qin2 * binfo[VN+'2']
+                    elif qin2 <= 0:
+                        squp = qin2 * binfo[VN+'1']
+                    # update basin salinity
+                    Ba[bk][VN+'1'] = binfo[VN+'1'] + dt*(sqin1 + squp)/V1
+                    Ba[bk][VN+'2'] = binfo[VN+'2'] + dt*(sqin2 - squp)/V2
+            # reset upstream values for all straits
+            for sk in St.keys():
+                sinfo = St[sk]
+                sinfo[vn+'1m'] = Ba[sk[0]][VN+'1']
+                sinfo[vn+'2m'] = Ba[sk[0]][VN+'2']
+                sinfo[vn+'1p'] = Ba[sk[1]][VN+'1']
+                sinfo[vn+'2p'] = Ba[sk[1]][VN+'2']
+                St[sk] = sinfo
         t += dt
         ii += 1
-    return (Ba, St, Ba_out, St_out, TD)
+    return Ba_out, St_out, TD
+    
+def plot_basic(Ba, St, Ba_out, Ba_oc, St_out, St_oc, TD):
+    plt.close('all')
+    fig, axes = plt.subplots(3, 1, squeeze=False, figsize=(12,7))
+
+    ax = axes[0,0]
+    hatch_list = [ '/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*' ]
+    hh = 0
+    for bk in Ba.keys():
+        if bk == 'a':
+            pass
+        else:
+            S1 = Ba_out[:,Ba_oc[(bk,'S1')]]
+            S2 = Ba_out[:,Ba_oc[(bk,'S2')]]
+            ax.fill_between(TD, S1, S2, alpha=.5, label=bk, hatch=hatch_list[hh])
+            ax.set_xlim(TD[0], TD[-1])
+            hh += 1
+    aa = ax.get_ylim()
+    ax.set_ylim(aa[1]+1, aa[0]-1)
+    ax.legend(loc='upper right')
+    #ax.grid(True)
+    ax.set_xticklabels('')
+    ax.text(.05, .85, 'Basin Salinities',
+        fontsize=15, transform=ax.transAxes)
+
+    ax = axes[1,0]
+    for sk in St.keys():
+        ax.plot(TD, -St_out[:,St_oc[(sk,'q2')]]/1e3, '-', linewidth=3, label=sk)
+        ax.grid(True)
+        ax.set_xlim(TD[0], TD[-1])
+    aa = ax.get_ylim()
+    ax.set_ylim(aa[0]-1, aa[1]+1)
+    ax.legend(loc='upper right')
+    #ax.grid(True)
+    ax.set_xticklabels('')
+    ax.text(.05, .85, 'Strait Bottom Layer Q [$1000\ m^{3}s^{-1}$] (positive in)',
+        fontsize=15, transform=ax.transAxes)
+
+    ax = axes[2,0]
+    for bk in Ba.keys():
+        if bk == 'a':
+            pass
+        else:
+            Qr = Ba_out[:,Ba_oc[(bk,'Qr')]]
+            ax.plot(TD, Qr/1e3, '-', linewidth=3, label=bk)
+            ax.set_xlim(TD[0], TD[-1])
+    ax.set_ylim(bottom=0)
+    ax.legend(loc='upper right')
+    #ax.grid(True)
+    ax.text(.05, .85, 'Basin River Flow [$1000\ m^{3}s^{-1}$]',
+        fontsize=15, transform=ax.transAxes)
+    ax.set_xlabel('Time (days)')
+
+    plt.show()
 
