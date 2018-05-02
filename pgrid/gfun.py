@@ -9,7 +9,7 @@ Organizational functions for pgrid.
 
 # USER EDIT
 
-gridname = 'hc1'
+gridname = 'cas4'
 
 import os
 
@@ -124,7 +124,7 @@ def select_file(Gr, using_old_grid=False):
     # interactive selection
     if using_old_grid==True:
         fn_list = []
-        dir0 = '/Users/PM5/Documents/LiveOcean_data/grids/'
+        dir0 = '/Users/pm7/Documents/LiveOcean_data/grids/'
         gn_list = ['cascadia1', 'cascadia2']
         for gn in gn_list:
             fn_list.append(dir0 + gn + '/grid.nc')

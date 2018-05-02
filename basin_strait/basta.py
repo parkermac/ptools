@@ -7,10 +7,10 @@ import bst_fun as bsf
 from importlib import reload
 reload(bsf)
 
-v_list = ['s', 'c'] # set variables to use (always include 's')
+v_list = ['s'] # set variables to use (always include 's')
 case = 'base' # choose basin and strait setup
 fcase = 'base' # choose forcing functions
-ND = 100 # set number of days to run
+ND = 1000 # set number of days to run
 
 # get the initial setup
 Ba, St = bsf.make_BaSt(case, v_list)

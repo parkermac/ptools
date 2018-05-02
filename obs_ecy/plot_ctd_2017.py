@@ -3,8 +3,6 @@
 """
 Created on Wed Feb 28 10:04:20 2018
 
-Created on Wed Feb  7 15:44:00 2018
-
 Plots data from a Department of Ecology, for all CTD stations.
 
 Designed to work only with the new  2017 data I requested.
@@ -24,45 +22,33 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart()
 
-# where the data is
-dir0 = Ldir['parent'] + 'ptools_data/ecology/'
-fn = dir0 + 'ParkerMacCready2017CTDDataFeb2018.xlsx'
-
 # set to True to save pngs, False to see on screen
-testing = False
+testing = True
 if testing:
     save_fig = False
 else:
     save_fig = True
 
-add_model = True
+add_model = False
+Ldir['gtagex'] = 'cas3_v1_lo6m'
+
+# location of data files
+dir0 = Ldir['parent'] + 'ptools_data/ecology/'
+# load processed station info and data
+year = 2017
+sta_df = pd.read_pickle(dir0 + 'sta_df_' + str(year) + '.p')
+Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
 
 # where to put plots
-dir11 = Ldir['parent'] + 'ptools_output/ecology/'
-Lfun.make_dir(dir11)
-if add_model:
-    Ldir['gtagex'] = 'cas3_v1_lo6m'
-    dir1 = dir11 + 'casts2017_'+ Ldir['gtagex'] + '/'
-else:
-    dir1 = dir11 + 'casts2017/'
-Lfun.make_dir(dir1, clean=True)
+if save_fig==True:
+    dir11 = Ldir['parent'] + 'ptools_output/ecology/'
+    Lfun.make_dir(dir11)
+    if add_model:
+        dir1 = dir11 + 'casts' + str(year) + '_'+ Ldir['gtagex'] + '/'
+    else:
+        dir1 = dir11 + 'casts' + str(year) + '/'
+    Lfun.make_dir(dir1, clean=True)
 
-# load station location and depth info
-sta_info_fn = dir0 + 'ParkerMacCreadyCoreStationInfoFeb2018.xlsx'
-sta_df = pd.read_excel(sta_info_fn)
-sta_df = sta_df.set_index('Station')
-# get locations in decimal degrees
-for sta in sta_df.index:
-    lat_str = sta_df.loc[sta, 'Lat_NAD83 (deg / dec_min)']
-    lat_deg = float(lat_str.split()[0]) + float(lat_str.split()[1])/60
-    sta_df.loc[sta,'Latitude'] = lat_deg
-    #
-    lon_str = sta_df.loc[sta, 'Long_NAD83 (deg / dec_min)']
-    lon_deg = float(lon_str.split()[0]) + float(lon_str.split()[1])/60
-    sta_df.loc[sta,'Longitude'] = -lon_deg    
-sta_df.pop('Lat_NAD83 (deg / dec_min)')
-sta_df.pop('Long_NAD83 (deg / dec_min)')
-    
 # choose which data fields to plot by commenting out parts of this list
 if add_model:
     data_to_plot = ['Salinity', 'Temperature']
@@ -75,7 +61,7 @@ else:
         'DO',
         'Turb']
     
-# data long names; we retain only these fields
+# data long names
 data_long_names = ['Salinity', 'Temp', 'Density',
                    'Chla_adjusted', 'DO_raw',
                    'Turbidity', 'Z']
@@ -93,6 +79,7 @@ data_range_dict = dict(zip(data_names, data_ranges))
 # lists and dictionaries for plotting different months
 
 months = range(1,13) # a list of 1 to 12
+    
 month_color_dict = dict(zip(months,
     ['mediumblue', 'royalblue', 'cadetblue', 'aquamarine',
     'lightgreen', 'greenyellow', 'gold', 'orange',
@@ -101,40 +88,18 @@ month_name_dict = dict(zip(months,
     ['Jan','Feb','Mar','Apr','May','Jun',
      'Jul','Aug','Sep','Oct','Nov','Dec']))
 
-
-# read in the data (all stations, all casts)
-all_casts = pd.read_excel(fn, sheet_name='2017Provisional_CTDResults',
-                          parse_dates = ['Date'])
-
 # plotting setup
 plt.close('all')
 figsize = (12,7)
-if save_fig:
-    plt.ioff()
 
-# trim the station list uf desired
+# trim the station list if desired
 if testing:
-    sta_list = [sta for sta in sta_df.index if 'HCB' in sta]
+    sta_list = [sta for sta in sta_df.index if 'DNA001' in sta]
 else:
     sta_list = [sta for sta in sta_df.index]
 
 for station in sta_list:
-    print(' - plotting: ' + station)           
-    casts = all_casts[all_casts['Station'] == station]   
-    casts = casts.set_index('Date')    
-    casts['Z'] = -casts['Depth'] # and make a Z column
-    casts = casts[data_long_names] # keep only selected columns
-    casts = casts.rename(columns=data_name_dict) # and rename them
     
-    # plot CASTS
-    
-    # identify a single cast by its DATE
-    alldates = casts.index
-    castdates = alldates.unique() # a short list of unique dates (1 per cast)
-    
-    title = station + ': ' + sta_df.loc[station,'Descrip']
-    Max_z = -float(sta_df.loc[station, 'Max_Depth'])
-            
     # set up the plot axes (an array)
     if add_model:
         NR = 1
@@ -151,33 +116,37 @@ for station in sta_list:
         else:
             nr += 1
             nc = 0
-    
     if add_model:
         fig, axes = plt.subplots(nrows=NR+1, ncols=NC, sharey=True,
                              figsize=figsize, squeeze=False)
     else:
         fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
                              figsize=figsize, squeeze=False)
-    
-    for cd in castdates:
-        pass
-        #print('\'' + datetime.strftime(cd, '%Y.%m.%d') + '\',')
 
+    # loop over all casts at this station
+    print(' - Working on: ' + station)           
+    casts = Casts[Casts['Station'] == station]   
+    casts = casts.set_index('Date')    
+    casts = casts.rename(columns=data_name_dict) # rename columns
+    # identify a single cast by its DATE
+    alldates = casts.index
+    castdates = alldates.unique() # a short list of unique dates (1 per cast)
+    title = station + ': ' + sta_df.loc[station,'Descrip']
+    Max_z = -float(sta_df.loc[station, 'Max_Depth'])
     # plot the CTD cast data for this station
     for cdate in castdates:
         imo = cdate.month
         cast = casts[casts.index==cdate]
-        # drop repeat values (aiming for the first of a depth pair)
-        zdf = np.diff(cast['Z'])
-        zdf = np.concatenate((np.array([1.,]),zdf))
-        mask = zdf != 0
-        cast = cast[mask]
-        cast = cast[:-5] # drop bottom values (sometimes bad)
         
+        if False: # saving a single cast for the USRS project
+            if (imo == 5) and (station=='HCB010'):
+                cast.to_excel(Ldir['parent'] +
+                'ptools_data/ecology/HCB010_May_2017.xlsx')
+    
         if add_model:
             # also get the model fields for this day
             date_string = cdate.strftime('%Y.%m.%d')
-            dir0m = '/Users/pm7/Documents/LiveOcean_output/casts/'
+            dir0m = Ldir['parent'] + 'LiveOcean_output/casts/'
             fnm = dir0m + Ldir['gtagex'] + '/' + station + '_' + date_string + '.nc'
             try:
                 ds = nc4.Dataset(fnm)
@@ -190,8 +159,7 @@ for station in sta_list:
             except OSError:
                 plot_mod = False
                 pass
-
-        
+    
         for fld in data_to_plot:
             nr, nc = nrnc[fld]
             ax = axes[nr,nc]
@@ -206,7 +174,7 @@ for station in sta_list:
                 ax.set_ylabel('Z (m)')
             ax.text(.95, .05, ax_str, fontsize=14, fontweight='bold',
             horizontalalignment='right', transform=ax.transAxes)
-            
+        
             if add_model and plot_mod:
                 axm = axes[nr+1, nc]
                 axm.plot(m_dict[fld], m_dict['Z'], '-',
@@ -217,7 +185,7 @@ for station in sta_list:
                 if nc==0:
                     axm.text(.05, .05, Ldir['gtagex'], fontsize=12,
                              fontweight='bold', transform=axm.transAxes)
-            
+        
     # add month labels with colors
     ax = axes[0, 0]
     for imo in months:
@@ -225,7 +193,7 @@ for station in sta_list:
             month_name_dict[imo], color=month_color_dict[imo],
             fontsize=12,
             verticalalignment='center', transform=ax.transAxes)
-    
+
     fig.suptitle(title, fontsize=16, fontweight='bold')
 
     if save_fig:

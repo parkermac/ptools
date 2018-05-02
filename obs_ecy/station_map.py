@@ -25,31 +25,16 @@ import pfun
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# where are the data csv files
+# location of data files
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
-
-#sta_df = pd.read_pickle(dir0 + 'sta_df.p')
-
-sta_info_fn = dir0 + 'ParkerMacCreadyCoreStationInfoFeb2018.xlsx'
-sta_df = pd.read_excel(sta_info_fn)
-sta_df = sta_df.set_index('Station')
-
-for sta in sta_df.index:
-    lat_str = sta_df.loc[sta, 'Lat_NAD83 (deg / dec_min)']
-    lat_deg = float(lat_str.split()[0]) + float(lat_str.split()[1])/60
-    sta_df.loc[sta,'Latitude'] = lat_deg
-    #
-    lon_str = sta_df.loc[sta, 'Long_NAD83 (deg / dec_min)']
-    lon_deg = float(lon_str.split()[0]) + float(lon_str.split()[1])/60
-    sta_df.loc[sta,'Longitude'] = -lon_deg
-    
-sta_df.pop('Lat_NAD83 (deg / dec_min)')
-sta_df.pop('Long_NAD83 (deg / dec_min)')
+# load processed station info
+year = 2017
+sta_df = pd.read_pickle(dir0 + 'sta_df_' + str(year) + '.p')
 
 # plotting
 plt.close('all')
-fig1 = plt.figure(figsize=(10,15))
-fig2 = plt.figure(figsize=(10,15))
+fig1 = plt.figure(figsize=(8,8))
+fig2 = plt.figure(figsize=(8,8))
 ax1 = fig1.add_subplot(111)
 ax2 = fig2.add_subplot(111)
 

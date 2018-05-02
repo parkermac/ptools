@@ -34,17 +34,17 @@ dir0 = dir00 + 'ptools_output/tide/'
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
-# select a subset
-#name_list = ['Neah Bay', 'Tacoma']
-#name_list = ['Neah Bay', 'Port Townsend']
-#name_list = ['Neah Bay', 'Point Atkinson']
-#name_list = ['Neah Bay', 'Port Angeles']
-#name_list = ['South Beach', 'Tofino']
-#name_list = ['La Push', 'Vancouver']
-#name_list = ['La Push', 'Tacoma']
+# Station pairs, North-to-South:
+#
+# - Strait of Georgia
 #name_list = ['La Push', 'Campbell River']
+#name_list = ['La Push', 'Point Atkinson']
+#name_list = ['La Push', 'Vancouver']
+# - JdF
 #name_list = ['La Push', 'Victoria Harbour']
-name_list = ['La Push', 'Seattle']
+# - Puget Sound
+#name_list = ['La Push', 'Seattle']
+name_list = ['La Push', 'Tacoma']
 
 a = dict()
 for name in name_list:
@@ -52,8 +52,8 @@ for name in name_list:
 sn_dict = a
 
 # select several model runs
-#run_list = ['cascadia1_base_lobio1', 'cas2_regulartide_lo6', 'cas2_v0_lo6', 'cas3_v0_lo6']
-run_list = ['cas3_v0_lo6m']
+run_list = ['cascadia1_base_lobio5','cas3_v0_lo6m',
+    'cas3_v2_lo6m_northopen','cas3_v2_lo6m_northclosed']
 
 # load observational data
 year  = 2017
@@ -98,6 +98,7 @@ def get_ij_good(lon, lat, xvec, yvec, i0, j0, mask):
     ddd = np.sqrt(xxx**2 + yyy**2) # distance from original point
     mmask = mask[jj,ii] 
     mm = mmask==1 # Boolean array of good points
+    #print(mm)
     dddm = ddd[mm] # vector of good distances
     # indices of best point
     igood = ii[mm][dddm==dddm.min()][0]
@@ -164,14 +165,18 @@ plt.close('all')
 
 fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True,
                      figsize=(12,8), squeeze=False)
+# NOTE: for some reason, when I use sharex=True and
+# have a Canadian station FIRST in the name_list the
+# first plot is blank - even though the data is good.
+# Maybe a problem with the time index?
 ax1 = axes[0,0]
 ax2 = axes[1,0]
 
 dt0 = datetime(year,1,1)
-dt1 = datetime(year,12,31)
+dt1 = datetime(year,1,31)
 
 count = 0
-for name in sn_dict.keys():
+for name in name_list:#sn_dict.keys():
     tobs = Tobs[name]
     tcomb = tobs.copy()
     tcomb = tcomb.rename(columns={'eta':'eta_obs'})

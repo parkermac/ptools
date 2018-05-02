@@ -48,8 +48,15 @@ Lfun.dict_to_csv(dch, dch_fn)
 #%% and put in the S coordinate info
 
 # copy file
-shutil.copyfile(Ldir['data'] + 'grids/S_COORDINATE_INFO_1.csv',
-                out_dir + 'S_COORDINATE_INFO.csv')
+if False:
+    # regular 40-layer grid
+    shutil.copyfile(Ldir['data'] + 'grids/S_COORDINATE_INFO_1.csv',
+                    out_dir + 'S_COORDINATE_INFO.csv')
+else:
+    # new 30-layer grid
+    print('WARNING: using 30 layer grid!!')
+    shutil.copyfile(Ldir['data'] + 'grids/S_COORDINATE_INFO_2.csv',
+                    out_dir + 'S_COORDINATE_INFO.csv')
 
 # create the S.mat file
 import subprocess

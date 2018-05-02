@@ -138,8 +138,8 @@ def make_St(ssdict):
         sinfo['r'] = ssdict[sk][3]
         sinfo['Ut'] = 1
         # the transports have one value in each layer
-        sinfo['q1'] = 0
-        sinfo['q2'] = 0
+        sinfo['q1'] = 1000
+        sinfo['q2'] = -500
         sinfo['rev'] = False
         St[sk] = sinfo
     return St
@@ -191,7 +191,7 @@ def make_BaSt_out(Ba, St, ND, names):
 
     return Ba_out, Ba_oc, St_out, St_oc
     
-def strait(Qr_sum, sinfo, pr):
+def strait(Qr_sum, sinfo, v_list):
     """
     This updates the four salinity values and two transports
     that define the dyanmical state of each of the straits.
@@ -205,6 +205,7 @@ def strait(Qr_sum, sinfo, pr):
     H = sinfo['H']
     A = sinfo['H'] * sinfo['B']
     L = sinfo['L']
+    B = sinfo['B']
     Ut = sinfo['Ut']
     prev_rev = sinfo['rev']
     c = np.sqrt(g * beta * Socn * H)
@@ -240,10 +241,38 @@ def strait(Qr_sum, sinfo, pr):
         q2 = -dq
         q1 = dq + Qr_sum
         # adjust salinities to conserve salt flux
+        # WARNING: in experiments with large Ut this produced static
+        # instability (test_strait.py 4/25/2018)
         ds = Socn*aa*G**2
         eps = Qr_sum*(sinfo['s2m']-sinfo['s1p']-2*ds)/(-2*q2+Qr_sum)
         sinfo['s2p'] = sinfo['s1p'] + 2*ds - eps
         sinfo['s1m'] = sinfo['s2m'] - 2*ds - eps
+    # # next update other tracers
+    # print('%0.2f' % (q2))
+    # for vn in v_list:
+    #     vn = vn.lower()
+    #     if vn=='s':
+    #         pass
+    #     else:
+    #         if rev==False:
+    #             print(' %0.2f' % (q2))
+    #             F = (sinfo[vn+'2p'] - sinfo[vn+'1m'])*K*L*B*2/H
+    #             Fqi1 = q1/F
+    #             if np.abs(Fqi1) < 1e-6:
+    #                 Fq1 = 0
+    #             else:
+    #                 Fq1 = F/q1
+    #             Fqi2 = q2/F
+    #             if np.abs(Fqi2) < 1e-6:
+    #                 Fq2 = 0
+    #             else:
+    #                 Fq2 = F/q2
+    #             sinfo[vn+'1p'] = sinfo[vn+'1m'] + Fq1
+    #             sinfo[vn+'2m'] = sinfo[vn+'2p'] + Fq2
+    #         elif rev==True:
+    #             F = (sinfo[vn+'2m'] - sinfo[vn+'1p'])*K*L*B*2/H
+    #             sinfo[vn+'1m'] = sinfo[vn+'1p'] + Fq1
+    #             sinfo[vn+'2p'] = sinfo[vn+'2m'] + Fq2
     sinfo['q1'] = q1
     sinfo['q2'] = q2
     sinfo['rev'] = rev
@@ -280,7 +309,7 @@ def bcalc(Ba, St, Ba_out, Ba_oc, St_out, St_oc, v_list, ND, fcase, ic=False):
             Qr_sum = 0
             for rbk in sinfo['r']:
                 Qr_sum += Ba[rbk]['Qr']
-            sinfo = strait(Qr_sum, sinfo, pr)
+            sinfo = strait(Qr_sum, sinfo, v_list)
             St[sk] = sinfo
             # save results
             for v in sv_list:
