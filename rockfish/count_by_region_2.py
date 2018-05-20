@@ -9,11 +9,11 @@ Count the number of particles that end up in a number
 of basins, for all the rockfish experiments.
 
 It makes 1829 rows of data:
-59 release days [1-59] x 31 settling days [90-120] = 1829
+59 release days [0-58] x 31 settling days [90-120] = 1829
 for each experiment.
 
-PERFORMANCE: takes about 14 seconds per experiment, and there are 33
-experiments, so this takes a total of 8 minutes.  Not bad.
+PERFORMANCE: takes about 16 seconds per experiment, and there are 33
+experiments, so this takes a total of 10 minutes.  Not bad.
 
 """
 
@@ -50,7 +50,7 @@ for ex in ex_list_raw:
 ex_list.sort()
 
 if testing:
-    ex_list = ex_list[:3] #[ex_list[0]]
+    ex_list = [ex_list[10]]
 
 # make shorter names for experiments
 ex_dict = dict()
@@ -81,7 +81,8 @@ for ex in ex_list:
     tt0 = time.time()
     
     # set up a DataFrame to store results
-    df = pd.DataFrame(columns=['rel_day', 'age'] + poly_list + ['total'])
+    df = pd.DataFrame(columns=['rel_day', 'age'] + poly_list +
+        ['total_found_in_ploygons','lost_to_ocean','lost_to_land','found_plus_lost'])
     ex_short = ex_dict[ex]
     
     print('Working on ' + ex_short)
@@ -99,60 +100,80 @@ for ex in ex_list:
     NT, NP = Lon.shape
     # NT = 4320 = 180*24 or hourly for 180 days [0:180]
     # Age is always the integer day, so it repeats 24 times each day.
-    # Age gets to 180 for particle 0 and 121 for the last particle.
-    # I think 167 particles are released each day for the first 60 days,
-    # so I want to isolate these. Actually there are an irregular number
-    # of particles released, between 12 and 575 for the first experiment.
-    # Odd.
+    # Age gets to 179 for particle 0 and 121 for the last particle.
+    # An irregular number of particles are released each day.
+    # (see ptools_data/rockfish/rockfish_partruition.csv)
     
     # 1. Find release day of all particles
-    nzero = (Age==0).sum(axis=0)
+    nzero = (Age==0).sum(axis=0) - 24
     release_day = nzero/24
-    rd_unique = np.unique(release_day)
+    
+    rd_unique = np.arange(59)
+    # there are only 59 release days, although I expected 60
     Release_day = release_day * np.ones(shape=(NT,1))
     
-    age0 = 90
-    age1 = 121
+    # age limits to consider
+    age_range = range(90,121)
     
     if testing:
-        rd_unique = rd_unique[:3]
-        age0 = 115
-        age1 = 121
+        age_range = [115]
                    
-    for age in range(age0, age1):
+    for age in age_range:
 
-        age_ind = (Age <= age).sum(axis=0) 
+        age_ind = (Age < age).sum(axis=0)
                    
         # and find particle locations at that time
         # using fancy indexing
-        lon1 = Lon[age_ind, np.arange(NP)]
-        lat1 = Lat[age_ind, np.arange(NP)]
-        h1 = H[age_ind, np.arange(NP)]
-        rd1 = Release_day[age_ind, np.arange(NP)]
+        lon0 = Lon[age_ind, np.arange(NP)]
+        lat0 = Lat[age_ind, np.arange(NP)]
+        h0 = H[age_ind, np.arange(NP)]
+        rd0 = Release_day[age_ind, np.arange(NP)]
+
+        for rd in rd_unique:
+            # loop over all release days
+            
+            lon1 = lon0[rd0==rd]
+            lat1 = lat0[rd0==rd]
+            h1 = h0[rd0==rd]
+            rd1 = rd0[rd0==rd]
+            
+            # things for naming
+            rd_str = ('0' + str(int(rd)))[-2:]
+            age_str = ('00' + str(int(age)))[-3:]
+            istr = 'rd' + rd_str + '_age' + age_str
     
-        # Drop particles that end up deeper than 50 m
-        # because the shallow ones are typically stuck on land.
-        # Also drop particles that escape the domain.
-        mask1 = h1 > 50
-        mask2 = lon1 > -126.5
-        mask3 = lat1 > 45.5
-        mask = mask1 & mask2 & mask3
-        lon1 = lon1[mask]
-        lat1 = lat1[mask]
-        rd1 = rd1[mask]
-     
-        xy1 = np.stack((lon1,lat1), axis=1)
+            # make masks: True for what we want to keep
+            mask_h = h1 >= 50 # at this age they are deeper than 50 m
+            # and ones that are shallower are stuck on land
+            mask_west = lon1 > -126.5
+            mask_south = lat1 > 45.5
+            
+            mask = mask_h & mask_west & mask_south
+            
+            lon2 = lon1[mask]
+            lat2 = lat1[mask]
+            rd2 = rd1[mask]
+
+            # keep track of how many we lost in the masking
+            df.loc[istr,'lost_to_ocean'] = (~mask_west).sum() + (~mask_south).sum()
+            df.loc[istr,'lost_to_land'] = (~mask_h).sum()
         
-        # count the number of particles that ended up in each polygon
-        # in age categories
-        for pn in poly_list:
-            p = p_dict[pn]
-            p_in = p.contains_points(xy1) # boolean
-            for rd in rd_unique:
-                rd_str = ('0' + str(int(rd)))[-2:]
-                age_str = ('00' + str(int(age)))[-3:]
-                istr = 'rd' + rd_str + '_age' + age_str
-                df.loc[istr, pn] = p_in[rd1==rd].sum()
+            xy2 = np.stack((lon2,lat2), axis=1)
+        
+            # count the number of particles that ended up in each polygon
+            # in age categories
+            for pn in poly_list:
+                p = p_dict[pn]
+                p_in = p.contains_points(xy2) # boolean
+                df.loc[istr, pn] = p_in.sum()
+            
+                # and keep track of what we masked away
+                # NOTE: if you just look at one age, then the sum of
+                # 'ocean' and 'land' (one value each per age)
+                # plus the sum of 'total' over all release days
+                # then you should recover 10,000, although in practice
+                # a few are missing because they are in the gaps between
+                # the polygons.  I got 9995 for age = 115 in exp 3_1.
     
     # add columns for release day and age, for convenience.
     for istr in df.index:
@@ -162,10 +183,12 @@ for ex in ex_list:
         df.loc[istr, 'age'] = int(age)
             
     df.index.name = 'Filter'
-    df['total'] = df[poly_list].sum(axis=1)
+    df['total_found_in_ploygons'] = df[poly_list].sum(axis=1)
     
     # sort in a logical way
     df = df.sort_values(by=['rel_day','age'])
+    
+    df['found_plus_lost'] = df[['total_found_in_ploygons','lost_to_ocean','lost_to_land']].sum(axis=1)
     
     # and export to csv
     df.to_csv(outdir + 'Exp_' + ex_short + '.csv')

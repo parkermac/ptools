@@ -26,7 +26,7 @@ Ldir['gtagex'] = 'cas3_v1_lo6m'
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
 # load processed station info and data
 year = 2017
-sta_df = pd.read_pickle(dir0 + 'sta_df_' + str(year) + '.p')
+sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
 
 if testing==True:
@@ -73,8 +73,8 @@ for station in sta_to_plot:
         imo = cdate.month
         cast = casts[casts.index==cdate]
         
-        temp_df.loc[cdate, 'so'] = cast['Temp'][cast['Z']>-5].mean()
-        temp_df.loc[cdate, 'do'] = cast['Temp'][cast['Z']<=-5].mean()
+        temp_df.loc[cdate, 'so'] = cast['Temperature'][cast['Z']>-5].mean()
+        temp_df.loc[cdate, 'do'] = cast['Temperature'][cast['Z']<=-5].mean()
         salt_df.loc[cdate, 'so'] = cast['Salinity'][cast['Z']>-5].mean()
         salt_df.loc[cdate, 'do'] = cast['Salinity'][cast['Z']<=-5].mean()
     

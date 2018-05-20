@@ -28,8 +28,7 @@ import matplotlib.pyplot as plt
 # location of data files
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
 # load processed station info
-year = 2017
-sta_df = pd.read_pickle(dir0 + 'sta_df_' + str(year) + '.p')
+sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 
 # plotting
 plt.close('all')

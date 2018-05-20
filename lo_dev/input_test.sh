@@ -19,6 +19,12 @@ while [ "$1" != "" ]; do
   shift
 done
 
-echo "a "$a
-echo "b "$b
-echo "c "$c
+# test for a missing argument
+if [ -z "$c" ] ; then
+  echo "Missing c"
+  exit
+fi
+
+echo "a="$a
+echo "b="$b
+echo "c="$c

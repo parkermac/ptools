@@ -40,7 +40,8 @@ NOTE: 2018.03.15 In response to this request from Kelly Andrews:
    is variation in where the larvae end up depending on whether a female
    releases larvae early in the period or late.
    
-   I made count_by_region_2.py.
+I made count_by_region_2.py, and revised it on 2018.05.19,
+and sent new results.
                                                           
 """
 

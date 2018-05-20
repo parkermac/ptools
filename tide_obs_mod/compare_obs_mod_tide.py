@@ -39,12 +39,12 @@ noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 # - Strait of Georgia
 #name_list = ['La Push', 'Campbell River']
 #name_list = ['La Push', 'Point Atkinson']
-#name_list = ['La Push', 'Vancouver']
+name_list = ['La Push', 'Vancouver']
 # - JdF
 #name_list = ['La Push', 'Victoria Harbour']
 # - Puget Sound
 #name_list = ['La Push', 'Seattle']
-name_list = ['La Push', 'Tacoma']
+#name_list = ['La Push', 'Tacoma']
 
 a = dict()
 for name in name_list:
@@ -52,8 +52,7 @@ for name in name_list:
 sn_dict = a
 
 # select several model runs
-run_list = ['cascadia1_base_lobio5','cas3_v0_lo6m',
-    'cas3_v2_lo6m_northopen','cas3_v2_lo6m_northclosed']
+run_list = ['cas4_v0_lo6m_goodtide']
 
 # load observational data
 year  = 2017
@@ -180,14 +179,23 @@ for name in name_list:#sn_dict.keys():
     tobs = Tobs[name]
     tcomb = tobs.copy()
     tcomb = tcomb.rename(columns={'eta':'eta_obs'})
-    tcomb['eta_obs'] -= tcomb.loc[dt0:dt1, 'eta_obs'].mean()
+
+    eraw = tcomb.loc[dt0:dt1, 'eta_obs'].values
+    efilt = zfun.filt_godin(eraw)
+    enew = eraw - efilt
+    tcomb.loc[dt0:dt1, 'eta_obs'] = enew
+    
+    #tcomb['eta_obs'] -= tcomb.loc[dt0:dt1, 'eta_obs'].mean()
     
     for gtagex in run_list:
         Tmod = Tmod_dict[gtagex]
         tmod = Tmod[name]
         tcomb[gtagex] = tmod['eta']
-        tcomb[gtagex] -= tcomb.loc[dt0:dt1, gtagex].mean()
-        
+        #tcomb[gtagex] -= tcomb.loc[dt0:dt1, gtagex].mean()
+        eraw = tcomb.loc[dt0:dt1, gtagex].values
+        efilt = zfun.filt_godin(eraw)
+        enew = eraw - efilt
+        tcomb.loc[dt0:dt1, gtagex] = enew
     if count == 0:
         ax = ax1
     else:
