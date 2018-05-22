@@ -25,15 +25,22 @@ import pfun
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# location of data files
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
-# load processed station info
+# load processed station info and data
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
+
+# add Canadian data
+
+dir1 = Ldir['parent'] + 'ptools_data/canada/'
+# load processed station info and data
+sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
+
+sta_df = pd.concat((sta_df, sta_df_ca))
 
 # plotting
 plt.close('all')
 fig1 = plt.figure(figsize=(8,8))
-fig2 = plt.figure(figsize=(8,8))
+fig2 = plt.figure(figsize=(10,13))
 ax1 = fig1.add_subplot(111)
 ax2 = fig2.add_subplot(111)
 
@@ -61,8 +68,8 @@ ax1.set_ylim(46.3, 47.1)
 
 # Puget Sound
 ax2.set_title('Puget Sound')
-ax2.set_xlim(-123.25, -122)
-ax2.set_ylim(47, 49)
+ax2.set_xlim(-124, -122)
+ax2.set_ylim(47, 49.5)
 
 plt.show()
 

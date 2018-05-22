@@ -59,8 +59,6 @@ if Gr['gridname'] == 'sal0':
     print('East: ' + 10*'%0.1f, ' % tuple([i for i in nudc[M2,-10:]]))
     print('West: ' + 10*'%0.1f, ' % tuple([i for i in nudc[M2,:10]]))
 
-if Gr['gridname'] == 'cas4':
-
 
 # save the default choices
 pickle.dump(dch, open(Gr['gdir'] + 'choices.p', 'wb'))
