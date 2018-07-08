@@ -12,7 +12,7 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-Ldir = Lfun.Lstart(gridname='cas3', tag='v0')
+Ldir = Lfun.Lstart(gridname='cas4', tag='v0')
 Ldir['gtagex'] = Ldir['gtag'] + '_lo6m'
 
 import zfun

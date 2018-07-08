@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import os
-alp = os.path.abspath('/Users/PM5/Documents/LiveOcean/alpha')
+alp = os.path.abspath('../../LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
 from importlib import reload

@@ -40,7 +40,7 @@ sta_df = pd.concat((sta_df, sta_df_ca))
 # plotting
 plt.close('all')
 fig1 = plt.figure(figsize=(8,8))
-fig2 = plt.figure(figsize=(10,13))
+fig2 = plt.figure(figsize=(8,8))
 ax1 = fig1.add_subplot(111)
 ax2 = fig2.add_subplot(111)
 
@@ -53,7 +53,7 @@ for station in sta_df.index:
     else:
         ax = ax2
     ax.plot(lon, lat, '*r')
-    ax.text(lon+.01, lat, station, color='b', fontsize=12, fontweight='bold')
+    ax.text(lon+.01, lat, station, color='b', fontsize=8, fontweight='bold')
     
 pfun.add_coast(ax1)
 pfun.dar(ax1)
@@ -67,7 +67,7 @@ ax1.set_xlim(-124.3, -123.6)
 ax1.set_ylim(46.3, 47.1)
 
 # Puget Sound
-ax2.set_title('Puget Sound')
+ax2.set_title('Salish Sea')
 ax2.set_xlim(-124, -122)
 ax2.set_ylim(47, 49.5)
 

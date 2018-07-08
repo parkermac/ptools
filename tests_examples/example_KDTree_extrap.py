@@ -27,6 +27,6 @@ b[a.mask] = a[~a.mask][cKDTree(xygood).query(xybad)[1]]
 # asking for [1] gives the index of the nearest good value
 # and [0] would return the distance, I think.
 
-print a
+print(a)
 
-print b
+print(b)

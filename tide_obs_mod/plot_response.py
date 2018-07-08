@@ -31,7 +31,7 @@ noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 if True:
     year  = 2017
-    gtagex = 'cas3_v0_lo6m'
+    gtagex = 'cas4_v0_lo6m'
 else:
     year  = 2013
     gtagex = 'cascadia1_base_lobio1'
@@ -95,9 +95,9 @@ name0 = 'La Push'
 
 # INLAND
 #name1 = 'Campbell River'
-name1 = 'Point Atkinson'
+#name1 = 'Point Atkinson'
 #name1 = 'Vancouver'
-#name1 = 'Seattle'
+name1 = 'Seattle'
 #name1 = 'Tacoma'
 #name1 = 'Friday Harbor'
 

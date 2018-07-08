@@ -1,3 +1,8 @@
+"""
+Test of 3D plotting.
+
+"""
+
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter

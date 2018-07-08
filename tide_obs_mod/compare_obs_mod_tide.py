@@ -39,11 +39,11 @@ noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 # - Strait of Georgia
 #name_list = ['La Push', 'Campbell River']
 #name_list = ['La Push', 'Point Atkinson']
-name_list = ['La Push', 'Vancouver']
+#name_list = ['La Push', 'Vancouver']
 # - JdF
 #name_list = ['La Push', 'Victoria Harbour']
 # - Puget Sound
-#name_list = ['La Push', 'Seattle']
+name_list = ['La Push', 'Seattle']
 #name_list = ['La Push', 'Tacoma']
 
 a = dict()
@@ -52,7 +52,7 @@ for name in name_list:
 sn_dict = a
 
 # select several model runs
-run_list = ['cas4_v0_lo6m_goodtide']
+run_list = ['cas4_v0_lo6m']
 
 # load observational data
 year  = 2017
@@ -172,7 +172,7 @@ ax1 = axes[0,0]
 ax2 = axes[1,0]
 
 dt0 = datetime(year,1,1)
-dt1 = datetime(year,1,31)
+dt1 = datetime(year,12,31)
 
 count = 0
 for name in name_list:#sn_dict.keys():

@@ -19,15 +19,22 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart()
 
-testing = True
-Ldir['gtagex'] = 'cas3_v1_lo6m'
+testing = False
+Ldir['gtagex'] = 'cas4_v0_lo6m'
 
-# location of data files
+# +++ load ecology CTD cast data +++
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
 # load processed station info and data
-year = 2017
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
+# add Canadian data
+dir1 = Ldir['parent'] + 'ptools_data/canada/'
+# load processed station info and data
+sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
+sta_df = pd.concat((sta_df, sta_df_ca))
+year = 2017
 Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
+Casts_ca = pd.read_pickle(dir1 + 'Casts_' + str(year) + '.p')
+Casts = pd.concat((Casts, Casts_ca))
 
 if testing==True:
     sta_to_plot = [s for s in sta_df.index if 'PSB' in s]
@@ -87,6 +94,7 @@ for station in sta_to_plot:
             salt = ds['salt'][:].squeeze()
             temp = ds['temp'][:].squeeze()
             z = ds['z_rho'][:].squeeze()
+            z = z - z[-1] # reference to sea level
             ds.close()
             temp_df.loc[cdate, 'sm'] = temp[z>-5].mean()
             temp_df.loc[cdate, 'dm'] = temp[z<=-5].mean()
@@ -124,7 +132,7 @@ for station in sta_to_plot:
             pass
     
     ax.set_xlim(dt0,dt1)
-    #ax.set_ylim(4,25)
+    ax.set_ylim(4,20)
     # ax.set_xticklabels('')
     # ax.set_xlabel('')
     ax.grid(True)
@@ -139,7 +147,7 @@ for station in sta_to_plot:
             pass
     #ax.set_xlabel('Date')
     ax.set_xlim(dt0,dt1)
-    #ax.set_ylim(10,34)
+    ax.set_ylim(8,34)
     ax.text(.05,.1,'Salinity', fontweight='bold', transform=ax.transAxes)
     ax.grid(True)
     

@@ -10,7 +10,7 @@ Code to experiment with writing strings to NetCDF files.
 
 import netCDF4 as nc
 
-fn = '/Users/PM5/Desktop/test.nc'
+fn = '/Users/pm7/Desktop/test.nc'
 
 foo = nc.Dataset(fn, 'w', format='NETCDF3_CLASSIC')
 

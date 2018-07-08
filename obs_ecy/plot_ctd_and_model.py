@@ -22,21 +22,29 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart()
 
-# set to True to save pngs, False to see on screen
+# set to False to save pngs, True to see on screen
 testing = False
 if testing:
     save_fig = False
 else:
     save_fig = True
 
-Ldir['gtagex'] = 'cas3_v1_lo6m'
-#Ldir['gtagex'] = 'cas4_v0_lo6m'
+#Ldir['gtagex'] = 'cas3_v1_lo6m'
+Ldir['gtagex'] = 'cas4_v0_lo6m'
 
-# load processed station info and data
-year = 2017
+# +++ load ecology CTD cast data +++
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
+# load processed station info and data
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
+# add Canadian data
+dir1 = Ldir['parent'] + 'ptools_data/canada/'
+# load processed station info and data
+sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
+sta_df = pd.concat((sta_df, sta_df_ca))
+year = 2017
 Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
+Casts_ca = pd.read_pickle(dir1 + 'Casts_' + str(year) + '.p')
+Casts = pd.concat((Casts, Casts_ca))
 
 # where to put plots
 if save_fig==True:
@@ -51,15 +59,15 @@ data_to_plot = ['Salinity', 'Temperature']
 # data short names, units, and plot ranges
 data_names =  ['Salinity','Temperature','Sigma', 'Chl', 'DO',   'Turb', 'Z']
 data_units =  ['psu',     'deg C',      'kg/m3', 'ug/l', 'mg/l', '',    'm']
-#data_ranges = [(14,34),   (4,25),       (14,26), (0,40), (0,18), (0,4),(-125,0)]
+data_ranges = [(14,34),   (4,25),       (14,26), (0,40), (0,18), (0,4),(-125,0)]
 
 # dictionaries to look up data attributes using names
 data_unit_dict = dict(zip(data_names, data_units))
-#data_range_dict = dict(zip(data_names, data_ranges))
+data_range_dict = dict(zip(data_names, data_ranges))
 
 # lists and dictionaries for plotting different months
 
-months = [1]#range(1,13) # a list of 1 to 12
+months = range(1,13) # a list of 1 to 12
     
 month_color_dict = dict(zip(months,
     ['mediumblue', 'royalblue', 'cadetblue', 'aquamarine',
@@ -82,7 +90,7 @@ else:
 for station in sta_list:
     
     # set up the plot axes (an array)
-    NR = 1
+    NR = 2
     NC = len(data_to_plot)
     fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
             figsize=figsize, squeeze=False)
@@ -96,6 +104,8 @@ for station in sta_list:
     castdates = alldates.unique() # a short list of unique dates (1 per cast)
     title = str(year) + ' || ' + station + ': ' + sta_df.loc[station,'Descrip']
     Max_z = -float(sta_df.loc[station, 'Max_Depth'])
+    ylim = data_range_dict['Z']
+    
     # plot the CTD cast data for this station
     for cdate in castdates:
         imo = cdate.month
@@ -113,19 +123,21 @@ for station in sta_list:
                 m_dict = dict()
                 m_dict['Salinity'] = ds['salt'][:].squeeze()
                 m_dict['Temperature'] = ds['temp'][:].squeeze()
-                m_dict['Z'] = ds['z_rho'][:].squeeze()
+                z = ds['z_rho'][:].squeeze()
+                z = z - z[-1] # reference to sea level
+                m_dict['Z'] = z
                 ds.close()
                 plot_mod = True
             except OSError:
                 plot_mod = False
                 pass
                 
-            nr = 0
             nc = 0
             for fld in data_to_plot:
-                ax = axes[nr,nc]
+                ax = axes[0,nc]
                 cast.plot(x=fld, y = 'Z', style='-', grid=True,
-                          color=month_color_dict[imo], ax=ax, legend=False)
+                          color=month_color_dict[imo], ax=ax, legend=False,
+                          xlim=data_range_dict[fld], ylim=ylim)
                 ax_str = fld + ' (' + data_unit_dict[fld] + ')'
                 ax.set_xlabel('')
                 if nc==0:
@@ -134,9 +146,11 @@ for station in sta_list:
                 horizontalalignment='right', transform=ax.transAxes)
         
                 if plot_mod:
-                    axm = axes[nr, nc]
-                    axm.plot(m_dict[fld], m_dict['Z'], '--',
+                    axm = axes[1, nc]
+                    axm.plot(m_dict[fld], m_dict['Z'], '-',
                             color=month_color_dict[imo])
+                    axm.set_xlim(data_range_dict[fld])
+                    axm.set_ylim(ylim)
                     axm.grid(True)
                     if nc==0:
                         axm.text(.05, .05, Ldir['gtagex'], fontsize=12,

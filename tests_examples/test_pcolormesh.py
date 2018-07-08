@@ -24,7 +24,7 @@ ax1 = fig.add_subplot(132)
 ax1.pcolormesh(xx,yy,zz[:-1, :-1])
 # Result: Here we have axes with size one larger than the data, and
 # the colored squares are plotted as if the axes referred to the CORNERS
-# of each square.  The plot is IDENTICAL to that of ax0 - sot it is not doing
+# of each square.  The plot is IDENTICAL to that of ax0 - so it is not doing
 # bilinear interpolation.
 
 ax2 = fig.add_subplot(133)

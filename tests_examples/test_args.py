@@ -1,7 +1,7 @@
 """
 Test of calling a function that expects arguments.
 
-This is just setting up a pyton program that accepts command line arguments.
+This is just setting up a python program that accepts command line arguments.
 
 The actual test is done by test_args_call.py.
 """
