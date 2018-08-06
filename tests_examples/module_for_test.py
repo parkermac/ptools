@@ -9,6 +9,8 @@ that are then available to all functions defined in the module.
 import os
 import sys
 
+a = 10
+
 def add_to_path():   
     pth = os.path.abspath('../../LiveOcean/alpha')
     if pth not in sys.path:
@@ -25,3 +27,6 @@ def change_var_return(x):
     x = 2*x
     print(' - x in module = ' + str(x))
     return x
+    
+def look_for_var():
+    return a

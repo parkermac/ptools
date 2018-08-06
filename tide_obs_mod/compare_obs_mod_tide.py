@@ -1,5 +1,5 @@
 """
-Compare detailed tide records at a selected point
+Compare detailed tide records at a selected pair of points.
 
 """
 
@@ -180,22 +180,27 @@ for name in name_list:#sn_dict.keys():
     tcomb = tobs.copy()
     tcomb = tcomb.rename(columns={'eta':'eta_obs'})
 
-    eraw = tcomb.loc[dt0:dt1, 'eta_obs'].values
-    efilt = zfun.filt_godin(eraw)
-    enew = eraw - efilt
-    tcomb.loc[dt0:dt1, 'eta_obs'] = enew
-    
-    #tcomb['eta_obs'] -= tcomb.loc[dt0:dt1, 'eta_obs'].mean()
+    if False:
+        eraw = tcomb.loc[dt0:dt1, 'eta_obs'].values
+        efilt = zfun.filt_godin(eraw)
+        enew = eraw - efilt
+        tcomb.loc[dt0:dt1, 'eta_obs'] = enew
+    else:
+        tcomb['eta_obs'] -= tcomb.loc[dt0:dt1, 'eta_obs'].mean()
     
     for gtagex in run_list:
         Tmod = Tmod_dict[gtagex]
         tmod = Tmod[name]
         tcomb[gtagex] = tmod['eta']
-        #tcomb[gtagex] -= tcomb.loc[dt0:dt1, gtagex].mean()
-        eraw = tcomb.loc[dt0:dt1, gtagex].values
-        efilt = zfun.filt_godin(eraw)
-        enew = eraw - efilt
-        tcomb.loc[dt0:dt1, gtagex] = enew
+        
+        if False:
+            eraw = tcomb.loc[dt0:dt1, gtagex].values
+            efilt = zfun.filt_godin(eraw)
+            enew = eraw - efilt
+            tcomb.loc[dt0:dt1, gtagex] = enew
+        else:
+            tcomb[gtagex] -= tcomb.loc[dt0:dt1, gtagex].mean()
+            
     if count == 0:
         ax = ax1
     else:

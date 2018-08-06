@@ -19,7 +19,7 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart()
 
-testing = False
+testing = True
 Ldir['gtagex'] = 'cas4_v0_lo6m'
 
 # +++ load ecology CTD cast data +++
@@ -37,7 +37,7 @@ Casts_ca = pd.read_pickle(dir1 + 'Casts_' + str(year) + '.p')
 Casts = pd.concat((Casts, Casts_ca))
 
 if testing==True:
-    sta_to_plot = [s for s in sta_df.index if 'PSB' in s]
+    sta_to_plot = [s for s in sta_df.index if 'PSB003' in s]
     save_fig = False
 else:
     sta_to_plot = [s for s in sta_df.index]

@@ -5,7 +5,7 @@ Created on Wed Feb 28 10:04:20 2018
 
 Plots data from a Department of Ecology, for all CTD stations.
 
-Designed to work only with the new  2017 data I requested.
+Designed to work only with processed data.
 
 """
 
@@ -23,7 +23,7 @@ import Lfun
 Ldir = Lfun.Lstart()
 
 # set to True to save pngs, False to see on screen
-testing = False
+testing = True
 if testing:
     save_fig = False
 else:
@@ -87,7 +87,7 @@ figsize = (12,7)
 
 # trim the station list if desired
 if testing:
-    sta_list = [sta for sta in sta_df.index if 'DNA001' in sta]
+    sta_list = [sta for sta in sta_df.index if 'PSB003' in sta]
 else:
     sta_list = [sta for sta in sta_df.index]
 

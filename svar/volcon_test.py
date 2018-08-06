@@ -45,7 +45,8 @@ dvol_dt = DA *(zeta1[1:-1, 1:-1] - zeta0[1:-1, 1:-1])/DT
 
 err = dvol_dt - transport_in
 
-rel_err = err / dvol_dt
+rel_err = err / np.abs(dvol_dt).mean()
+#rel_err = err / dvol_dt
 
 ds_h0.close()
 ds_h1.close()
@@ -58,5 +59,6 @@ ax = fig.add_subplot(111)
 remax = .05
 cs = ax.pcolormesh(G['lon_psi'], G['lat_psi'], rel_err, vmin=-remax, vmax = remax, cmap='jet')
 fig.colorbar(cs)
+ax.set_title('error normalized by average(abs(convergence))')
 plt.show()
 

@@ -3,9 +3,10 @@ More Jackswarm plotting.
 """
 # setup
 import os; import sys
-alp = os.path.abspath('/Users/PM3/Documents/LiveOcean/alpha')
+alp = os.path.abspath('/Users/pm7/Documents/LiveOcean/alpha')
 if alp not in sys.path:
     sys.path.append(alp)
+from importlib import reload
 import zfun; reload(zfun)
 import matfun; reload(matfun)
 
@@ -14,7 +15,7 @@ import matplotlib.pyplot as plt
 
 def jack_to_df(jnum):
     # Function to load Jack data into a data frame
-    dir0 = '/Users/PM3/Documents/tools_data/vortex_drifter/2014_11_JackSwarm_Data/'
+    dir0 = '/Users/pm7/Documents/tools_data/vortex_drifter/2014_11_JackSwarm_Data/'
     fn = 'JACK' + str(jnum) + '.CSV'
     # load a jack data frame, and make a datetime column
     import pandas as pd

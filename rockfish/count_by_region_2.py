@@ -15,6 +15,9 @@ for each experiment.
 PERFORMANCE: takes about 16 seconds per experiment, and there are 33
 experiments, so this takes a total of 10 minutes.  Not bad.
 
+7/20/2018 Added more detailed information about which polygon
+the "lost to land" ones ended up in.
+
 """
 
 # setup
@@ -40,7 +43,7 @@ filterwarnings('ignore') # skip some warning messages
 
 # create the list of run files
 indir = Ldir['parent'] + 'ptools_output/rockfish/'
-outdir = indir + 'counted_by_region_2/'
+outdir = indir + 'counted_by_region_3/'
 Lfun.make_dir(outdir, clean=True)
 ex_list_raw = os.listdir(indir)
 ex_list = []
@@ -63,6 +66,11 @@ for ex in ex_list:
 poly_dir = Ldir['parent'] + 'ptools_data/rockfish/polygons_rockfish/'
 poly_list = ['admiralty', 'hood_canal', 'jdf', 'main_basin', 'outer_coast',
     'san_juans', 'sog', 'south_sound', 'whidbey']
+    
+poly_lost_list = []
+for po in poly_list:
+    poly_lost_list.append('lost_to_land_'+po)
+    
 v_dict = dict() # V is for the Vertices of the polygons
 p_dict = dict()
 for pn in poly_list:
@@ -81,8 +89,10 @@ for ex in ex_list:
     tt0 = time.time()
     
     # set up a DataFrame to store results
+    # df = pd.DataFrame(columns=['rel_day', 'age'] + poly_list +
+    #     ['total_found_in_ploygons','lost_to_ocean','lost_to_land','found_plus_lost'])
     df = pd.DataFrame(columns=['rel_day', 'age'] + poly_list +
-        ['total_found_in_ploygons','lost_to_ocean','lost_to_land','found_plus_lost'])
+        ['total_found_in_ploygons','lost_to_ocean', 'lost_to_land'] + poly_lost_list + ['found_plus_lost'])
     ex_short = ex_dict[ex]
     
     print('Working on ' + ex_short)
@@ -154,11 +164,16 @@ for ex in ex_list:
             lat2 = lat1[mask]
             rd2 = rd1[mask]
 
+            lon3 = lon1[~mask_h]
+            lat3 = lat1[~mask_h]
+
+
             # keep track of how many we lost in the masking
             df.loc[istr,'lost_to_ocean'] = (~mask_west).sum() + (~mask_south).sum()
             df.loc[istr,'lost_to_land'] = (~mask_h).sum()
         
             xy2 = np.stack((lon2,lat2), axis=1)
+            xy3 = np.stack((lon3,lat3), axis=1)
         
             # count the number of particles that ended up in each polygon
             # in age categories
@@ -166,6 +181,9 @@ for ex in ex_list:
                 p = p_dict[pn]
                 p_in = p.contains_points(xy2) # boolean
                 df.loc[istr, pn] = p_in.sum()
+                
+                p_lost = p.contains_points(xy3) # boolean
+                df.loc[istr, 'lost_to_land_'+pn] = p_lost.sum()
             
                 # and keep track of what we masked away
                 # NOTE: if you just look at one age, then the sum of

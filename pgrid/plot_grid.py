@@ -63,11 +63,16 @@ plt.close()
 
 # set number of columns for plot 
 NC = 1 # first guess
-flag_show_grids = True
+flag_show_grids = False
 if flag_show_grids:
     NC += 1
     icg = NC       
-flag_show_sections = True
+flag_show_res = True
+if flag_show_res:
+    NC += 1
+    icr = NC
+# this has to come last in the lineup
+flag_show_sections = False
 if flag_show_sections:
     NC += 1
     ics = NC
@@ -140,6 +145,20 @@ if flag_show_grids:
     pfun.add_coast(ax)
     ax.axis(ax_lims)
     gfp.add_river_tracks(Gr, ds, ax)
+    
+if flag_show_res:
+    DX = 1/ds['pm'][:]
+    DY = 1/ds['pn'][:]
+    res = np.maximum(DX, DY)
+    ax = fig.add_subplot(1,NC,icr)
+    cmap = plt.get_cmap(name='jet') # terrain, viridis
+    cs = ax.pcolormesh(plon, plat, res,
+                       vmin=500, vmax=1500, cmap = cmap)
+    fig.colorbar(cs, ax=ax, extend='both')
+    pfun.add_coast(ax)
+    pfun.dar(ax)
+    ax.axis(ax_lims)
+    ax.set_title('Grid Resolution - maximum (m)')
 
 ds.close()
 ds0.close()

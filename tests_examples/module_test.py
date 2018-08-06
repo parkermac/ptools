@@ -16,6 +16,9 @@ RESULT 3: Changing a dict entry in a module changes it in the calling code.
 
 RESULT 4: Changing a varible in a module does NOT it in the calling code.
     Expected
+
+RESULT 5: A variable defined in a module is available to all the functions
+    in the module even if it is not directly passed to the functions.
 """
 
 from importlib import reload
@@ -54,3 +57,10 @@ print(' - x in main = ' + str(x))
 print('After change_var_return')
 x = mft.change_var_return(x)
 print(' - x in main = ' + str(x))
+print('Test of using a variable defined in a module')
+try:
+    print('a before call = ' + str(a))
+except NameError:
+    print('a not found before call')
+a = mft.look_for_var()
+print('a after call = ' + str(a))

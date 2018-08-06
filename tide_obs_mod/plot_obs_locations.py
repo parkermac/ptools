@@ -1,6 +1,5 @@
 """
-Code to plot year-long tide height records from
-a series of NOAA and DFO sites around the Salish Sea and NE Pacific
+Code to plot a map of of NOAA and DFO sites around the Salish Sea and NE Pacific
 coast.
 
 """
@@ -30,7 +29,7 @@ dir0 = dir00 + 'ptools_output/tide/'
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 # extract and save data
-year  = 2013
+year  = 2017
 outdir = dir0 + 'obs_data/'
 
 M = dict()
@@ -43,7 +42,7 @@ for name in sn_dict.keys():
     hfn = outdir + 'h_' + str(sn) + '_' + str(year) + '.p'
     #df = pd.read_pickle(fn)
     M[name] = Lfun.csv_to_dict(mfn)
-    H[name] = pickle.load(open(hfn, 'rb'))
+    #H[name] = pickle.load(open(hfn, 'rb'))
 
 # plotting
 plt.close('all')

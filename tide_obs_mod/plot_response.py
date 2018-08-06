@@ -1,6 +1,7 @@
 """
 Code to plot the observed and modeled harmonic constituent
-amplitude and phase.
+amplitude and phase, for apair of stations (typically one
+on the coast and one in the Salish Sea).
 
 """
 

@@ -4,6 +4,10 @@ an extracted model NetCDF file of surface height at
 a series of NOAA and DFO sites around the Salish Sea and NE Pacific
 coast.
 
+Also computes harmonics using utide.
+
+Have to run zeta_extractor.py first.
+
 """
 
 import os
