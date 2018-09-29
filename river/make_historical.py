@@ -16,7 +16,7 @@ Ldir = Lfun.Lstart()
 import zfun
 reload(zfun)
 
-rivp = os.path.abspath(Ldir['LO'] + 'forcing/riv1/')
+rivp = os.path.abspath(Ldir['LO'] + 'forcing/riv2/')
 if rivp not in sys.path:
     sys.path.append(rivp)
 import river_class
@@ -37,25 +37,34 @@ save_data = True
 
 df = pd.read_csv(ri_fn, index_col='rname')
 
-# and create directory for output, if needed
-out_dir0 = Ldir['data'] + 'rivers/'
-out_dir = out_dir0 + 'Data_historical/'
-Lfun.make_dir(out_dir0, clean=False)
-Lfun.make_dir(out_dir, clean=False)
 
 #%% set time range
 
-testing = True
+testing = True # custom settings
 
 if testing == True:
-    dt0 = datetime(2014,1,1)
-    dt1 = datetime(2017,10,7)
+    dt0 = datetime(2017,1,1)
+    dt1 = datetime(2017,12,31)
     #df = df.loc[['skokomish', 'nf_skokomish', 'sf_skokomish', 'fraser']]
+    #df = df.loc[['columbia', 'naselle', 'willapa']]
     df = df.loc[['fraser']]
-    save_data = False
+    save_data = True
+    # and create directory for output, if needed
+    out_dir00 = Ldir['parent'] + 'ptools_output/'
+    out_dir0 = out_dir00 + 'river/'
+    out_dir = out_dir0 + 'all_2017/'
+    Lfun.make_dir(out_dir00, clean=False)
+    Lfun.make_dir(out_dir0, clean=False)
+    Lfun.make_dir(out_dir, clean=False)
+
 else:
     dt0 = datetime(1980,1,1)
     dt1 = datetime(2015,12,31)
+    # and create directory for output, if needed
+    out_dir0 = Ldir['data'] + 'rivers/'
+    out_dir = out_dir0 + 'Data_historical/'
+    Lfun.make_dir(out_dir0, clean=False)
+    Lfun.make_dir(out_dir, clean=False)
 days = (dt0, dt1)
 
 qt_dict = dict()

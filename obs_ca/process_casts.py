@@ -1,6 +1,7 @@
 """
 Process data from Canadian CTD casts, and
-save the results for future use.
+save the results for future use.  I had to download the casts by hand
+from the website, searching for stations 27 and 42 in 2017.
 
 """
 
@@ -11,14 +12,19 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 plt.close('all')
 
+import os
+
 # where the data is, and where results will be stored
 dir0 = '../../ptools_data/canada/'
 
 # NOTE: list should only have files for a single year
-fn_list = ['2017-01-0124.ctd.txt', '2017-01-0118.ctd.txt']
+
+fn_list = [item for item in os.listdir(dir0+'raw/') if '.ctd' in item]
+
+#fn_list_alt = ['2017-01-0124.ctd', '2017-01-0118.ctd']
 
 # initialize a DataFrame to hold all cast info
-sta_df = pd.DataFrame(index=fn_list,
+sta_df = pd.DataFrame(#index=fn_list_alt,
     columns=['Station', 'Desig', 'Descrip', 'Basin', 'Max_Depth',
         'Latitude', 'Longitude','Datetime','File'])
 sta_df.index.name = 'Filename' # later we replace this
@@ -26,8 +32,12 @@ sta_df.index.name = 'Filename' # later we replace this
 # initialize a DataFrame to hold all cast data for a year
 Casts = pd.DataFrame()
 
+sta_list = [] # used to ensure that sta_df only has one entry per station location
+
 for fn in fn_list:
     dfn = dir0 + 'raw/' + fn
+    
+    print('--working on ' + fn)
     f = open(dfn,'r', errors='ignore')
 
     count = 0
@@ -85,19 +95,22 @@ for fn in fn_list:
         count += 1
     f.close()
     
-    # store metadata in sta_df
-    sta_df.loc[fn,'Station'] = station
-    sta_df.loc[fn,'Desig'] = 'X'
-    sta_df.loc[fn,'Descrip'] = 'BLANK'
-    sta_df.loc[fn,'Basin'] = 'Strait of Georgia'
-    sta_df.loc[fn,'Max_Depth'] = water_depth
-    sta_df.loc[fn,'Latitude'] = lat
-    sta_df.loc[fn,'Longitude'] = lon
-    sta_df.loc[fn,'Datetime'] = dt.strftime('%Y.%m.%d')
-    sta_df.loc[fn,'File'] = fn
-
+    if station not in sta_list:
+        # store metadata in sta_df
+        sta_df.loc[fn,'Station'] = station
+        sta_df.loc[fn,'Desig'] = 'X'
+        sta_df.loc[fn,'Descrip'] = 'BLANK'
+        sta_df.loc[fn,'Basin'] = 'Strait of Georgia'
+        sta_df.loc[fn,'Max_Depth'] = water_depth
+        sta_df.loc[fn,'Latitude'] = lat
+        sta_df.loc[fn,'Longitude'] = lon
+        sta_df.loc[fn,'Datetime'] = dt.strftime('%Y.%m.%d')
+        sta_df.loc[fn,'File'] = fn
+        sta_list.append(station)
+        
     # get the cast data
-    df = pd.read_csv(dfn,skiprows=data_start+1, header=None, names=vn_list, delim_whitespace=True)
+    df = pd.read_csv(dfn,skiprows=data_start+1,
+        header=None, names=vn_list, delim_whitespace=True)
     df.rename(columns={'Depth':'Z'}, inplace=True)
     df['Z'] = -df['Z']
     cast = df.copy()
@@ -108,7 +121,7 @@ for fn in fn_list:
     # The resulting DataFrame "Casts" just has numbers for its index.
     Casts = pd.concat((Casts, cast), ignore_index=True)
     
-    if True:
+    if False:
         # plotting
         z = cast['Z'].values
         temp = cast['Temperature'].values

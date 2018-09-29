@@ -23,14 +23,13 @@ import Lfun
 Ldir = Lfun.Lstart()
 
 # set to False to save pngs, True to see on screen
-testing = False
+testing = True
 if testing:
     save_fig = False
 else:
     save_fig = True
 
-#Ldir['gtagex'] = 'cas3_v1_lo6m'
-Ldir['gtagex'] = 'cas4_v0_lo6m'
+Ldir['gtagex'] = 'cas4_v1_lo6biom'
 
 # +++ load ecology CTD cast data +++
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
