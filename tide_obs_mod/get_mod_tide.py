@@ -16,8 +16,8 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-Ldir = Lfun.Lstart(gridname='cas4', tag='v0')
-Ldir['gtagex'] = Ldir['gtag'] + '_lo6m'
+Ldir = Lfun.Lstart(gridname='cas4', tag='v2')
+Ldir['gtagex'] = Ldir['gtag'] + '_lo6biom'
 
 import zfun
 
@@ -36,9 +36,7 @@ from importlib import reload
 import obsfun as ofn
 reload(ofn)
 
-home = os.environ.get('HOME')
-dir00 = home + '/Documents/'
-dir0 = dir00 + 'ptools_output/tide/'
+dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 testing = False
@@ -101,9 +99,17 @@ def get_ij_good(lon, lat, xvec, yvec, i0, j0):
     #
     return igood, jgood
 
+# set the locations for model input and output
+mod_string = Ldir['gtagex'] + '_' + str(year) + '.01.01' + '_' + str(year) + '.12.31'
+mod_dir_in = Ldir['LOo'] + 'layer/' + mod_string + '/'
+
+mod_dir_out0 = dir0 + 'mod_data/'
+Lfun.make_dir(mod_dir_out0)
+mod_dir_out = mod_dir_out0 + Ldir['gtagex'] + '/'
+Lfun.make_dir(mod_dir_out)
+        
 # load model data
-mod_dir = dir0 + 'mod_data/' + Ldir['gtagex'] + '/'
-fn = mod_dir + 'eta_' + str(year) + '.nc'
+fn = mod_dir_in + 'zeta_hourly.nc'
 ds = nc.Dataset(fn)
 lon = ds['lon_rho'][:]
 lat = ds['lat_rho'][:]
@@ -149,14 +155,14 @@ for name in sn_dict.keys():
 # save results to disk, exactly like what we did for the observations
 for name in sn_dict.keys():
     sn = sn_dict[name]
-    fn = mod_dir + 'tide_' + str(sn) + '_' + str(year) + '.p'
-    mfn = mod_dir + 'm_' + str(sn) + '_' + str(year) + '.csv'
-    hfn = mod_dir + 'h_' + str(sn) + '_' + str(year) + '.p'
+    fn = mod_dir_out + 'tide_' + str(sn) + '_' + str(year) + '.p'
+    mfn = mod_dir_out + 'm_' + str(sn) + '_' + str(year) + '.csv'
+    hfn = mod_dir_out + 'h_' + str(sn) + '_' + str(year) + '.p'
     Tmod[name].to_pickle(fn)
     Lfun.dict_to_csv(Mmod[name], mfn)
     pickle.dump(Hmod[name], open(hfn, 'wb'))
     
-if True:
+if False:
     plt.close('all')
     #
     fig = plt.figure(figsize=(8, 8))

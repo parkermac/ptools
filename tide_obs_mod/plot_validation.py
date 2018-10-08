@@ -32,7 +32,7 @@ reload(ofn)
 dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 # select model run
-gtagex = 'cas4_v0_lo6m'
+gtagex = 'cas4_v2_lo6biom'
 year  = 2017
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
@@ -198,6 +198,8 @@ for name in sn_list:
     ym = Mmod['lat']
     ax.plot(float(xm), float(ym), '*b', markersize=mm)
     ax.set_title(name)
+    
+    fig.tight_layout()
     
     if save_plot==False:
         plt.show()

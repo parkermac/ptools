@@ -52,7 +52,7 @@ for name in name_list:
 sn_dict = a
 
 # select several model runs
-run_list = ['cas4_v0_lo6m']
+run_list = ['cas4_v2_lo6biom']
 
 # load observational data
 year  = 2017

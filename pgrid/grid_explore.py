@@ -96,8 +96,8 @@ ax3 = plt.subplot2grid((1,5), (0,3), colspan=2) # buttons
 
 #%% initialize the data plot
 cmap1 = plt.get_cmap(name='rainbow_r') # terrain
-tvmin = -20
-tvmax = 200
+tvmin = -10
+tvmax = 40
 cs = ax1.imshow(h, interpolation='nearest', vmin=tvmin, vmax=tvmax, cmap = cmap1)
 fig.colorbar(cs, ax=ax1, extend='both')
 aa = ax1.axis()
