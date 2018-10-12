@@ -37,17 +37,18 @@ year  = 2017
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
-save_plot=True
+testing = False
+if testing==False:
+    sn_list = sn_dict.keys()
+    save_plot=True
+elif testing==True:
+    sn_list = ['Seattle']
+    save_plot=False
+
 if save_plot==True:
     # place for output
     outdir = dir0 + 'validation_' + gtagex + '_' + str(year) + '/'
     Lfun.make_dir(outdir, clean=True)
-
-testing = False
-if testing==False:
-    sn_list = sn_dict.keys()
-elif testing==True:
-    sn_list = ['Seattle']
     
 def get_AG(hn, Hobs, Hmod):
     ho = Hobs
@@ -101,20 +102,27 @@ for name in sn_list:
     tcomb = Tobs.copy()
     tcomb = tcomb.rename(columns={'eta':'SSH obs'})
     tcomb['SSH mod'] = Tmod['eta']
+    pair = Tmod['Pair (mb)'] - Tmod['Pair (mb)'].mean()
+    tcomb['SSH mod adj'] = Tmod['eta'] - pair*100/(1025*9.8)
     tcomb = tcomb.loc[dt0:dt1, :]
     
     # remove means
     obs_mean = tcomb.loc[:, 'SSH obs'].mean()
     mod_mean = tcomb.loc[:, 'SSH mod'].mean()
+    moda_mean = tcomb.loc[:, 'SSH mod adj'].mean()
     
     tcomb['SSH obs'] -= obs_mean
     tcomb['SSH mod'] -= mod_mean
+    tcomb['SSH mod adj'] -= moda_mean
     tcomb['SSH error'] = tcomb['SSH mod'] - tcomb['SSH obs']
     
+    # note that rms is the same as std here because these have ~zero mean
     err = tcomb['SSH error'].std()
+    obs_std = tcomb['SSH obs'].std()
     
     tcomb['SSH obs low-passed'] = zfun.filt_godin(tcomb.loc[dt0:dt1, 'SSH obs'].values)
     tcomb['SSH mod low-passed'] = zfun.filt_godin(tcomb.loc[dt0:dt1, 'SSH mod'].values)
+    tcomb['SSH mod adj low-passed'] = zfun.filt_godin(tcomb.loc[dt0:dt1, 'SSH mod adj'].values)
 
     # Hourly SSH for One Month
     ax = plt.subplot2grid(axtup, (0,0), colspan=2)
@@ -127,7 +135,10 @@ for name in sn_list:
     ax.text(.5,.9, tstr, weight='bold', color='k', transform=ax.transAxes, horizontalalignment='center')
     ax.text(.5, .8, ('Obs Mean = %0.2f (m) Mod Mean = %0.2f (m)' % (obs_mean, mod_mean)),
         transform=ax.transAxes, horizontalalignment='center')
-    ax.text(.05, .05, ('Error Std. Dev. = %0.2f (m)' % (err)), transform=ax.transAxes, weight='bold')
+    ax.text(.05, .1, ('SSH Std. Dev. = %0.2f (m)' % (obs_std)),
+            transform=ax.transAxes, weight='bold')
+    ax.text(.05, .03, ('Error Std. Dev. = %0.2f (m) (%d%%)' % (err, int(100*err/obs_std))),
+            transform=ax.transAxes, weight='bold')
     ax.grid(False)
     #ax.set_xticklabels([''])
     ax.set_xlabel('')
@@ -135,7 +146,7 @@ for name in sn_list:
     # Full year of low-passed SSH
     ax = plt.subplot2grid(axtup, (1,0), colspan=2)
     tstr = 'Tidally-averaged SSH for full year ' + str(year)
-    tcomb.plot(y=['SSH obs low-passed', 'SSH mod low-passed'], ax = ax,color=['r','b'], x_compat=True)
+    tcomb.plot(y=['SSH obs low-passed', 'SSH mod low-passed','SSH mod adj low-passed'], ax = ax,color=['r','b','c'], x_compat=True)
     ax.legend(loc='lower right', ncol=2)
     ax.text(.5,.9, tstr, weight='bold', color='k', transform=ax.transAxes, horizontalalignment='center')
     ax.set_xlim(dt0, dt1)

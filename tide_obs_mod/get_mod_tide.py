@@ -41,7 +41,7 @@ dir0 = Ldir['parent'] + 'ptools_output/tide/'
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 testing = False
 if testing == True:
-    name_list = ['Neah Bay', 'Campbell River', 'Tacoma']
+    name_list = ['Seattle']
     a = dict()
     for name in name_list:
         a[name] = sn_dict[name]
@@ -136,6 +136,7 @@ for name in sn_dict.keys():
         i0, j0 = get_ij_good(lon, lat, xvec, yvec, i0, j0)
     # put data into a DataFrame
     zm = ds['zeta'][:,j0,i0].squeeze()
+    pair = ds['Pair'][:,j0,i0].squeeze()# units are millibars = 1e-3 * 1e5 Pa = 100 Pa
     tm = ds['ocean_time'][:]
     dtm_list = []
     for t in tm:
@@ -143,6 +144,7 @@ for name in sn_dict.keys():
     dti = pd.to_datetime(dtm_list)
     dti = dti.tz_localize('UTC')
     df = pd.DataFrame(data={'eta':zm}, index = dti)
+    df['Pair (mb)'] = pair
     df.index.name = 'Date'
     #
     Tmod[name] = df

@@ -63,17 +63,20 @@ pfun.add_coast(ax)
 pfun.dar(ax)
 
 for rn in df.index:
-    fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
-    df_tr = pd.read_csv(fn_tr, index_col='ind')
-    x = df_tr['lon'].values
-    y = df_tr['lat'].values
-    ax.plot(x, y, '-r', linewidth=2)
-    ax.plot(x[-1], y[-1], '*r')
+    try:
+        fn_tr = G['ri_dir'] + 'tracks/' + rn + '.csv'
+        df_tr = pd.read_csv(fn_tr, index_col='ind')
+        x = df_tr['lon'].values
+        y = df_tr['lat'].values
+        ax.plot(x, y, '-r', linewidth=2)
+        ax.plot(x[-1], y[-1], '*r')
 
-    if (rn + '.csv') in c_list:
-        ax.text(x[-1]+.05, y[-1]+.03, rn.title(), color='r', weight='bold')
-    else:
-        ax.text(x[-1]+.05, y[-1]+.03, rn.title())
+        if (rn + '.csv') in c_list:
+            ax.text(x[-1]+.05, y[-1]+.03, rn.title(), color='r', weight='bold')
+        else:
+            ax.text(x[-1]+.05, y[-1]+.03, rn.title())
+    except FileNotFoundError:
+        pass
 
 ax.set_title('Rivers with Flow Data (RED have Temp Climatology)')
 
