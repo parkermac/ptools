@@ -43,7 +43,7 @@ mlon_deg_vec = np.linspace(180, -180, nmh)
 mlon_rad_vec = np.deg2rad(mlon_deg_vec)
 #
 r = 10 # radius of the Earth Sphere
-mdec_deg = 0#23.5 # set the lunar declination
+mdec_deg = 23.5 # set the lunar declination
 mdec_rad = np.deg2rad(mdec_deg)
 #
 
@@ -73,7 +73,7 @@ for mh in mhour_vec:
         outname = 'plot_' + nouts + '.png'
         outfile = outdir + outname
     
-    fig = plt.figure(figsize=(9, 9))
+    fig = plt.figure(figsize=(9, 9)) # (9,9)
     ax = fig.add_subplot(111, projection='3d')
     
     tf.draw_sphere(ax, r)
@@ -99,6 +99,8 @@ for mh in mhour_vec:
     
     ax.set_title(('Lunar Declination = %s Degrees' % str(mdec_deg)),
         fontweight='bold', fontsize=16)
+        
+    fig.tight_layout()
 
     if do_movie:
         plt.draw()
