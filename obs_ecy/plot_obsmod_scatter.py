@@ -4,6 +4,8 @@
 Plots data from the Department of Ecology, combining data from CTD casts
 and bottles at the same station.  Also including model output.
 
+This makes the summary scatterplot for all variables of interest.
+
 """
 
 import pandas as pd

@@ -10,7 +10,7 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 
-testing = True
+testing = False
 if testing:
     year_list = [2017]
 else:

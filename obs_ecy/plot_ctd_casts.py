@@ -3,9 +3,9 @@
 """
 Created on Wed Feb 28 10:04:20 2018
 
-Plots data from a Department of Ecology, for all CTD stations,
-and associated model extractions created by
-LiveOcean/extract/driver_get_cast.py.
+Plots data from a Department of Ecology, for all CTD stations.
+
+Designed to work only with processed data.
 
 """
 
@@ -22,14 +22,15 @@ if pth not in sys.path:
 import Lfun
 Ldir = Lfun.Lstart()
 
-# set to False to save pngs, True to see on screen
+# set to True to save pngs, False to see on screen
 testing = True
 if testing:
     save_fig = False
 else:
     save_fig = True
 
-Ldir['gtagex'] = 'cas4_v1_lo6biom'
+add_model = True
+Ldir['gtagex'] = 'cas4_v2_lo6biom'
 
 # +++ load ecology CTD cast data +++
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
@@ -49,11 +50,23 @@ Casts = pd.concat((Casts, Casts_ca))
 if save_fig==True:
     dir11 = Ldir['parent'] + 'ptools_output/ecology/'
     Lfun.make_dir(dir11)
-    dir1 = dir11 + 'casts' + str(year) + '_'+ Ldir['gtagex'] + '/'
+    if add_model:
+        dir1 = dir11 + 'casts' + str(year) + '_'+ Ldir['gtagex'] + '/'
+    else:
+        dir1 = dir11 + 'casts' + str(year) + '/'
     Lfun.make_dir(dir1, clean=True)
 
 # choose which data fields to plot by commenting out parts of this list
-data_to_plot = ['Salinity', 'Temperature']
+if add_model:
+    data_to_plot = ['Salinity', 'Temperature']
+else:
+    data_to_plot = [
+        'Salinity',
+        'Temperature',
+        'Sigma',
+        'Chl',
+        'DO',
+        'Turb']
     
 # data short names, units, and plot ranges
 data_names =  ['Salinity','Temperature','Sigma', 'Chl', 'DO',   'Turb', 'Z']
@@ -82,17 +95,34 @@ figsize = (12,7)
 
 # trim the station list if desired
 if testing:
-    sta_list = [sta for sta in sta_df.index if 'DNA001' in sta]
+    sta_list = [sta for sta in sta_df.index if 'SOG' in sta]
 else:
     sta_list = [sta for sta in sta_df.index]
 
 for station in sta_list:
     
     # set up the plot axes (an array)
-    NR = 2
-    NC = len(data_to_plot)
-    fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
-            figsize=figsize, squeeze=False)
+    if add_model:
+        NR = 1
+    else:
+        NR = 2
+    NC = int(np.ceil(len(data_to_plot)/NR))
+    nrnc = dict()
+    nr = 0
+    nc = 0
+    for name in data_to_plot:
+        nrnc[name] = (nr,nc)
+        if nc < NC-1:
+            nc+=1
+        else:
+            nr += 1
+            nc = 0
+    if add_model:
+        fig, axes = plt.subplots(nrows=NR+1, ncols=NC, sharey=True,
+                             figsize=figsize, squeeze=False)
+    else:
+        fig, axes = plt.subplots(nrows=NR, ncols=NC, sharey=True,
+                             figsize=figsize, squeeze=False)
 
     # loop over all casts at this station
     print(' - Working on: ' + station)           
@@ -103,58 +133,53 @@ for station in sta_list:
     castdates = alldates.unique() # a short list of unique dates (1 per cast)
     title = str(year) + ' || ' + station + ': ' + sta_df.loc[station,'Descrip']
     Max_z = -float(sta_df.loc[station, 'Max_Depth'])
-    ylim = data_range_dict['Z']
-    
     # plot the CTD cast data for this station
     for cdate in castdates:
         imo = cdate.month
-        
-        if imo in months:
+        cast = casts[casts.index==cdate]
             
-            cast = casts[casts.index==cdate]
-            
+        if add_model:
             # also get the model fields for this day
             date_string = cdate.strftime('%Y.%m.%d')
-            dir0m = Ldir['parent'] + 'LiveOcean_output/casts/'
+            dir0m = Ldir['parent'] + 'LiveOcean_output/cast/'
             fnm = dir0m + Ldir['gtagex'] + '/' + station + '_' + date_string + '.nc'
             try:
                 ds = nc4.Dataset(fnm)
                 m_dict = dict()
                 m_dict['Salinity'] = ds['salt'][:].squeeze()
                 m_dict['Temperature'] = ds['temp'][:].squeeze()
-                z = ds['z_rho'][:].squeeze()
-                z = z - z[-1] # reference to sea level
-                m_dict['Z'] = z
+                m_dict['Z'] = ds['z_rho'][:].squeeze()
                 ds.close()
                 plot_mod = True
             except OSError:
                 plot_mod = False
                 pass
-                
-            nc = 0
-            for fld in data_to_plot:
-                ax = axes[0,nc]
-                cast.plot(x=fld, y = 'Z', style='-', grid=True,
-                          color=month_color_dict[imo], ax=ax, legend=False,
-                          xlim=data_range_dict[fld], ylim=ylim)
-                ax_str = fld + ' (' + data_unit_dict[fld] + ')'
-                ax.set_xlabel('')
-                if nc==0:
-                    ax.set_ylabel('Z (m)')
-                ax.text(.95, .05, ax_str, fontsize=14, fontweight='bold',
-                horizontalalignment='right', transform=ax.transAxes)
+    
+        for fld in data_to_plot:
+            nr, nc = nrnc[fld]
+            ax = axes[nr,nc]
+            ylim = data_range_dict['Z']
+            #ylim = (Max_z, 0)
+            cast.plot(x=fld, y = 'Z', style='-', grid=True,
+                      color=month_color_dict[imo], ax=ax, legend=False,
+                      xlim=data_range_dict[fld], ylim=ylim)
+            ax_str = fld + ' (' + data_unit_dict[fld] + ')'
+            ax.set_xlabel('')
+            if nc==0:
+                ax.set_ylabel('Z (m)')
+            ax.text(.95, .05, ax_str, fontsize=14, fontweight='bold',
+            horizontalalignment='right', transform=ax.transAxes)
         
-                if plot_mod:
-                    axm = axes[1, nc]
-                    axm.plot(m_dict[fld], m_dict['Z'], '-',
-                            color=month_color_dict[imo])
-                    axm.set_xlim(data_range_dict[fld])
-                    axm.set_ylim(ylim)
-                    axm.grid(True)
-                    if nc==0:
-                        axm.text(.05, .05, Ldir['gtagex'], fontsize=12,
-                                 fontweight='bold', transform=axm.transAxes)
-                nc += 1
+            if add_model and plot_mod:
+                axm = axes[nr+1, nc]
+                axm.plot(m_dict[fld], m_dict['Z'], '-',
+                        color=month_color_dict[imo])
+                axm.set_xlim(data_range_dict[fld])
+                axm.set_ylim(ylim)
+                axm.grid(True)
+                if nc==0:
+                    axm.text(.05, .05, Ldir['gtagex'], fontsize=12,
+                             fontweight='bold', transform=axm.transAxes)
         
     # add month labels with colors
     ax = axes[0, 0]

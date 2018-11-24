@@ -48,7 +48,7 @@ Bottles = pd.read_pickle(dir0 + 'Bottles_' + str(year) + '.p')
 Ldir['gtagex'] = 'cas4_v2_lo6biom'
 
 testing = False
-for_web = False # plots styled for the validation website
+for_web = False # True for plots styled for the validation website
 
 if testing==True:
     sta_to_plot = [s for s in sta_df.index if 'HCB003' in s]
@@ -132,7 +132,7 @@ for station in sta_to_plot:
         for Zn in Z_list:
             try:
                 if Zn==0:
-                    # OK to extrapolate at surface becasue shallowest cast data is
+                    # OK to extrapolate at surface because shallowest cast data is
                     # always deeper than 0.
                     exn = False
                 else:
@@ -184,11 +184,6 @@ if testing == False:
     out_fn = 'ObsMod_' + Ldir['gtagex'] + '_'+ str(year) + '.p'
     print('Saving ' + out_fn)
     Bc.to_pickle(dir11 + out_fn)
-
-# Print some statistics to the screen
-for vn in ['Temp. (deg C)', 'Salinity', 'DO (mg L-1)', 'DIN (uM)', 'Chl (mg m-3)']:
-    rmse = np.sqrt( ((Bc[vn]-Bc['Mod '+vn])**2).mean() )
-    print('RMSE %s = %0.2f' % (vn, rmse))
 
 # # plotting
 plt.close('all')
@@ -272,28 +267,3 @@ for station in sta_to_plot:
         plt.close()
     else:
         plt.show()
-        
-
-        
-# also make overall scatterplots
-fig = plt.figure(figsize=(12,8))
-NR = 2; NC = 3
-pp = 1
-for vn in ['Salinity', 'Temp. (deg C)', 'DO (mg L-1)', 'DIN (uM)', 'Chl (mg m-3)']:
-    ax = fig.add_subplot(NR, NC ,pp)
-    ii = 0
-    for Zn in Z_list:
-        Bcz = Bc[Bc['Znom']==Zn]
-        Bcz.plot(x=vn, y = 'Mod '+vn, style = 'o'+ clist[ii],
-            grid=True, ax=ax, legend=False)
-        ii += 1
-    ax.set_xlim(lim_dict[vn])
-    ax.set_ylim(lim_dict[vn])
-    v0 = lim_dict[vn][0]; v1 = lim_dict[vn][1]
-    ax.plot([v0, v1], [v0, v1], '-k')
-    ax.text(.05, .9, vn, fontweight='bold', transform=ax.transAxes)
-    ax.set_xlabel('Observations')
-    ax.set_ylabel('Model')
-    pp+=1
-plt.show()
-
