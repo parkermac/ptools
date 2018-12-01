@@ -1,5 +1,4 @@
-Info for obs_ncdc.
-2018.11.05 an on
+This is code for processing and plotting observational weather data.
 
 NCDC is the National Climate Data Center, which has long term weather data.
 
@@ -29,3 +28,10 @@ TSUN Total sunshine for the period (minutes)
 The wind data doesn't have enough coverage.
 
 The files you get (by email link, after a short wait) are named by you order number, for example the one I just got, for SeaTac, is called 1527887.csv.
+
+================================================================
+* plot_weather.py analyzes and plots weather data
+
+Input: ptools_data/ncdc/1527887.csv
+
+Output: Plot of weather variables, focusing on possible long-term changes such as warming, or seasonal timing.  These end up in ptools_output/ncdc.

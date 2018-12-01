@@ -1,41 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar  2 15:15:22 2018
-
-@author: pm7
-
-Plot locations of Stations.
+Plot locations of Ecology Stations.
 
 """
 
-import os
-import sys
-pth = os.path.abspath('../../LiveOcean/alpha')
-if pth not in sys.path:
-    sys.path.append(pth)
-import Lfun
-Ldir = Lfun.Lstart()
-
-pth = os.path.abspath(Ldir['LO'] + 'plotting')
-if pth not in sys.path:
-    sys.path.append(pth)
-import pfun
-
+# imports
 import pandas as pd
 import matplotlib.pyplot as plt
 
-dir0 = Ldir['parent'] + 'ptools_data/ecology/'
+# SSMSP import
+import os
+import sys
+pth = os.path.abspath('../ssmsp')
+if pth not in sys.path:
+    sys.path.append(pth)
+import sfun
+import pfun
+
+dir0 = '../../ptools_data/ecology/'
 # load processed station info and data
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 
 # add Canadian data
 
-dir1 = Ldir['parent'] + 'ptools_data/canada/'
+dir1 = '../../ptools_data/canada/'
 # load processed station info and data
 sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
 
-sta_df = pd.concat((sta_df, sta_df_ca))
+sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
 
 # plotting
 plt.close('all')
@@ -55,10 +48,10 @@ for station in sta_df.index:
     ax.plot(lon, lat, '*r')
     ax.text(lon+.01, lat, station, color='b', fontsize=8, fontweight='bold')
     
-pfun.add_coast(ax1)
+pfun.add_coast(ax1, dir0='../ssmsp/')
 pfun.dar(ax1)
 
-pfun.add_coast(ax2)
+pfun.add_coast(ax2, dir0='../ssmsp/')
 pfun.dar(ax2)
 
 # Coastal Estuaries

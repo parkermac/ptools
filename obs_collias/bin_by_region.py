@@ -20,30 +20,26 @@ to match the bottle depths from the modern Ecology data.
 
 """
 
-import os
-import sys
-pth = os.path.abspath('../../LiveOcean/alpha')
-if pth not in sys.path:
-    sys.path.append(pth)
-import Lfun
-Ldir = Lfun.Lstart()
-import zfun
-
-pth = os.path.abspath(Ldir['LO'] + 'plotting')
-if pth not in sys.path:
-    sys.path.append(pth)
-import pfun
-
+# imports
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 
-dir0 = Ldir['parent'] + 'ptools_data/collias/'
+# SSMSP import
+import os
+import sys
+pth = os.path.abspath('../ssmsp')
+if pth not in sys.path:
+    sys.path.append(pth)
+import sfun
+from importlib import reload
+reload(sfun)
+
+dir0 = '../../ptools_data/collias/'
 # load processed station info and data
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 
-dir1 = Ldir['parent'] + 'ptools_output/collias/'
-Lfun.make_dir(dir1)
+dir1 = '../../ptools_output/collias/'
+sfun.make_dir(dir1)
 
 testing = False
 if testing:
@@ -53,7 +49,7 @@ else:
 
 # variables to process
 col_list = ['Temp. (deg C)', 'Salinity',
-            'DO (mg L-1)', 'NO3 (mg L-1)', 'NO2 (mg L-1)', 'SiOH4 (mg L-1)']
+            'DO (mg L-1)', 'NO3 (mg L-1)']
 
 for region in range(1,9):
     print('Binning by region ' + str(region))
@@ -79,7 +75,7 @@ for region in range(1,9):
                     zvec = np.array(c.index.values)
                     z = np.array([-30, -10, 0])
                     if len(zvec) > 1:
-                        ii0, ii1, ffr = zfun.get_interpolant(z,zvec, extrap_nan=True)
+                        ii0, ii1, ffr = sfun.get_interpolant(z,zvec, extrap_nan=True)
                         x = pd.DataFrame(columns=col_list) #  a temporary storage place
                         # NOTE the brackets around [i0 or i1] keep the result as a DataFrame even
                         # though we are only pulling out a single row.
@@ -87,7 +83,7 @@ for region in range(1,9):
                         for fr in ffr:
                             i0 = ii0[iz]; i1 = ii1[iz]; zz = z[iz]
                             d = (1-fr)*c.iloc[[i0],:].values + fr*c.iloc[[i1],:].values
-                            x.loc[zz,:] = d#dict(zip(col_list,d))
+                            x.loc[zz,:] = d
                             iz+=1
                         x.loc[:,'Date'] = date
                         a = pd.concat((a,x))
@@ -95,5 +91,10 @@ for region in range(1,9):
     if len(a) > 0:
         a.loc[:,'Z (m)'] = a.index.values
         a = a.set_index('Date')
+        
+        # convert Nitrate to uM
+        a['NO3 (uM)'] = a['NO3 (mg L-1)'] * 1000/14
+        a.pop('NO3 (mg L-1)')
+        
         a.to_pickle(dir1 + 'region_' + str(region) + '.p')
 

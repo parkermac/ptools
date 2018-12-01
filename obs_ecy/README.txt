@@ -1,6 +1,4 @@
-README for obs_ecy
-
-This is for processing the Ecology CTD and Bottle data
+This is for processing the Ecology CTD and Bottle data.
 
 ======================================================================
 * process_station_info.py makes a DateFrame of station locations, etc.
@@ -66,7 +64,7 @@ Output: ptools_data/ecology/Bottles_[2006-2017].p with data like:
 5     ADM001 2006-03-21  -0.931  2.047256   48.457275  24.136850  0.229608  0.633126  24.999585  -0.0
 
 ======================================================================
-* plot_ctd_casts.py makes nice plots CTD casts (property vs. z, colored by month) at each station
+* plot_ctd_casts.py makes nice plots CTD casts (property vs. z, colored by month) at each station.  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
 
 Input: ptools_data/ecology/Casts_2017.p & ptools_data/canada/Casts_2017.p
 	   and model extractions like
@@ -77,23 +75,55 @@ Output: plots, one per station, names like ADM001.png, in folders like
 	ptools_output/ecology/casts_cas4_v2_lo6biom/ if you include the model
 	
 ======================================================================
-* plot_obsmod_series.py makes time series plots comparing obs & mod over a year
+* plot_obsmod_series.py makes time series plots comparing obs & mod over a year (just 2017).  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
 
-Input: ptools_data/ecology/Casts_2017.p & ptools_data/canada/Casts_2017.p
+Input: ptools_data/ecology/Casts_2017.p & ptools_data/canada/Casts_2017.p &
+	   ptools_data/ecology/Bottles_2017.p
 	   and model extractions like
 	   LiveOcean_output/cast/cas4_v2_lo6biom/PSB003_2017.12.11.nc
 	   
 Output: plots, one per station, names like ADM001.png, in folders like
 	ptools_output/ecology/val_series_cas4_v2_lo6biom/ or
 	ptools_output/ecology/web_series_cas4_v2_lo6biom/ (formatted for the website, e.g. no map)
-	   and
-	ptools_output/ecology/ObsMod_cas4_v2_lo6biom.p (used in the scatterplot below)
+	
+	and...
+	
+	ptools_output/ecology/ObsMod_cas4_v2_lo6biom.p (used in the scatterplot below) with data like
+	
+     Station       Date  Znom         ...          Mod DIN (uM) Density (kg m-3) Mod Density (kg m-3)
+0     ADM001 2017-02-23     0         ...               18.3425          1022.36              1021.87
+1     ADM001 2017-02-23   -10         ...               20.3044          1022.59              1022.91
+2     ADM001 2017-02-23   -30         ...               20.8001          1022.67              1023.41
+3     ADM001 2017-04-28     0         ...               8.61608          1019.62              1020.71
+4     ADM001 2017-04-28   -10         ...               14.4416           1021.7              1022.27
+5     ADM001 2017-04-28   -30         ...               17.2305          1022.16              1022.84
+
+the full list of columns is:
+['Station', 'Date', 'Znom', 'Z', 'Salinity', 'Temp. (deg C)',
+       'Chl (mg m-3)', 'DO (mg L-1)', 'DIN (uM)', 'Mod Salinity',
+       'Mod Temp. (deg C)', 'Mod Chl (mg m-3)', 'Mod DO (mg L-1)',
+       'Mod DIN (uM)', 'Density (kg m-3)', 'Mod Density (kg m-3)']
 
 ======================================================================
-* plot_obsmod_scatter.py makes time a scatterplot comparing obs & mod over a year
+* plot_obsmod_scatter.py makes time a scatterplot comparing obs & mod over a year.  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
 
 Input: ptools_output/ecology/ObsMod_cas4_v2_lo6biom.p
 	   
 Output: a scatterplot of all data (for three depths)
 
+======================================================================
+* bin_by_region.py replicates a step in obs_collias.  It gathers all the casts in a Region, for all years, and then for each cast interpolates in the vertical to just have data at [-30, -10, 0] m.
+
+Input: ptools_data/ecology/Casts_[1999-2017].p &
+	   ptools_data/ecology/Bottles_[2006-2017].p
+
+Output: ptools_output/ecology/region_[1-8].py which are DataFrames containing data like:
+           Station  Z (m) Salinity Temp. (deg C) DO (mg L-1) NO3 (uM)
+Date                                                                 
+2009-03-12  RSR837      0  30.3119        7.0192     8.41159  27.2884
+2009-03-12  RSR837    -10  30.3119         7.017     8.41581      NaN
+2009-03-12  RSR837    -30  30.3116        7.0192     8.42661      NaN
+2009-04-07  RSR837      0  30.3256        7.5435     8.56143  23.6588
+2009-04-07  RSR837    -10  30.3283        7.4309     8.60177      NaN
+2009-04-07  RSR837    -30  30.3287        7.4321     8.65763      NaN
 
