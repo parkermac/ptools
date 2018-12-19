@@ -17,6 +17,7 @@ out_dir0 = '../../ptools_output/'
 ri_fn = '../ssmsp/river_info.csv'
 df = pd.read_csv(ri_fn, index_col='rname')
 df = df.loc[['skagit', 'snohomish', 'puyallup', 'deschutes', 'skokomish'],:]
+#df = df.loc[['skagit'],:]
 
 # where the extracted data is
 out_dir = out_dir0 + 'river_long/'
@@ -34,6 +35,8 @@ for rn in df.index:
 
     # plot daily flow
     ax = fig.add_subplot(221)
+    #ax = plt.subplot2grid((2,3), (0,0), colspan=2)
+    
     qt.plot(ax=ax)
     ax.set_title(rn.title() + ' River')
     ax.set_ylim(0,)
@@ -41,21 +44,27 @@ for rn in df.index:
     ax.set_xticklabels([])
     #ax.set_xlabel('')
     ax.set_xticks(pd.date_range(start='1/1/1900', end='1/1/2020', freq='10Y'))
-    ax.set_xlim(qt.index[0], qt.index[-1])
+    ax.set_xlim(qt.index[0], pd.datetime(2020,1,1))
+    #ax.set_xlim(pd.datetime(1900,1,1), pd.datetime(2020,1,1))
     ax.text(.05, .85, '(a) Daily Flow', fontweight='bold', transform=ax.transAxes)
     ax.set_ylabel('Flow $(m^{3}s^{-1})$')
     
     # plot mean flow by wateryear
     ax = fig.add_subplot(223)
+    #ax = plt.subplot2grid((2,3), (1,0), colspan=2)
+    
     wyt = qt.index + timedelta(days=92)
     qwy = pd.Series(index=wyt, data=qt.values)
     qa = qwy.resample('Y').mean()
+    qa = qa[:-1] # drop last wateryear (2019) because it is not over
+    
     qa.plot(ax=ax)
     ax.set_ylim(0,)
     ax.grid(True)
-    ax.set_xticks(pd.date_range(start='1/1/1900', end='1/1/2020', freq='10Y'))
-    ax.set_xlim(qt.index[0], qt.index[-1])
-    ax.set_xlabel('Date')
+    ax.set_xticks(pd.date_range(start='1/1/1900', end='1/1/2020', freq='10Y'))    
+    ax.set_xlim(qt.index[0], pd.datetime(2020,1,1))
+    #ax.set_xlim(pd.datetime(1900,1,1), pd.datetime(2020,1,1))
+    ax.set_xlabel('Year')
     ax.text(.05,.15, '(b) Annual Mean Flow by Wateryear', fontweight='bold', transform=ax.transAxes)
     ax.set_ylabel('Flow $(m^{3}s^{-1})$')
     

@@ -36,12 +36,12 @@ testing = False
 
 if testing == True:
     dt0 = datetime(1900,1,1)
-    dt1 = datetime(2017,12,31)
+    dt1 = datetime(2018,12,31)
     df = df.loc[['puyallup'],:]
     save_data = False
 else:
     dt0 = datetime(1900,1,1)
-    dt1 = datetime(2017,12,31)
+    dt1 = datetime(2018,12,31)
     df = df.loc[['skagit', 'snohomish', 'puyallup', 'deschutes', 'skokomish'],:]
     save_data = True
     # and create directory for output, if needed
