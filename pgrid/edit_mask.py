@@ -162,7 +162,6 @@ for bnum in bdict.keys():
         addButtonLabel(ax2, xbc, ybc, bnum, Bdict[bnum], tcol=inactive_color)
 
 plt.show()
-pfun.topfig()
 
 # polygon functions
 def get_indices_in_polygon(plon_poly, plat_poly, NR, NC):

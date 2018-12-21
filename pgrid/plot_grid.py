@@ -164,4 +164,3 @@ ds.close()
 ds0.close()
 
 plt.show()
-pfun.topfig()

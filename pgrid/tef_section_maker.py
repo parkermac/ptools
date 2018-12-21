@@ -159,7 +159,6 @@ for bnum in bdict.keys():
         addButtonLabel(ax2, xbc, ybc, bnum, Bdict[bnum], tcol=inactive_color)
 
 plt.show()
-pfun.topfig()
 
 # polygon functions
 def remove_poly():    

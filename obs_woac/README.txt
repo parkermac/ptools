@@ -7,39 +7,62 @@ Input: ptools_data/woac/raw/WOAC_data_9-7-2018_dataToParker.xlsx
 
 Output: ptools_data/woac/sta_df.p
 		ptools_data/woac/Casts_2017.p
-		ptools_output/woac/station_map.png
 		
 sta_df is a DataFrame with info like:
-        Latitude Longitude
-Station                   
-W5       47.8799  -122.372
-W7       47.9831  -122.622
-W28      47.7054  -122.453
+        Station        Cruise Latitude Longitude             Datetime
+castnum                                                              
+0.0          28       CAB1065  47.7108  -122.454  2017-04-06 17:27:39
+1.0         28b       CAB1065  47.7042  -122.452  2017-04-06 18:18:01
+2.0           5       CAB1065   47.885  -122.373  2017-04-06 21:24:59
+3.0           7       CAB1065  47.9847  -122.623  2017-04-06 23:18:31
+4.0           8       CAB1065  47.8989   -122.61  2017-04-07 00:24:22
+5.0          12       CAB1065  47.4266  -123.108  2017-04-07 19:29:19
+6.0         402       CAB1065  47.3571  -123.021  2017-04-07 21:38:10
+7.0          11       CAB1065   47.373  -123.131  2017-04-07 22:30:12
+8.0          13       CAB1065  47.5494  -123.004  2017-04-07 00:05:10
 
-Casts is a DataFrame with data like:
-      Cruise       Date       Time  Longitude  ...    Omega Ar     DO (uM)       Z (m)  ncast
-0    CAB1065 2017-04-06   21:14:35 -122.37086  ...    0.703018  228.296664 -240.105631      0
-1    CAB1065 2017-04-06   21:18:06 -122.37211  ...         NaN  229.989032 -150.736001      0
-2    CAB1065 2017-04-06   21:19:43 -122.37268  ...    0.801193  254.515428 -110.611965      0
-3    CAB1065 2017-04-06   21:21:21 -122.37311  ...         NaN  264.230826  -81.203427      0
-4    CAB1065 2017-04-06   21:22:59 -122.37269  ...         NaN  264.173253  -50.635715      0
-5    CAB1065 2017-04-06   21:24:08 -122.37247  ...         NaN  272.537131  -30.371035      0
-6    CAB1065 2017-04-06   21:25:06 -122.37276  ...         NaN  279.368144  -20.883421      0
-7    CAB1065 2017-04-06   21:24:59 -122.37271  ...    0.971966  279.066720  -20.763447      0
-8    CAB1065 2017-04-06   21:26:19 -122.37327  ...    1.433686  332.598505  -11.275388      0
-9    CAB1065 2017-04-06   21:27:20 -122.37362  ...         NaN  386.030887   -5.545058      0
-10   CAB1065 2017-04-06   21:28:15 -122.37372  ...         NaN  396.535737   -2.485974      0
-11   CAB1065 2017-04-06   21:28:08 -122.37374  ...    1.943827  396.939987   -2.461184      0
-12   CAB1065 2017-04-06   23:11:33 -122.62151  ...    1.068248  270.851023  -90.494133      1
-13   CAB1065 2017-04-06   23:13:58 -122.62246  ...         NaN  275.819606  -50.747273      1
-14   CAB1065 2017-04-06   23:15:45 -122.62286  ...         NaN  285.464407  -30.306311      1
+Note that the castnum index is a much cleaner was of identifying casts, and this carries over to the data in Casts_2017.
+
+Note that when I extract casts from the model I append 'WOAC' to the station name (LiveOcean/x_cast).
+
+Casts_2017 is a DataFrame with data like:
+      Cruise  Longitude  Latitude Station  Pressure (dbar)   ...     Omega Ar     DO (uM)       Z (m)            Datetime  castnum
+0    CAB1065 -122.45541  47.70757      28          183.761   ...     0.833404  252.984516 -182.142790 2017-04-06 17:20:07      0.0
+1    CAB1065 -122.45550  47.70774      28          184.378   ...          NaN  252.806723 -182.754081 2017-04-06 17:20:47      0.0
+2    CAB1065 -122.45471  47.71024      28          144.985   ...     0.849518  258.225945 -143.721699 2017-04-06 17:25:41      0.0
+3    CAB1065 -122.45382  47.71103      28          117.492   ...          NaN  261.564385 -116.475996 2017-04-06 17:27:37      0.0
+4    CAB1065 -122.45382  47.71103      28          117.598   ...          NaN  261.545452 -116.581049 2017-04-06 17:27:38      0.0
+5    CAB1065 -122.45382  47.71104      28          117.562   ...          NaN  261.480525 -116.545371 2017-04-06 17:27:39      0.0
+6    CAB1065 -122.45382  47.71104      28          117.514   ...          NaN  261.446276 -116.497799 2017-04-06 17:27:39      0.0
+7    CAB1065 -122.45422  47.71141      28          113.366   ...     0.910803  261.921844 -112.386794 2017-04-06 17:30:06      0.0
+8    CAB1065 -122.45422  47.71197      28           80.693   ...     0.873082  263.524334  -80.002335 2017-04-06 17:31:39      0.0
+9    CAB1065 -122.45408  47.71254      28           51.645   ...     0.779552  262.735246  -51.206563 2017-04-06 17:33:14      0.0
+10   CAB1065 -122.45402  47.71294      28           29.944   ...     0.779128  265.136759  -29.691353 2017-04-06 17:34:26      0.0
+11   CAB1065 -122.45306  47.70394     28b           20.972   ...     0.795994  266.878131  -20.795522 2017-04-06 18:15:33      1.0
+12   CAB1065 -122.45266  47.70409     28b           10.321   ...     0.882316  291.453175  -10.234414 2017-04-06 18:16:55      1.0
 and the full list of columns is:
-['Cruise', 'Date', 'Time', 'Longitude', 'Latitude', 'Station',
-       'Pressure (dbar)', 'Temp. (deg C)', 'Salinity', 'Sigma (kg m-3)',
-       'DO Flag', 'NO3 (uM)', 'NO2 (uM)', 'NH4 (uM)', 'Chl (ug L-1)',
-       'TA1 (umol kg-1)', 'DIC1 (umol kg-1)', 'TA1 Flag', 'DIC1 Flag',
-       'TA2 (umol kg-1)', 'DIC2 (umol kg-1)', 'TA2 Flag', 'DIC2 Flag', 'pH',
-       'pCO2 (uatm)', 'CO2 (umol kg-1)', 'HCO3- (umol kg-1)',
-       'CO3-- (umol kg-1)', 'Omega Ca', 'Omega Ar', 'DO (uM)', 'Z (m)', 'ncast']
+['Cruise', 'Longitude', 'Latitude', 'Station', 'Pressure (dbar)',
+       'Temp. (deg C)', 'Salinity', 'Sigma (kg m-3)', 'DO Flag', 'NO3 (uM)',
+       'NO2 (uM)', 'NH4 (uM)', 'Chl (ug L-1)', 'TA1 (umol kg-1)',
+       'DIC1 (umol kg-1)', 'TA1 Flag', 'DIC1 Flag', 'TA2 (umol kg-1)',
+       'DIC2 (umol kg-1)', 'TA2 Flag', 'DIC2 Flag', 'pH', 'pCO2 (uatm)',
+       'CO2 (umol kg-1)', 'HCO3- (umol kg-1)', 'CO3-- (umol kg-1)', 'Omega Ca',
+       'Omega Ar', 'DO (uM)', 'Z (m)', 'Datetime', 'castnum']
 
-Issue: because I define casts as having distinct Stations and Dates, it is possible that some casts will be cut into two parts becasue they extended over UTC midnight.  Does this matter?
+======================================================================
+* station_map.py
+
+Input: ptools_data/woac/sta_df.p
+
+Output: ptools_output/woac/station_map.png
+
+======================================================================
+* plot_casts.py
+
+Input:	ptools_data/woac/sta_df.p
+		ptools_data/woac/Casts_2017.p
+		LiveOcean_output/cast/cas4_v2_lo6biom/WOAC[Station]_[YYYY.MM.DD].nc
+
+Output: a plot or plots
+
+
