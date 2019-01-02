@@ -26,7 +26,9 @@ import seawater
 # where the data is, and where results will be stored
 dir0 = '../../ptools_data/woac/'
 
-a_raw = pd.read_excel(dir0 + 'raw/WOAC_data_9-7-2018_dataToParker.xlsx',
+#raw_fn = 'WOAC_data_9-7-2018_dataToParker.xlsx'
+raw_fn = 'WOAC_data_12-11-2018_dataToParker.xlsx'
+a_raw = pd.read_excel(dir0 + 'raw/' + raw_fn,
     parse_dates = ['Date_collected', 'Time_collected'])
     
 # keep only selected columns

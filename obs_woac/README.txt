@@ -63,6 +63,7 @@ Input:	ptools_data/woac/sta_df.p
 		ptools_data/woac/Casts_2017.p
 		LiveOcean_output/cast/cas4_v2_lo6biom/WOAC[Station]_[YYYY.MM.DD].nc
 
-Output: a plot or plots
+Output: one plot for each station in ptools_output/woac/ e.g. CAB1065_1_2017.04.09.png
+		meaning [Cruise]_[Station]_[YYYY.MM.DD].png
 
 
