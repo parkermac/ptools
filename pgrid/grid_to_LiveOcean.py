@@ -55,7 +55,7 @@ if False:
 else:
     # new 30-layer grid
     print('WARNING: using 30 layer grid!!')
-    shutil.copyfile(Ldir['data'] + 'grids/S_COORDINATE_INFO_2.csv',
+    shutil.copyfile(Ldir['data'] + 'grids/S_COORDINATE_INFO_3.csv',
                     out_dir + 'S_COORDINATE_INFO.csv')
 
 # create the S.mat file

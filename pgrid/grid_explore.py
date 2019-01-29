@@ -255,7 +255,26 @@ while flag_get_ginput:
             print('Volume inside polygon = %0.1f km3' % (vp/1e9) )
             print('Area inside polygon = %0.1f km2' % (ap/1e6) )
             print('Mean Depth inside polygon = %0.1f m' % (hp) )
+            #inp = input('Push Return to continue\n')
+            
+            # custom request 1/11/2019 area below 120 ft = 36.6 m
+            hm = h.copy()
+            dam = da.copy()
+            hm[h < 36.576] = np.nan
+            dam[h < 36.576] = np.nan
+            dap = dam[ji_rho_in[:,0], ji_rho_in[:,1]]
+            dvp = hm[ji_rho_in[:,0], ji_rho_in[:,1]] * da[ji_rho_in[:,0], ji_rho_in[:,1]]
+            ap = np.nansum(dap)
+            vp = np.nansum(dvp)
+            hp = vp/ap
+            print('')
+            print('CUSTOM: Values with h >= 36.576 m')
+            print('- all values are for unmasked area -')
+            print('Volume inside polygon = %0.1f km3' % (vp/1e9) )
+            print('Area inside polygon = %0.1f km2' % (ap/1e6) )
+            print('Mean Depth inside polygon = %0.1f m' % (hp) )
             inp = input('Push Return to continue\n')
+            
             remove_poly()
             ax1.set_title('PAUSED')
         elif (bdict[nb]=='polySave') and not flag_start:
