@@ -113,17 +113,24 @@ set_rc(fs, lw, mks)
 
 fig = plt.figure(figsize=(18,8))
 ax = fig.add_subplot(111)
-df_2025.plot(y='z',
+
+# edits 2019.01.29 PM
+LW = .5
+df_2017.loc[:,'zm'] = f2m * df_2017['z'].values
+df_2025.loc[:,'zm'] = f2m * df_2025['z'].values
+
+df_2025.plot(y='zm',
         legend=False, style='-r', ax=ax, lw=lwt, grid=True)
-df_2017.plot(y='z', title=('Predicted Tide Height (feet) ' + city),
+df_2017.plot(y='zm', title=('Predicted Tide Height (m) ' + city),
         legend=False, style='-b', ax=ax, lw=lwt, grid=True, alpha=.5)
         
 ax.text(.23,.11,'2017', color='b',
-    transform=ax.transAxes, fontweight='bold', fontsize=26)
+    transform=ax.transAxes, fontweight='bold', fontsize=26, alpha=.5)
 ax.text(.27,.03,'2025', color='r',
     transform=ax.transAxes, fontweight='bold', fontsize=26)
 
-ax.set_xlabel('Day of Year')    
+ax.set_xlabel('Day of Year')
+ax.set_xlim(0,365)
 plt.show()
 
 # RC CLEANUP
