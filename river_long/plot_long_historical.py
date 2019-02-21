@@ -16,13 +16,13 @@ out_dir0 = '../../ptools_output/'
 # Load a dataframe with info for selected rivers
 ri_fn = '../ssmsp/river_info.csv'
 df = pd.read_csv(ri_fn, index_col='rname')
-df = df.loc[['skagit', 'snohomish', 'puyallup', 'deschutes', 'skokomish'],:]
-#df = df.loc[['skagit'],:]
+#df = df.loc[['skagit', 'snohomish', 'puyallup', 'deschutes', 'skokomish'],:]
+df = df.loc[['skokomish'],:]
 
 # where the extracted data is
 out_dir = out_dir0 + 'river_long/'
 
-plt.close('all')
+#plt.close('all')
 
 for rn in df.index:
     fig = plt.figure(figsize=(16,8))
@@ -30,8 +30,8 @@ for rn in df.index:
     qt = pd.read_pickle(out_dir + rn + '.p')
     
     # drop bad data from later years of Skokomish - they stopped reporting high flow events
-    if rn == 'skokomish':
-        qt = qt[qt.index[0]:pd.datetime(2008,12,31)]
+    # if rn == 'skokomish':
+    #     qt = qt[qt.index[0]:pd.datetime(2008,12,31)]
 
     # plot daily flow
     ax = fig.add_subplot(221)
@@ -88,7 +88,7 @@ for rn in df.index:
     ax.set_ylabel('Flow $(m^{3}s^{-1})$')
     ax.grid(True)
     
-    plt.savefig(out_dir + 'Historical_' + rn + '.png')
+    #plt.savefig(out_dir + 'Historical_' + rn + '.png')
     
 plt.show()
     

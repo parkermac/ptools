@@ -22,7 +22,7 @@ if rivp not in sys.path:
 import river_class
 reload(river_class)
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 
@@ -40,11 +40,11 @@ df = pd.read_csv(ri_fn, index_col='rname')
 
 #%% set time range
 
-testing = True # custom settings
+testing = False # custom settings
 
 if testing == True:
-    dt0 = datetime(2017,1,1)
-    dt1 = datetime(2017,12,31)
+    dt0 = datetime(2013,1,1)
+    dt1 = datetime(2019,2,14)
     #df = df.loc[['skokomish', 'nf_skokomish', 'sf_skokomish', 'fraser']]
     #df = df.loc[['columbia', 'naselle', 'willapa']]
     df = df.loc[['fraser']]
@@ -52,14 +52,14 @@ if testing == True:
     # and create directory for output, if needed
     out_dir00 = Ldir['parent'] + 'ptools_output/'
     out_dir0 = out_dir00 + 'river/'
-    out_dir = out_dir0 + 'all_2017/'
+    out_dir = out_dir0 + 'ec_testing_2019.02.17/'
     Lfun.make_dir(out_dir00, clean=False)
     Lfun.make_dir(out_dir0, clean=False)
     Lfun.make_dir(out_dir, clean=False)
 
 else:
     dt0 = datetime(1980,1,1)
-    dt1 = datetime(2015,12,31)
+    dt1 = datetime(2018,12,31)
     # and create directory for output, if needed
     out_dir0 = Ldir['data'] + 'rivers/'
     out_dir = out_dir0 + 'Data_historical/'
@@ -83,6 +83,8 @@ if get_usgs:
                 qt_dict[rn] = riv.qt
 
 #%% get EC data, a year at a time
+roms_fn = 'cas4_v2_2017.01.01_2018.12.31.p'
+roms_qt = pd.read_pickle(Ldir['LOo'] + 'river/' + roms_fn)
 if get_ec:
     for rn in df.index:
         rs = df.loc[rn] # a series with info for this river
@@ -92,15 +94,23 @@ if get_ec:
                 print('year = ' + str(year))
                 this_days = (datetime(year,1,1), datetime(year,12,31))
                 riv = river_class.River(rn, rs)
-                if year >= 2015:
+                if year >= 2019:
                     print(' - getting current EC data')
                     riv.get_ec_data(this_days)
-                elif year <= 2014:
+                    riv.print_info()
+                    sys.stdout.flush()
+                    this_qt = riv.qt
+                elif year in [2017, 2018]:
+                    this_qt = roms_qt.loc[this_days[0]:this_days[1], rn]
+                    this_qt.index = this_qt.index + timedelta(days=0.5)
+                    print(' - getting historical EC data from ' + roms_fn)
+                elif year <= 2016:
                     print(' - getting historical EC data')
                     riv.get_ec_data_historical(year)
-                riv.print_info()
-                sys.stdout.flush()
-                Qt = pd.concat([Qt, riv.qt])
+                    riv.print_info()
+                    sys.stdout.flush()
+                    this_qt = riv.qt
+                Qt = pd.concat([Qt, this_qt])
             if not Qt.empty:
                 qt_dict[rn] = Qt
 
