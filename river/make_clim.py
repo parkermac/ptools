@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 18 13:50:31 2016
-
-@author: PM5
-
 Program to create climatological records for rivers.
 """
 
@@ -35,21 +31,19 @@ out_dir = dir0 + 'Data_clim/'
 Lfun.make_dir(dir0, clean=False)
 Lfun.make_dir(out_dir, clean=False)
 
-#%% create the climatologies
-
+# create the climatologies
+plt.close('all')
 for rn in df.index:
-
+    print('Working on ' + rn)
+    sys.stdout.flush()
     qt = pd.read_pickle(in_dir + rn + '.p')
-
     clm_d = dict()
 
     for day in range(1,367):
         clm_d[day] = qt[qt.index.dayofyear == day].mean()
-
     qtc = pd.Series(clm_d)
-
     # plot if desired
-    if rn in ['skagit']:
+    if rn in ['hamma', 'skokomish']:
         fig = plt.figure(figsize=(15,10))
         ax = fig.add_subplot(111)
         year0 = qt.index[0].year
@@ -61,6 +55,6 @@ for rn in df.index:
         ax.set_title(rn.title())
         ax.set_xlim(0,366)
         ax.set_xlabel('Yearday')
-
     # save climatology to a csv file
     qtc.to_csv(out_dir + rn + '.csv')
+plt.show()

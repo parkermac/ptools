@@ -37,22 +37,21 @@ save_data = True
 
 df = pd.read_csv(ri_fn, index_col='rname')
 
-
 #%% set time range
 
-testing = True # custom settings
+testing = False # custom settings
 
 if testing == True:
-    dt0 = datetime(2008,1,1)
-    dt1 = datetime(2019,2,14)
+    dt0 = datetime(1980,1,1)
+    dt1 = datetime(2018,12,31)
     #df = df.loc[['skokomish', 'nf_skokomish', 'sf_skokomish', 'fraser']]
     #df = df.loc[['columbia', 'naselle', 'willapa']]
-    df = df.loc[['skokomish']]
+    df = df.loc[['hamma', 'skokomish', 'skagit']]
     save_data = True
     # and create directory for output, if needed
     out_dir00 = Ldir['parent'] + 'ptools_output/'
     out_dir0 = out_dir00 + 'river/'
-    out_dir = out_dir0 + 'skok_testing_2019.03.19/'
+    out_dir = out_dir0 + 'skok_testing_2019.03.21/'
     Lfun.make_dir(out_dir00, clean=False)
     Lfun.make_dir(out_dir0, clean=False)
     Lfun.make_dir(out_dir, clean=False)
@@ -60,6 +59,7 @@ if testing == True:
 else:
     dt0 = datetime(1980,1,1)
     dt1 = datetime(2018,12,31)
+    #df = df.loc[['hamma', 'skokomish']]
     # and create directory for output, if needed
     out_dir0 = Ldir['data'] + 'rivers/'
     out_dir = out_dir0 + 'Data_historical/'
@@ -75,35 +75,10 @@ if get_usgs:
     for rn in df.index:
         rs = df.loc[rn] # a series with info for this river
         riv = river_class.River(rn, rs)
-        # +++ new code 2019.03.19 to deal with Skokomish +++
-        if (rn == 'skokomish'):
-            print('+++ combining to form Skokomish River +++')
-            # South Fork
-            rs1 = rs.copy()
-            rs1.usgs = 12060500
-            rs1.ratio=1.4417
-            riv1 = river_class.River(rn, rs1)
-            if pd.notnull(rs.usgs):
-                riv1.get_usgs_data(days)
-                riv1.print_info()
-                sys.stdout.flush()
-            # North Fork
-            rs2 = rs.copy()
-            rs2.usgs = 12059500
-            rs2.ratio=1.0
-            riv2 = river_class.River(rn, rs2)
-            if pd.notnull(rs.usgs):
-                riv2.get_usgs_data(days)
-                riv2.print_info()
-                sys.stdout.flush()
-            riv.qt = riv1.qt + riv2.qt
-            # ++++++++++++++++++++++++++++++++++++++++++++++++++
-        else:
-            if pd.notnull(rs.usgs):
-                riv.get_usgs_data(days)
-                riv.print_info()
-                sys.stdout.flush()
-                
+        if pd.notnull(rs.usgs):
+            riv.get_usgs_data(days)
+            riv.print_info()
+            sys.stdout.flush()
         if not riv.qt.empty:
             qt_dict[rn] = riv.qt
 
@@ -114,7 +89,7 @@ if get_ec:
     for rn in df.index:
         rs = df.loc[rn] # a series with info for this river
         Qt = pd.Series() # initialize a Series to concatenate into
-        if pd.notnull(rs.ec) and rn in ['fraser']:
+        if pd.notnull(rs.ec):# and rn in ['fraser']:
             for year in range(dt0.year, dt1.year + 1):
                 print('year = ' + str(year))
                 this_days = (datetime(year,1,1), datetime(year,12,31))
