@@ -104,8 +104,6 @@ elif model_type == 'Kurapov':
     S_info_dict = {'VTRANSFORM':2, 'VSTRETCHING':4, 'THETA_S':8,
         'THETA_B':3, 'TCLINE':50, 'N':40}
     S = zrfun.get_S(S_info_dict)
-    S['s_rho'] = S['sc_r']
-    S['s_w'] = S['sc_w']
     G = zrfun.get_basic_info(fng, only_G=True)
     fn = fn_list[0]
     ds = nc.Dataset(fn)

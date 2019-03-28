@@ -78,10 +78,6 @@ def get_basic_info(fn, only_G=False, only_S=False, only_T=False):
             S[vv] = ds.variables[vv][:]
         S['N'] = len(S['s_rho']) # number of vertical levels
         
-        # naming hack 2019.03.18
-        S['sc_r'] = S['s_rho']
-        S['sc_w'] = S['s_w']
-        
         return S
     def make_T(ds):
         # get time info

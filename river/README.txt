@@ -74,7 +74,7 @@ Note: The skokomish and hamma fixes work for both historical data and for when
 we get usgs data for run forcing.  But when we are doing a forecast the
 Skokomish has an NWS number and so it does not use the fix.  However, it appears
 that what comes from NWS does not have the problem that the main Skok
-gauge has, so this should be fine.
+gauge has, so this should be fine. [need to check to be sure]
 
 Note: The Hamma Hamma was originally created as 0.4459
 times the Skokomish flow, which has the problem we just solved above.  To fix

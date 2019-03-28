@@ -17,7 +17,7 @@ reload(rfun)
 B = 3e3     # width (m)
 hs = 10     # thickness of shallow layer (m)
 hd = 10     # thickness of deep layer (m)
-nx = 200    # number of steps to initially define a channel
+nx = 500    # number of steps to initially define a channel
 
 # outer
 o_Socn = 30 
