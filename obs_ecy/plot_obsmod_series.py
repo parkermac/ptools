@@ -34,18 +34,19 @@ sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 dir1 = Ldir['parent'] + 'ptools_data/canada/'
 # load processed station info and data
 sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
-sta_df = pd.concat((sta_df, sta_df_ca))
+sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
 year = 2017
 Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
 Casts_ca = pd.read_pickle(dir1 + 'Casts_' + str(year) + '.p')
-Casts = pd.concat((Casts, Casts_ca))
+Casts = pd.concat((Casts, Casts_ca), sort=False)
 
 # +++ load ecology bottle data +++
 Bottles = pd.read_pickle(dir0 + 'Bottles_' + str(year) + '.p')
 # still need to get Canadian bottle data
 
 # specify which model run to use
-Ldir['gtagex'] = 'cas4_v2_lo6biom'
+#Ldir['gtagex'] = 'cas4_v2_lo6biom'
+Ldir['gtagex'] = 'cas5_v3_lo8'
 
 testing = False
 for_web = False # True for plots styled for the validation website
@@ -111,7 +112,10 @@ for station in sta_to_plot:
     Z_list = [0,-10,-30]
 
     # loop over all casts at this station
+    dates = dates[dates.year==year]
+    
     for dd in dates:
+        
 
         #Initialize a DataFrame for this station/date
         bc_columns = ['Station', 'Date', 'Znom', 'Z',
@@ -124,7 +128,7 @@ for station in sta_to_plot:
         bc['Znom'] = Z_list # we save this as a column and as the index, because
                 # later we will need it after we drop the index during
                 # concatenation into Bc.
-        
+    
         # NOTE the brackets around [dd] keep the result as a DataFrame even if
         # we are only pulling out a single row.
         ca = casts.loc[[dd],:]
@@ -145,7 +149,7 @@ for station in sta_to_plot:
                     bc.loc[Zn,vn] = (1-fr)*cv.iloc[int(i0)] + fr*cv.iloc[int(i1)]
             except:
                 pass
-        
+    
         try:
             bo = bottles.loc[[dd],:]
             bo = bo.set_index('Znom')
@@ -178,6 +182,7 @@ for station in sta_to_plot:
         except OSError:
             pass
         Bc = pd.concat((Bc,bc), ignore_index=True, sort=False)
+            
         
 # save the output to disk (only for full set)
 if testing == False:

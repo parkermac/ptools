@@ -1,46 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 16 16:18:09 2016
-
-@author: PM5
-
 Organizational functions for pgrid.
 """
 
-# USER EDIT
-
-gridname = 'cas5'
+# **** USER EDIT ********
+gridname = 'cas6'
+# **** END USER EDIT ****
 
 import os
+import sys
+pth = os.path.abspath('../../LiveOcean/alpha')
+if pth not in sys.path:
+    sys.path.append(pth)
+import Lfun
+Ldir = Lfun.Lstart()
 
-which_home = os.environ.get("HOME") # This works even when called by cron.
-if which_home == '/Users/pm7': # mac version
-    dir0 = os.environ.get('HOME') + '/Documents/'
-elif which_home == '/home/parker': # fjord version
-    dir0 = '/data1/parker/'
-else:
-    print('Trouble filling out environment variables')
+pth = os.path.abspath('../../LiveOcean/plotting')
+if pth not in sys.path:
+    sys.path.append(pth)
 
+
+dir0 = Ldir['parent']
 pgdir = dir0 + 'ptools_output/pgrid/'
-
 if 'aestus' in gridname:
     ri_dir = dir0 + 'ptools_output/river/analytical/'
 else:
     ri_dir = dir0 + 'ptools_output/river/pnw_all_2016_07/'
-
-# END USER EDIT
-
-import os
-import sys
-alp = os.path.abspath(dir0 +'LiveOcean/alpha')
-if alp not in sys.path:
-    sys.path.append(alp)
-import Lfun
-Ldir = Lfun.Lstart()
-
-plp = os.path.abspath(dir0 +'LiveOcean/plotting')
-if plp not in sys.path:
-    sys.path.append(plp)
     
 def default_choices(Gr, wet_dry=False):
     # Default choices (can override in each case)    
@@ -57,13 +42,6 @@ def default_choices(Gr, wet_dry=False):
     # the fact that mean sea level is somewhat higher than NAVD88.
     dch['use_z_offset'] = True
     dch['z_offset'] = -1.06
-    # Set do_cell_average to True for grids that are much
-    # coarser than the bathy files.
-    # It means we average all data inside a rho grid cell to get depth there,
-    # instead of using interpolation.
-    # We also make a mask_rho that is the average of all values in a cell
-    # using 1=water, 0=land.
-    dch['do_cell_average'] = False
     # specify topography files to use
     dch['t_dir'] = Gr['dir0'] + 'ptools_data/topo/'    
     # list of topo files: coarsest to finest
@@ -77,9 +55,6 @@ def default_choices(Gr, wet_dry=False):
     dch['maskfiles'] = []
     # set z position of INITIAL dividing line (positive up)
     dch['z_land'] = 0        
-    # Set alternate z position of initial dividing line; could be
-    # used for example when dch['do_cell_average'] = True.
-    dch['z_land_alt'] = 0.1
     # Set unmask_coast to True to unmask all cells crossed by the coastline.
     if dch['wet_dry'] == True:
         dch['unmask_coast'] = True
@@ -90,19 +65,6 @@ def default_choices(Gr, wet_dry=False):
     dch['remove_islands'] = True
 
     # SMOOTHING
-    if dch['wet_dry'] == True:
-        # don't use fjord_cliff_edges with wet_dry because it will mess
-        # with intertidal zones
-        dch['fjord_cliff_edges'] = False
-    else:
-        # With fjord_cliff_edges True the smoothing deviates from its
-        # usual volume-conserving nature when it is next to a
-        # masked region, and instead adjusts the slope
-        # by preferentially deepening at the coast.  This does a much better job of
-        # preserving thalweg depth in channels like Hood Canal.
-        dch['fjord_cliff_edges'] = False
-        # As of 2017.10.28 I am moving away from this.
-    # Set the minimum depth.
     dch['use_min_depth'] = True # now I think this is always a good idea
     dch['min_depth'] = 4 # meters (positive down)
         

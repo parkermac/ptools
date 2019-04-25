@@ -8,7 +8,15 @@ By using imshow() this is MUCH faster than anything I achieved
 using pcolormesh().  E.g with an 800x500 grid it was still
 pleasant to use, whereas the old version was unworkable.
 
+Now accepts an optional command line argument to set the
+carving depth "dval." 2019.04.19
+
 """
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--dval', nargs='?', default=5, type=float)
+args = parser.parse_args()
 
 import gfun
 from importlib import reload
@@ -34,11 +42,8 @@ import shutil
 import Lfun
 Ldir = Lfun.Lstart()
 
-# load the default choices
-#dch = pickle.load(open(Gr['gdir'] + 'choices.p', 'rb'))
-
 # set the depth to impose during Depth Editing
-dval = 5. # m (positive down)
+dval = args.dval # m (positive down)
 
 flag_testing = False
 if not flag_testing:
@@ -209,7 +214,7 @@ plat_poly = []
 while flag_get_ginput:
 
     # get ginput, note that you can click with any key
-    a = plt.ginput(n=1, timeout=-1)
+    a = plt.ginput(n=1, timeout=0)
     # returns a list of tuples - of length 1
     b = np.array(a)
     b = np.round(b).astype(int)

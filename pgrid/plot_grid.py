@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 16 13:07:01 2016
-
-@author: PM5
+Plot grid to have a look at it. Accepts an optional command line argument
+to look at a grid other than the one set in gfun.pu
 """
-
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -27,12 +25,25 @@ import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
 
-# select grid file
+# **** USER CHOICES ********
 
-using_old_grid = False
+# show plot of markers for rho, u, v grids with masking
+flag_show_grids = False
+
+# show resolution
+flag_show_res = True
+
+# show bathymetry on some sections
+flag_show_sections = False
+
 # Set this to True to look at grids we have already created,
 # e.g. ones currently in use for LiveOcean.
+using_old_grid = False
 # Set it to False when interacting with grids from pgrid_output.
+
+# **** END USER CHOICES ****
+
+# select grid file
 
 if using_old_grid==True:
     fn = gfun.select_file(Gr, using_old_grid=True)
@@ -59,26 +70,21 @@ if using_old_grid==False:
     z0m = np.ma.masked_where(mask_rho == 0, z0)
 
 # plotting
-plt.close()
+plt.close('all')
 
 # set number of columns for plot 
 NC = 1 # first guess
-flag_show_grids = False
 if flag_show_grids:
     NC += 1
     icg = NC       
-flag_show_res = True
 if flag_show_res:
     NC += 1
     icr = NC
 # this has to come last in the lineup
-flag_show_sections = False
 if flag_show_sections:
     NC += 1
     ics = NC
 fig = plt.figure(figsize=(8*NC,8))
-
-#ax_grids = fig.add_subplot(1,NC,2)
 
 ax1 = fig.add_subplot(1,NC,1)
 cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis

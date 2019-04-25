@@ -182,7 +182,7 @@ tef_list = []
 while flag_get_ginput:
 
     # get ginput, note that you can click with any key
-    a = plt.ginput(n=1, timeout=-1)
+    a = plt.ginput(n=1, timeout=0)
     # returns a list of tuples - of length 1
     b = np.array(a)
     b = np.round(b).astype(int)

@@ -33,13 +33,14 @@ reload(ofn)
 dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 # select model run
-gtagex = 'cas4_v2_lo6biom'
+#gtagex = 'cas4_v2_lo6biom'
+gtagex = 'cas5_v3_lo8'
 year  = 2017
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 #==============================================
 testing = False
-for_web = True # plots styled for the validation website
+for_web = False # plots styled for the validation website
 
 if testing==True:
     sn_list = ['Seattle', 'Tacoma']
@@ -78,7 +79,7 @@ obs_std_list = []
 
 sn_lonlat_dict = dict()
 
-plt.close('all')
+#plt.close('all')
 for name in sn_list:
 
     # load observational data

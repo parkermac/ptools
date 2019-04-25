@@ -40,11 +40,14 @@ def qa_calc(Qin, Qout, Sin, Sout, I):
     
     return q1, q2, q3, q4, a21, a34
 
-def c_calc(csp, cdp, info_tup, riv=0, ocn=0, riv2=0):
+def c_calc(csp, cdp, info_tup, riv=0, ocn=0, riv2=0, do_age=False):
     # unpack some parameters
     NS, NX, NT, dt, dvs, dvd, q1, q2, q3, q4, a21, a34, o_Qr, I = info_tup
     NTs = int(NT/NS) # save interval, in timesteps
-    
+    if do_age:
+        # arrays for age calculation
+        ccsp = csp.copy()
+        ccdp = cdp.copy()
     # arrays to save in
     csa = np.nan * np.ones((NS,NX-1))
     cda = np.nan * np.ones((NS,NX-1))
@@ -66,6 +69,9 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0, riv2=0):
         # boundary conditions
         c4 = np.concatenate(([riv], csp[:-1])) # river
         c1 = np.concatenate((cdp[1:], [ocn])) # ocean
+        if do_age:
+            cc4 = np.concatenate(([riv], ccsp[:-1])) # river
+            cc1 = np.concatenate((ccdp[1:], [ocn])) # ocean
         # save time series entries
         t_vec[tt] = tt*dt
         c_tot[tt] = np.sum(csp*dvs + cdp*dvd)
@@ -77,6 +83,12 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0, riv2=0):
         # update fields
         cs = csp + (dt/dvs)*(q4*c4 + a21*q1*cdp - a34*q4*csp - q2*csp + o_Qr*riv2*riv_mask)
         cd = cdp + (dt/dvs)*(q1*c1 - a21*q1*cdp + a34*q4*csp - q3*cdp)
+        if do_age:
+            # ageing versions
+            ccs = ccsp + (dt/dvs)*(q4*cc4 + a21*q1*ccdp - a34*q4*ccsp - q2*ccsp + o_Qr*riv2*riv_mask) + dt*csp/86400
+            ccd = ccdp + (dt/dvs)*(q1*cc1 - a21*q1*ccdp + a34*q4*ccsp - q3*ccdp) + dt*cdp/86400
+            ccsp = ccs.copy()
+            ccdp = ccd.copy()
         csp = cs.copy()
         cdp = cd.copy()
         if (np.mod(tt, NTs) == 0) and tta < NS:
@@ -85,8 +97,12 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0, riv2=0):
             cda[tta,:] = cd
             tta += 1
     # work on time series
-    T = t_vec/86400 # time axins in days
+    T = t_vec/86400 # time axis in days
     # pack things
     f_tup = (T, c_tot, f1_vec, f2_vec, f3_vec, f4_vec, friv2_vec)
     
-    return csa, cda, f_tup
+    if do_age:
+        age_tup = (cs, cd, ccs, ccd)
+        return csa, cda, f_tup, age_tup
+    else:
+        return csa, cda, f_tup

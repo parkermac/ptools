@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 16 08:36:02 2016
-
-@author: PM5
-
 Code to create an initial mask for a grid.
-
 """
 
 from importlib import reload
 import gfun; reload(gfun)
 Gr =gfun.gstart()
-import pfun
 
 import numpy as np
 import shutil
@@ -82,15 +76,6 @@ if mask_rho_orig.all() == 1:
         print(np.sum(m))
         print(np.sum(~m))
         
-elif dch['do_cell_average']:
-    # This branch applies when we created the grid using
-    # do_cell_ave = True
-    print('Original mask not all ones')
-    #m = mask_rho_orig == 0 # seems OK (in low res)
-    #m = mask_rho_orig < 1 # gets rid of a lot of water (in low res)
-    #m = mask_rho_orig < .5 # OK but still removes a lot of PS
-    m = mask_rho_orig < dch['z_land_alt'] # 0.1 maybe best?
-
 # unmask the coast
 if dch['unmask_coast']:
     # This unmasks it in the places where the

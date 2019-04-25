@@ -26,7 +26,6 @@ import pickle
 import Lfun
 import zfun
 
-#%%
 Lfun.make_dir(Gr['gdir'], clean=True)
 
 fn = 'grid_m00_r00_s00_x00.nc'
@@ -36,43 +35,12 @@ print(out_fn)
 
 dch = gfun.default_choices(Gr)
 
-#%% GRID DEFINITIONS
+# GRID DEFINITIONS
 
 # vectors to define the plaid grid
 # start with cell corners (like an extended psi grid)
-
-if Gr['gridname'] == 'big1':
-    # the next evolution: big domain, high-res
-    dch =  gfun.default_choices(Gr, wet_dry=True) # override for wet_dry
-    dch['z_land'] = 2
-    maxres = 4000
-    medres = 1000
-    minres = 300
-    lon_list = [-130, -124.5, -123.5, -122]
-    x_res_list = [maxres, medres, minres, minres]
-    lat_list = [42, 46, 47, 49, 50, 52]
-    y_res_list = [maxres, medres, minres, minres, medres, maxres]
-    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
-                                        lat_list, y_res_list)
-    dch['nudging_edges'] = ['north', 'south', 'west']
-
-if Gr['gridname'] == 'big2':
-    # the next-next evolution: big domain, med-high-res
-    dch =  gfun.default_choices(Gr, wet_dry=True) # override for wet_dry
-    dch['z_land'] = 2
-    dch['min_depth'] = -5 # negative means land
-    maxres = 4000
-    medres = 1000
-    minres = 600
-    lon_list = [-130, -124.5, -123.5, -122]
-    x_res_list = [maxres, medres, minres, minres]
-    lat_list = [42, 46, 47, 49, 50, 52]
-    y_res_list = [maxres, medres, minres, minres, medres, maxres]
-    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
-                                        lat_list, y_res_list)
-    dch['nudging_edges'] = ['north', 'south', 'west']
     
-elif Gr['gridname'] == 'sal0':
+if Gr['gridname'] == 'sal0':
     # start of a salish nest grid
     aa = [-124, -122, 47, 49]
     res = 300 # target resolution (m)
@@ -81,15 +49,6 @@ elif Gr['gridname'] == 'sal0':
              'psdem/PS_183m.nc',
              'ttp_patch/TTP_Regional_27m_patch.nc']
     dch['nudging_edges'] = ['north', 'west']
-    
-elif Gr['gridname'] == 'hc0':
-    # mid Hood Canal nest
-    aa = [-123, -122.55, 47.5, 47.9]
-    res = 50 # target resolution (m)
-    plon_vec, plat_vec = gfu.simple_grid(aa, res)
-    dch['t_list'] = ['psdem/PS_27m.nc']
-    dch['nudging_edges'] = ['north', 'west']
-    dch['nudging_days'] = (0.1, 1.0)
 
 elif Gr['gridname'] == 'hc1':
     # mid Hood Canal nest
@@ -99,27 +58,8 @@ elif Gr['gridname'] == 'hc1':
     dch['t_list'] = ['psdem/PS_27m.nc']
     dch['nudging_edges'] = ['north', 'west']
     dch['nudging_days'] = (0.1, 1.0)
-             
-elif Gr['gridname'] == 'cas1': # An extended version of cascadia1
-    maxres = 5000
-    medres = 3000
-    minres = 1500
-    lon_list = [-127.4, -126, -124, -122]
-    x_res_list = [maxres, medres, minres, minres]
-    lat_list = [42, 47.9, 49, 50]
-    y_res_list = [medres, minres, minres, medres]
-    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
-                                        lat_list, y_res_list)
-    dch['do_cell_average'] = True
-    dch['nudging_edges'] = ['south', 'west']
-    
-elif Gr['gridname'] == 'cas2': # Another extended version of cascadia1
-    aa = [-127.4, -122, 42, 50]
-    res = 900 # target resolution (m)
-    plon_vec, plat_vec = gfu.simple_grid(aa, res)
-    dch['nudging_edges'] = ['south', 'west']
 
-elif Gr['gridname'] == 'cas3': # a stretched MoSSea-like grid
+elif Gr['gridname'] == 'cas3': # a stretched MoSSea-like grid, became cas4/5
     maxres = 1500
     minres = 500
     lon_list = [-127.4, -124, -122]
@@ -131,6 +71,20 @@ elif Gr['gridname'] == 'cas3': # a stretched MoSSea-like grid
     dch['nudging_edges'] = ['south', 'west']
     # new: a list of good masks to work from
     dch['maskfiles'] = ['cas2/grid_m05_r01_s01_x01.nc', 'sal0/grid_m06_r03_s05_x02.nc']
+
+elif Gr['gridname'] == 'cas6': # an extended version of the excellent cas4/5
+    maxres = 1500
+    minres = 500
+    extres = 3000
+    lon_list = [-130, -127.4, -124, -122]
+    x_res_list = [extres, maxres, minres, minres]
+    lat_list = [42, 47, 49, 50.3, 52]
+    y_res_list = [maxres, minres, minres, maxres, extres]
+    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+    dch['nudging_edges'] = ['north', 'south', 'west']
+    # new: a list of good masks to work from
+    dch['maskfiles'] = ['cas5/grid_m05_r01_s02_x02.nc']
 
 elif Gr['gridname'] == 'aestus1': # idealized model
     lon_list = [-1, 0, 1, 2, 3]
@@ -168,60 +122,22 @@ if dch['analytical']==True:
         z[mask] = zestuary[mask]    
 else:
     # add bathymetry automatically from files
-    if dch['do_cell_average']:
-        # m is the start of a mask: 1=water, 0=land
-        m = np.nan * lon
-        for t_file in dch['t_list']:
-            t_fn = dch['t_dir'] + t_file
-            print('\nOPENING BATHY FILE: ' + t_file)
-            tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
-            if isinstance(tz, np.ma.masked_array):
-                tz1 = tz.data
-                tz1[tz.mask==True] = np.nan
-                tz = tz1
-            # Apply the offset here instead of at the end because it matters
-            # for the estimated mask field.
-            if dch['use_z_offset']:
-                tz = tz + dch['z_offset']
-            tm = np.ones_like(tz)
-            tm[tz>0] = 0.
-            # average in grid cells
-            xi0, xi1, xf = zfun.get_interpolant(tlon_vec,plon_vec, extrap_nan=True)
-            yi0, yi1, yf = zfun.get_interpolant(tlat_vec,plat_vec, extrap_nan=True)
-            z_part = np.nan * np.ones((NR,NC))
-            m_part = np.nan * np.ones((NR,NC))
-            tNR, tNC = tz.shape
-            itx = np.arange(tNC)
-            jty = np.arange(tNR)
-            for ii in range(NC):
-                for jj in range(NR):
-                    ix = itx[xi0==ii]
-                    jy = jty[yi0==jj]
-                    if ix.size>0 and jy.size>0:
-                        z_part[jj, ii] = np.nanmean(tz[jy[0]:jy[-1], ix[0]:ix[-1]])
-                        m_part[jj, ii] = np.nanmean(tm[jy[0]:jy[-1], ix[0]:ix[-1]])
-                    else:
-                        pass
-            # put good values of z_part in z
-            z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-            m[~np.isnan(m_part)] = m_part[~np.isnan(m_part)]
-    else:
-        # m is the start of a mask: 1=water, 0=land
-        m = np.ones_like(lon)
-        for t_file in dch['t_list']:
-            t_fn = dch['t_dir'] + t_file
-            print('\nOPENING BATHY FILE: ' + t_file)
-            tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
-            if isinstance(tz, np.ma.masked_array):
-                tz1 = tz.data
-                tz1[tz.mask==True] = np.nan
-                tz = tz1
-            tlon, tlat = np.meshgrid(tlon_vec, tlat_vec)
-            z_part = zfun.interp2(lon, lat, tlon, tlat, tz)
-            # put good values of z_part in z
-            z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
-        if dch['use_z_offset']:
-            z = z + dch['z_offset']
+    # m is the start of a mask: 1=water, 0=land
+    m = np.ones_like(lon)
+    for t_file in dch['t_list']:
+        t_fn = dch['t_dir'] + t_file
+        print('\nOPENING BATHY FILE: ' + t_file)
+        tlon_vec, tlat_vec, tz = gfu.load_bathy_nc(t_fn)
+        if isinstance(tz, np.ma.masked_array):
+            tz1 = tz.data
+            tz1[tz.mask==True] = np.nan
+            tz = tz1
+        tlon, tlat = np.meshgrid(tlon_vec, tlat_vec)
+        z_part = zfun.interp2(lon, lat, tlon, tlat, tz)
+        # put good values of z_part in z
+        z[~np.isnan(z_part)] = z_part[~np.isnan(z_part)]
+    if dch['use_z_offset']:
+        z = z + dch['z_offset']
 
 #%% save the output to NetCDF
 gfu.make_nc(out_fn, plon, plat, lon, lat, z, m, dch)
