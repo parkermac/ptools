@@ -34,7 +34,8 @@ dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 # select model run
 #gtagex = 'cas4_v2_lo6biom'
-gtagex = 'cas5_v3_lo8'
+#gtagex = 'cas5_v3_lo8'
+gtagex = 'cas6_v1_lo8'
 year  = 2017
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
@@ -43,7 +44,7 @@ testing = False
 for_web = False # plots styled for the validation website
 
 if testing==True:
-    sn_list = ['Seattle', 'Tacoma']
+    sn_list = ['Seattle']
     save_fig=False
 
 else:

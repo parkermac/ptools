@@ -22,8 +22,9 @@ import Lfun
 Ldir = Lfun.Lstart()
 import zfun
 
-Ldir['gtagex'] = 'cas4_v2_lo6biom'
+#Ldir['gtagex'] = 'cas4_v2_lo6biom'
 #Ldir['gtagex'] = 'cas5_v3_lo8'
+Ldir['gtagex'] = 'cas6_v1_lo8'
 year = 2017
 dir11 = Ldir['parent'] + 'ptools_output/ecology/'
 out_fn = 'ObsMod_' + Ldir['gtagex'] + '_'+ str(year) + '.p'

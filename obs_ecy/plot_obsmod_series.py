@@ -46,7 +46,8 @@ Bottles = pd.read_pickle(dir0 + 'Bottles_' + str(year) + '.p')
 
 # specify which model run to use
 #Ldir['gtagex'] = 'cas4_v2_lo6biom'
-Ldir['gtagex'] = 'cas5_v3_lo8'
+#Ldir['gtagex'] = 'cas5_v3_lo8'
+Ldir['gtagex'] = 'cas6_v1_lo8'
 
 testing = False
 for_web = False # True for plots styled for the validation website
@@ -174,10 +175,13 @@ for station in sta_to_plot:
             for Zn in Z_list:
                 i0, i1, fr = zfun.get_interpolant(np.array([Zn]), z, extrap_nan=True)
                 for vn in mod_vn_dict.keys():
-                    mcv = ds[vn][:].squeeze()
-                    # note we also apply the scaling factor here
-                    val = ((1-fr)*mcv[int(i0)] + fr*mcv[int(i1)])*mod_fac_dict[vn]
-                    bc.loc[Zn,mod_vn_dict[vn]] = val
+                    try:
+                        mcv = ds[vn][:].squeeze()
+                        # note we also apply the scaling factor here
+                        val = ((1-fr)*mcv[int(i0)] + fr*mcv[int(i1)])*mod_fac_dict[vn]
+                        bc.loc[Zn,mod_vn_dict[vn]] = val
+                    except IndexError:
+                        pass
             ds.close()
         except OSError:
             pass
