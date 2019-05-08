@@ -1,6 +1,8 @@
 """
 Compare model and observations at a single station.
 
+Makes all plots in about 20 seconds.
+
 """
 
 import os
@@ -33,10 +35,13 @@ reload(ofn)
 dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 # select model run
+
 #gtagex = 'cas4_v2_lo6biom'
 #gtagex = 'cas5_v3_lo8'
 gtagex = 'cas6_v1_lo8'
+
 year  = 2017
+
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 #==============================================
@@ -280,19 +285,21 @@ for name in sn_list:
 
 # print statistics
 print('')
+print(gtagex)
 print('Average Error Statistics')
 print('RMS Error = %0.2f (m)' % (np.array(err_std_list).mean()))
 print('RMS Error = %0.2f (%% of RMS Tide)' % (np.array(err_pct_list).mean()))
 print('RMS Tide = %0.2f (m)' % (np.array(obs_std_list).mean()))
 print('')
 
-# print list of stations to use with webpage Google Map API
-print('sta_list = [')
-for station in sn_lonlat_dict.keys():
-    lon = sn_lonlat_dict[station][0]
-    lat = sn_lonlat_dict[station][1]
-    print('    {sta:"%s", lat:%0.4f, lng:%0.4f},' % (station.title(), lat, lon))
-print('];')
+if for_web == True:
+    # print list of stations to use with webpage Google Map API
+    print('sta_list = [')
+    for station in sn_lonlat_dict.keys():
+        lon = sn_lonlat_dict[station][0]
+        lat = sn_lonlat_dict[station][1]
+        print('    {sta:"%s", lat:%0.4f, lng:%0.4f},' % (station.title(), lat, lon))
+    print('];')
 
 #
 #

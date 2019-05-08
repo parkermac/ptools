@@ -11,6 +11,7 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
+Ldir = Lfun.Lstart()
 
 pth = os.path.abspath('../../LiveOcean/plotting')
 if pth not in sys.path:
@@ -22,20 +23,18 @@ import pickle
 
 import obsfun as ofn
 
-home = os.environ.get('HOME')
-dir00 = home + '/Documents/'
+dir00 = Ldir['parent']
 dir0 = dir00 + 'ptools_output/tide/'
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
-# load observational data
+# select model run
 
-if True:
-    year  = 2017
-    gtagex = 'cas4_v0_lo6m'
-else:
-    year  = 2013
-    gtagex = 'cascadia1_base_lobio1'
+#gtagex = 'cas4_v2_lo6biom'
+gtagex = 'cas5_v3_lo8'
+#gtagex = 'cas6_v1_lo8'
+
+year  = 2017
 
 obs_dir = dir0 + 'obs_data/'
 Tobs = dict()
@@ -77,9 +76,9 @@ def get_AG(name, hn, Hobs, Hmod):
     #
     return Ao, Am, Go, Gm, Fo, Fm
     
-# plotting
+# PLOTTING
 
-plt.close('all')
+#plt.close('all')
 
 # plot amplitude and phase, comparing two stations (ocean and inland)
 # for both observations and model
@@ -103,7 +102,7 @@ name1 = 'Seattle'
 #name1 = 'Friday Harbor'
 
 
-fig, axes = plt.subplots(nrows=3, ncols = 2, squeeze=False, figsize=(13,8))
+fig, axes = plt.subplots(nrows=3, ncols = 2, squeeze=False, figsize=(12,12))
 
 fig.suptitle(gtagex + ' OCEAN:' + name0 + ' to INLAND:' + name1)
 
@@ -223,7 +222,7 @@ for hn in hn_list:
     ax6.text(Fo1, Am1/Ao1, hn+' '+str(int(100*Am1/Ao1)/100),
             color='k', weight='bold', verticalalignment='center')
     
-if True:
+if False:
     # Plot station locations
     fig2 = plt.figure(figsize=(8,8))
     ax = fig2.add_subplot(111)

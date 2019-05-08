@@ -3,7 +3,7 @@ Code to automate getting year-long tide height records from
 a series of NOAA and DFO sites around the Salish Sea and NE Pacific
 coast.
 
-Alos computes harmonics using utide.
+Also computes harmonics using utide.
 
 """
 
