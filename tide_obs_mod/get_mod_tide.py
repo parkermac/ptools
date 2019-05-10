@@ -16,8 +16,15 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-Ldir = Lfun.Lstart(gridname='cas6', tag='v1')
-Ldir['gtagex'] = Ldir['gtag'] + '_lo8'
+
+gridname = 'cas6'
+tag = 'v2'
+ex_name = 'lo8'
+ds0 = '2016.12.15'
+ds1 = '2017.03.11'
+
+Ldir = Lfun.Lstart(gridname=gridname, tag=tag)
+Ldir['gtagex'] = Ldir['gtag'] + '_' + ex_name
 
 import zfun
 
@@ -100,7 +107,7 @@ def get_ij_good(lon, lat, xvec, yvec, i0, j0):
     return igood, jgood
 
 # set the locations for model input and output
-mod_string = Ldir['gtagex'] + '_' + str(year) + '.01.01' + '_' + str(year) + '.12.31'
+mod_string = Ldir['gtagex'] + '_' + ds0 + '_' + ds1
 mod_dir_in = Ldir['LOo'] + 'layer/' + mod_string + '/'
 
 mod_dir_out0 = dir0 + 'mod_data/'

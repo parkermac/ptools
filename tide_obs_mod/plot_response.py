@@ -31,8 +31,8 @@ noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 # select model run
 
 #gtagex = 'cas4_v2_lo6biom'
-gtagex = 'cas5_v3_lo8'
-#gtagex = 'cas6_v1_lo8'
+#gtagex = 'cas5_v3_lo8'
+gtagex = 'cas6_v1_lo8'
 
 year  = 2017
 
