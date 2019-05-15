@@ -43,9 +43,6 @@ Ldir['gtagex'] = Ldir['gtag'] + '_' + args.ex_name
 Ldir['date_string0'] = args.date_string0
 Ldir['date_string1'] = args.date_string1
 
-Ldir = Lfun.Lstart(gridname=gridname, tag=tag)
-Ldir['gtagex'] = Ldir['gtag'] + '_' + ex_name
-
 import zfun
 
 pth = os.path.abspath('../../LiveOcean/plotting')
