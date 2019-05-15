@@ -38,18 +38,18 @@ dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 #gtagex = 'cas4_v2_lo6biom'
 #gtagex = 'cas5_v3_lo8'
-gtagex = 'cas6_v1_lo8'
+gtagex = 'cas6_v2_lo8'
 
 year  = 2017
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 #==============================================
-testing = False
+testing = True
 for_web = False # plots styled for the validation website
 
 if testing==True:
-    sn_list = ['Seattle']
+    sn_list = ['Tofino']
     save_fig=False
 
 else:
@@ -229,7 +229,8 @@ for name in sn_list:
         ax.text(.05,.7, 'MODEL', weight='bold', color='b',
             transform=ax.transAxes)
         #
-        hn_list = ['M2','S2','N2','O1','P1','K1']
+        #hn_list = ['M2','S2','N2','O1','P1','K1']
+        hn_list = ['M2','S2','N2','O1','K1']
         for hn in hn_list:
             Ao, Am, Go, Gm, Fo, Fm = get_AG(hn, Hobs, Hmod)
             ax.text(Fo, Ao, hn, color='r', weight='bold',
@@ -246,7 +247,7 @@ for name in sn_list:
         ax.text(.05,.9, 'Phase (degrees)', weight='bold', color='k',
             transform=ax.transAxes)
         #
-        hn_list = ['M2','S2','N2','O1','P1','K1']
+        #hn_list = ['M2','S2','N2','O1','P1','K1']
         for hn in hn_list:
             Ao, Am, Go, Gm, Fo, Fm = get_AG(hn, Hobs, Hmod)
             ax.text(Fo, Go, hn, color='r', weight='bold',

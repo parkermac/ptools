@@ -5,6 +5,40 @@ on the coast and one in the Salish Sea).
 
 """
 
+# ========== USER ==========================
+
+# (1) Select station pair
+
+# OFFSHORE
+#name0 = 'Tofino'
+#name0 = 'Westport'
+#name0 = 'La Push'
+name0 = 'Neah Bay'
+#name0 = 'Bamfield'
+#name0 = 'Garibaldi'
+#name0 = 'Victoria Harbour'
+
+# INLAND
+#name1 = 'Campbell River'
+#name1 = 'Point Atkinson'
+#name1 = 'Victoria Harbour'
+name1 = 'Vancouver'
+#name1 = 'Seattle'
+#name1 = 'Tacoma'
+#name1 = 'Friday Harbor'
+
+# (2) Select model run
+
+#gtagex = 'cas4_v2_lo6biom'
+#gtagex = 'cas5_v3_lo8'
+gtagex = 'cas6_v2_lo8'
+
+# (3) Select year
+year  = 2017
+
+# =========================================
+
+
 import os
 import sys
 pth = os.path.abspath('../../LiveOcean/alpha')
@@ -27,14 +61,6 @@ dir00 = Ldir['parent']
 dir0 = dir00 + 'ptools_output/tide/'
 
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
-
-# select model run
-
-#gtagex = 'cas4_v2_lo6biom'
-#gtagex = 'cas5_v3_lo8'
-gtagex = 'cas6_v1_lo8'
-
-year  = 2017
 
 obs_dir = dir0 + 'obs_data/'
 Tobs = dict()
@@ -77,59 +103,41 @@ def get_AG(name, hn, Hobs, Hmod):
     return Ao, Am, Go, Gm, Fo, Fm
     
 # PLOTTING
-
 #plt.close('all')
-
-# plot amplitude and phase, comparing two stations (ocean and inland)
-# for both observations and model
-
-# OFFSHORE
-#name0 = 'Westport'
-name0 = 'La Push'
-#name0 = 'Neah Bay'
-#name0 = 'Bamfield'
-#name0 = 'Garibaldi'
-#name0 = 'Campbell River'
-#name0 = 'Victoria Harbour'
-
-
-# INLAND
-#name1 = 'Campbell River'
-#name1 = 'Point Atkinson'
-#name1 = 'Vancouver'
-name1 = 'Seattle'
-#name1 = 'Tacoma'
-#name1 = 'Friday Harbor'
-
-
-fig, axes = plt.subplots(nrows=3, ncols = 2, squeeze=False, figsize=(12,12))
-
+fig, axes = plt.subplots(nrows=3, ncols = 3, squeeze=False, figsize=(14,12))
 fig.suptitle(gtagex + ' OCEAN:' + name0 + ' to INLAND:' + name1)
 
+# frequecy limits (cpd)
 flo = .5
 fhi = 2.5
+
+# fontsize and weight
+fs = 6
+fw = 'normal'
 
 ax1 = axes[0,0]
 ax1.set_xlim(flo, fhi)
 ax1.set_ylim(0, 3)
 ax1.grid()
-ax1.text(.05,.9, 'Amplification Factor (INLAND/OCEAN)', weight='bold', color='k',
+ax1.text(.05,.9, 'Amplification Factor (INLAND/OCEAN)',
+    color='k',
     transform=ax1.transAxes)
-ax1.text(.05,.8, 'OBSERVATION', weight='bold', color='r',
+ax1.text(.05,.8, 'OBSERVATION',
+    color='r',
     transform=ax1.transAxes)
-ax1.text(.05,.7, 'MODEL', weight='bold', color='b',
+ax1.text(.05,.7, 'MODEL',
+    color='b',
     transform=ax1.transAxes)
 
 ax2 = axes[0,1]
 ax2.set_xlim(flo, fhi)
 ax2.set_ylim(0, 180)
-#ax2.set_ylim(-360, 360)
 ax2.grid()
-ax2.text(.05,.9, 'Phase Shift (INLAND-OCEAN deg)', weight='bold', color='k',
+ax2.text(.05,.9, 'Phase Shift (INLAND-OCEAN deg)',
+    color='k',
     transform=ax2.transAxes)
 
-hn_list = ['M2','S2','N2','O1','P1','K1']
-for hn in hn_list:
+for hn in ofn.hn_list:
     Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
     Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
     Aro = Ao1/Ao0
@@ -143,100 +151,101 @@ for hn in hn_list:
     ax1.plot(Fo0, Aro, '*r', Fm0, Arm, '*b')
     ax2.plot(Fo0, dGo, '*r', Fm0, dGm, '*b')
 
-if False:
-    # AMPLITUDES
-    ax3 = axes[1,0]
-    ax3.set_xlim(flo, fhi)
-    ax3.set_ylim(0, 1.4)
-    ax3.grid()
-    #ax3.set_xlabel('Frequency (cycles/day)')
-    ax3.text(.05,.9, 'OCEAN Amplitude (m)', weight='bold', color='k',
-        transform=ax3.transAxes)
-    #
-    ax4 = axes[1,1]
-    ax4.set_xlim(flo, fhi)
-    ax4.set_ylim(0, 1.4)
-    ax4.grid()
-    #ax4.set_xlabel('Frequency (cycles/day)')
-    ax4.text(.05,.9, 'INLAND Amplitude (m)', weight='bold', color='k',
-        transform=ax4.transAxes)
-    #
-    hn_list = ['M2','S2','N2','O1','P1','K1']
-    for hn in hn_list:
-        Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
-        Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
-        ax3.text(Fo0, Ao0, hn, color='r', weight='bold')
-        ax3.text(Fm0, Am0, hn, color='b', weight='bold')
-        ax4.text(Fo1, Ao1, hn, color='r', weight='bold')
-        ax4.text(Fm1, Am1, hn, color='b', weight='bold')
-else:
-    # PHASES
-    ax3 = axes[1,0]
-    ax3.set_xlim(flo, fhi)
-    ax3.set_ylim(0,360)
-    ax3.grid()
-    #ax3.set_xlabel('Frequency (cycles/day)')
-    ax3.text(.05,.9, 'OCEAN Phase (deg)', weight='bold', color='k',
-        transform=ax3.transAxes)
-    #
-    ax4 = axes[1,1]
-    ax4.set_xlim(flo, fhi)
-    ax4.set_ylim(0,360)
-    ax4.grid()
-    #ax4.set_xlabel('Frequency (cycles/day)')
-    ax4.text(.05,.9, 'INLAND Phase (deg)', weight='bold', color='k',
-        transform=ax4.transAxes)
-    #
-    hn_list = ['M2','S2','N2','O1','P1','K1']
-    for hn in hn_list:
-        Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
-        Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
-        ax3.text(Fo0, Go0, hn, color='r', weight='bold')
-        ax3.text(Fm0, Gm0, hn, color='b', weight='bold')
-        ax4.text(Fo1, Go1, hn, color='r', weight='bold')
-        ax4.text(Fm1, Gm1, hn, color='b', weight='bold')
+# AMPLITUDES
+ax3 = axes[1,0]
+ax3.set_xlim(flo, fhi)
+ax3.set_ylim(0, 1.4)
+ax3.grid()
+#ax3.set_xlabel('Frequency (cycles/day)')
+ax3.text(.05,.9, 'OCEAN Amplitude (m)',
+    color='k',
+    transform=ax3.transAxes)
+#
+ax4 = axes[2,0]
+ax4.set_xlim(flo, fhi)
+ax4.set_ylim(0, 1.4)
+ax4.grid()
+ax4.set_xlabel('Frequency (cycles/day)')
+ax4.text(.05,.9, 'INLAND Amplitude (m)',
+    color='k',
+    transform=ax4.transAxes)
+#
+for hn in ofn.hn_list:
+    Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
+    Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
+    ax3.text(Fo0, Ao0, hn, color='r', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+    ax3.text(Fm0, Am0, hn, color='b', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+    ax4.text(Fo1, Ao1, hn, color='r', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+    ax4.text(Fm1, Am1, hn, color='b', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+
+# PHASES
+ax3 = axes[1,1]
+ax3.set_xlim(flo, fhi)
+ax3.set_ylim(0,360)
+ax3.grid()
+#ax3.set_xlabel('Frequency (cycles/day)')
+ax3.text(.05,.9, 'OCEAN Phase (deg)',
+    color='k',
+    transform=ax3.transAxes)
+#
+ax4 = axes[2,1]
+ax4.set_xlim(flo, fhi)
+ax4.set_ylim(0,360)
+ax4.grid()
+ax4.set_xlabel('Frequency (cycles/day)')
+ax4.text(.05,.9, 'INLAND Phase (deg)',
+    color='k',
+    transform=ax4.transAxes)
+#
+for hn in ofn.hn_list:
+    Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
+    Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
+    ax3.text(Fo0, Go0, hn, color='r', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+    ax3.text(Fm0, Gm0, hn, color='b', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+    ax4.text(Fo1, Go1, hn, color='r', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
+    ax4.text(Fm1, Gm1, hn, color='b', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
 
 # AMPLITUDE RATIOS
-ax5 = axes[2,0]
+ax5 = axes[1,2]
 ax5.set_xlim(flo, fhi)
 ax5.set_ylim(0.5, 1.7)
 ax5.grid()
-ax5.set_xlabel('Frequency (cycles/day)')
-ax5.text(.05,.9, 'OCEAN Amplitude Ratio (Mod/Obs)', weight='bold', color='k',
+#ax5.set_xlabel('Frequency (cycles/day)')
+ax5.text(.05,.9, 'OCEAN Amplitude Ratio (Mod/Obs)',
+    color='k',
     transform=ax5.transAxes)
 #
-ax6 = axes[2,1]
+ax6 = axes[2,2]
 ax6.set_xlim(flo, fhi)
 ax6.set_ylim(0.5, 1.7)
 ax6.grid()
 ax6.set_xlabel('Frequency (cycles/day)')
-ax6.text(.05,.9, 'INLAND Amplitude Ratio (Mod/Obs)', weight='bold', color='k',
+ax6.text(.05,.9, 'INLAND Amplitude Ratio (Mod/Obs)',
+    color='k',
     transform=ax6.transAxes)
 #
-hn_list = ['M2','S2','N2','O1','P1','K1']
-for hn in hn_list:
+for hn in ofn.hn_list:
     Ao0, Am0, Go0, Gm0, Fo0, Fm0 = get_AG(name0, hn, Hobs, Hmod)
     Ao1, Am1, Go1, Gm1, Fo1, Fm1 = get_AG(name1, hn, Hobs, Hmod)
     ax5.text(Fo0, Am0/Ao0, hn+' '+str(int(100*Am0/Ao0)/100),
-            color='k', weight='bold', verticalalignment='center')
+            color='k', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
     ax6.text(Fo1, Am1/Ao1, hn+' '+str(int(100*Am1/Ao1)/100),
-            color='k', weight='bold', verticalalignment='center')
+            color='k', weight=fw, fontsize=fs, horizontalalignment='center', verticalalignment='center')
     
-if False:
-    # Plot station locations
-    fig2 = plt.figure(figsize=(8,8))
-    ax = fig2.add_subplot(111)
-    pfun.add_coast(ax, color='g')
-    ax.set_xlim(-129, -121)
-    ax.set_ylim(43, 51)
-    pfun.dar(ax)
-    for name in sn_dict.keys():
-        xo = float(Mobs[name]['lon'])
-        yo = float(Mobs[name]['lat'])
-        ax.plot(xo, yo, '*r')
-        ax.text(xo+.05, yo, name)
-        xm = Mmod[name]['lon']
-        ym = Mmod[name]['lat']
-        ax.plot(xm, ym, '*b')
+ax_map = axes[0,2]
+# Plot station locations
+pfun.add_coast(ax_map, color='g')
+ax_map.set_xlim(-129, -121)
+ax_map.set_ylim(46, 51)
+pfun.dar(ax_map)
+for name in sn_dict.keys():
+    xo = float(Mobs[name]['lon'])
+    yo = float(Mobs[name]['lat'])
+    if name in [name0, name1]:
+        ax_map.plot(xo, yo, '*r')
+        ax_map.text(xo+.05, yo, name)
+    else:
+        ax_map.plot(xo, yo, 'ok', alpha=.3)
+        
     
 plt.show()

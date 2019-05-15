@@ -101,7 +101,7 @@ This is useful for exploring the physics of the model response in terms of the i
 Output: screen output
 
 =================================================================================
-NOTE: I have kept some diagnostic output for various runs in ptools_output/tide/obs_mod_summary_output.
+NOTE: I have kept some diagnostic output for various runs in ptools_output/tide/obs_mod_summary_output_cas6.
 
 =================================================================================
 =================================================================================

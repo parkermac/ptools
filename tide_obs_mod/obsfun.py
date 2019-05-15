@@ -10,6 +10,11 @@ import pytz
 import utide
 from matplotlib.dates import date2num
 
+# list of frequencies to consider.  Sometimes we want to limit this
+# because for shorter records utide can't separate nearby peaks
+#hn_list = ['M2','S2','N2','O1','P1','K1']
+hn_list = ['M2','S2','N2','O1','K1']
+
 def get_sn_dicts():
     noaa_sn_dict = {
         'Charleston': 9432780,

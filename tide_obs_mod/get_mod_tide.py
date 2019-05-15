@@ -16,12 +16,32 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pickle
+import netCDF4 as nc
 
-gridname = 'cas6'
-tag = 'v2'
-ex_name = 'lo8'
-ds0 = '2016.12.15'
-ds1 = '2017.03.11'
+from importlib import reload
+import obsfun as ofn
+reload(ofn)
+
+# get command line arguments
+import argparse
+parser = argparse.ArgumentParser()
+# standard arguments
+parser.add_argument('-g', '--gridname', nargs='?', type=str, default='cas4')
+parser.add_argument('-t', '--tag', nargs='?', type=str, default='v2')
+parser.add_argument('-x', '--ex_name', nargs='?', type=str, default='lo6biom')
+parser.add_argument('-0', '--date_string0', nargs='?', type=str, default='2017.07.20')
+parser.add_argument('-1', '--date_string1', nargs='?', type=str, default='2017.07.22')
+args = parser.parse_args()
+
+# save some arguments
+Ldir = Lfun.Lstart(args.gridname, args.tag)
+Ldir['gtagex'] = Ldir['gtag'] + '_' + args.ex_name
+Ldir['date_string0'] = args.date_string0
+Ldir['date_string1'] = args.date_string1
 
 Ldir = Lfun.Lstart(gridname=gridname, tag=tag)
 Ldir['gtagex'] = Ldir['gtag'] + '_' + ex_name
@@ -33,15 +53,6 @@ if pth not in sys.path:
     sys.path.append(pth)
 import pfun
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import pickle
-import netCDF4 as nc
-
-from importlib import reload
-import obsfun as ofn
-reload(ofn)
 
 dir0 = Ldir['parent'] + 'ptools_output/tide/'
 

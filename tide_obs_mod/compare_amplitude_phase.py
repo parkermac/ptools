@@ -23,7 +23,7 @@ dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 # select model run
 
-for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8']:
+for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8', 'cas6_v2_lo8']:
 
     year  = 2017
 
@@ -42,8 +42,6 @@ for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8']:
         #
         return Ao, Am, Go, Gm, Fo, Fm
 
-    hn_list = ['M2','S2','N2','O1','P1','K1']
-
     sn_coast = ['Charleston', 'South Beach', 'Garibaldi', 'Toke Point',
         'Westport', 'La Push', 'Neah Bay', 'Tofino', 'Bamfield']
     sn_salish = ['Port Angeles', 'Friday Harbor', 'Cherry Point', 'Port Townsend',
@@ -52,7 +50,7 @@ for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8']:
     
     df_dict = dict() # each DataFrame has one constituent
     df = pd.DataFrame(index=sn_list, columns=['ar', 'dph'])
-    for hn in hn_list:
+    for hn in ofn.hn_list:
         df_dict[hn] = df.copy()
 
     for name in sn_list:
@@ -69,7 +67,7 @@ for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8']:
         Hmod = pickle.load(open(hfn, 'rb'))
     
         # get constituent info
-        for hn in hn_list:
+        for hn in ofn.hn_list:
             Ao, Am, Go, Gm, Fo, Fm = get_AG(hn, Hobs, Hmod)
             df_dict[hn].loc[name, 'ar'] = Am/Ao
             # fix phase difference when they straddle 360
@@ -86,14 +84,14 @@ for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8']:
     print(gtagex)
     print(50*'=')
     print('\nCoast Stations: mean (std)')
-    for hn in hn_list:
+    for hn in ofn.hn_list:
         df = df_dict[hn]
         dff = df.loc[sn_coast,:]
         print(' %s: Amplitude Ratio = %5.2f (%5.5f), Phase Difference = %5.1f (%5.1f) [deg]' % (hn,
             dff['ar'].mean(), dff['ar'].std(), dff['dph'].mean(), dff['dph'].std()))
 
     print('\nSalish Stations: mean (std)')
-    for hn in hn_list:
+    for hn in ofn.hn_list:
         df = df_dict[hn]
         dff = df.loc[sn_salish,:]
         print(' %s: Amplitude Ratio = %5.2f (%5.5f), Phase Difference = %5.1f (%5.1f) [deg]' % (hn,
