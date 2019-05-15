@@ -40,8 +40,10 @@ args = parser.parse_args()
 # save some arguments
 Ldir = Lfun.Lstart(args.gridname, args.tag)
 Ldir['gtagex'] = Ldir['gtag'] + '_' + args.ex_name
-Ldir['date_string0'] = args.date_string0
-Ldir['date_string1'] = args.date_string1
+ds0 = args.date_string0
+ds1 = args.date_string1
+Ldir['date_string0'] = ds0
+Ldir['date_string1'] = ds1
 
 import zfun
 
