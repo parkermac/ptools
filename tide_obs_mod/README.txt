@@ -52,6 +52,7 @@ which has variables:
 	h
 	zeta
 	Pair
+This now works on bioler because I have Utide there, and I have configured the code to use command line arguments so it should not need to be edited for new runs.
 
 Output: is exactly like the files created by get_obs_tides.py, in:
 ptools_output/tide/mod_data/[m_, tide_, h_] except that now there is a new column in the tide_ Dataframe giving the atmospheric pressure from the model:

@@ -47,7 +47,7 @@ Bottles = pd.read_pickle(dir0 + 'Bottles_' + str(year) + '.p')
 # specify which model run to use
 #Ldir['gtagex'] = 'cas4_v2_lo6biom'
 #Ldir['gtagex'] = 'cas5_v3_lo8'
-Ldir['gtagex'] = 'cas6_v1_lo8'
+Ldir['gtagex'] = 'cas6_v2_lo8'
 
 testing = False
 for_web = False # True for plots styled for the validation website

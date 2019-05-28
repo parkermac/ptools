@@ -45,11 +45,11 @@ year  = 2017
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 
 #==============================================
-testing = True
+testing = False
 for_web = False # plots styled for the validation website
 
 if testing==True:
-    sn_list = ['Tofino']
+    sn_list = ['Seattle']
     save_fig=False
 
 else:
@@ -107,7 +107,7 @@ for name in sn_list:
     Tmod = pd.read_pickle(fn)
     Mmod = Lfun.csv_to_dict(mfn)
     Hmod = pickle.load(open(hfn, 'rb'))
-    
+        
     # PLOTTING
     
     if for_web==True:
