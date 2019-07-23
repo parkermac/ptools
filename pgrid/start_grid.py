@@ -85,6 +85,15 @@ elif Gr['gridname'] == 'cas6': # an extended version of the excellent cas4/5
     dch['nudging_edges'] = ['north', 'south', 'west']
     # new: a list of good masks to work from
     dch['maskfiles'] = ['cas5/grid_m05_r01_s02_x02.nc']
+    
+elif Gr['gridname'] == 'sj0':
+    # San Juan Islands nest, first version
+    aa = [-123.3, -122.65, 48.3, 48.8]
+    res = 100 # target resolution (m)
+    plon_vec, plat_vec = gfu.simple_grid(aa, res)
+    dch['t_list'] = ['cascadia/cascadia_gridded.nc']
+    dch['nudging_edges'] = ['north', 'south', 'east', 'west']
+    dch['nudging_days'] = (0.1, 1.0)
 
 elif Gr['gridname'] == 'aestus1': # idealized model
     lon_list = [-1, 0, 1, 2, 3]

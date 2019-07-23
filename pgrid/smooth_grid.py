@@ -77,7 +77,7 @@ elif dch['min_depth'] <= 0:
     
 # Do the smoothing.
 Hnew = gfu.GRID_PlusMinusScheme_rx0(MSK, Hobs, rx0max, AreaMatrix,
-            fjord_cliff_edges=dch['fjord_cliff_edges'], shift=shift)
+            fjord_cliff_edges=True, shift=shift)
 
 print('Smoothing took %0.1f seconds' % (time.time() - tt0))
 

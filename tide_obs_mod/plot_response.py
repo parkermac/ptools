@@ -31,7 +31,7 @@ name1 = 'Seattle'
 
 #gtagex = 'cas4_v2_lo6biom'
 #gtagex = 'cas5_v3_lo8'
-gtagex = 'cas6_v2_lo8'
+gtagex = 'cas6_v3_lo8b'
 
 # (3) Select year
 year  = 2017

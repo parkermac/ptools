@@ -39,7 +39,11 @@ Lfun.make_dir(out_dir, clean=True)
 
 # copy files
 shutil.copyfile(in_fn, out_dir + 'grid.nc')
-shutil.copyfile(Gr['gdir'] + 'river_info.csv', out_dir + 'river_info.csv')
+try:
+    shutil.copyfile(Gr['gdir'] + 'river_info.csv', out_dir + 'river_info.csv')
+except:
+    # sometimes there is no river_info file
+    pass
 
 # also save the dch dict
 dch_fn = out_dir + 'dch.csv'

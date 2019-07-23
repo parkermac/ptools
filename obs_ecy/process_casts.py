@@ -14,22 +14,41 @@ sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 
 # PROCESS CTD DATA
 read_new = True
-for year in range(1999,2018):
+for year in [2018]:#range(1999,2018):
     print('\nYEAR = ' + str(year))
+    
     
     if year == 2017:
         read_new = True
         ctd_fn = dir0 + 'raw/ParkerMacCready2017CTDDataFeb2018.xlsx'
         sheet_name = '2017Provisional_CTDResults'
+    elif year == 2018:
+        read_new = True
+        ctd_fn = dir0 + 'raw/Parker_2018.xlsx'
+        sheet_name = 'Results'
     else:
         ctd_fn = dir0 + 'raw/ParkerMacCready1999-2016CTDDataMay2018.xlsx'
         sheet_name = '1999-2016Finalized_CTDResults'
 
     # data long names; we retain only these fields
+    
+    # DEFAULTS
+    date_col_name = 'Date'
+    station_col_name = 'Station'
+    depth_col_name = 'Depth'
+    data_new_names = ['Salinity', 'Temperature', 'Sigma', 'Chl', 'DO', 'Turb', 'Z']
+    
     if year == 2017:
         data_original_names = ['Salinity', 'Temp', 'Density',
                            'Chla_adjusted', 'DO_raw',
                            'Turbidity', 'Z']
+    elif year == 2018: # missing Chl and DO
+        date_col_name = 'UTCDate'
+        station_col_name = 'SiteCode'
+        depth_col_name = 'ActualDepthDecimal'
+        data_original_names = ['Salinity', 'Temperature', 'Density',
+                           'Turbidity', 'Z']
+        data_new_names = ['Salinity', 'Temperature', 'Sigma','Turb', 'Z']
     else:
         data_original_names = ['Salinity', 'Temp', 'Density',
                            'Chla_adjusted', 'DO_adjusted',
@@ -38,29 +57,21 @@ for year in range(1999,2018):
     # read in the data (all stations, all casts)
     if read_new:
         all_casts = pd.read_excel(ctd_fn, sheet_name=sheet_name,
-            parse_dates = ['Date'])
+            parse_dates = [date_col_name])
         read_new = False
     
-    data_new_names = [
-            'Salinity',
-            'Temperature',
-            'Sigma',
-            'Chl',
-            'DO',
-            'Turb',
-            'Z']
         
     varname_dict = dict(zip(data_original_names, data_new_names))
-
+    
     # initialize a DataFrame to hold all cast data for a year
     Casts = pd.DataFrame()
 
     # loop over all stations
     for station in sta_df.index:
         print(' - processing: ' + station)
-        casts = all_casts[all_casts['Station'] == station]
-        casts = casts.set_index('Date')
-        casts['Z'] = -casts['Depth'] # and make a Z column
+        casts = all_casts[all_casts[station_col_name] == station]
+        casts = casts.set_index(date_col_name)
+        casts['Z'] = -casts[depth_col_name] # and make a Z column
         casts = casts[data_original_names] # keep only selected columns
         casts = casts.rename(columns=varname_dict) # rename columns
     
@@ -87,6 +98,10 @@ for year in range(1999,2018):
             # in the concat operation below.  The resulting DataFrame "Casts"
             # just has numbers for its index
             Casts = pd.concat((Casts, cast), ignore_index=True)
+    
+    if year == 2018:
+        Casts['DO'] = np.nan
+        Casts['Chl'] = np.nan
         
     # save result
     Casts.to_pickle(dir0 + 'Casts_' + str(year) + '.p')

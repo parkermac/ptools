@@ -26,31 +26,44 @@ if pth not in sys.path:
     sys.path.append(pth)
 import pfun
 
+# ***** User Edits
+
+year = 2018
+
+# specify which model run to use
+Ldir['gtagex'] = 'cas4_v2_lo6biom'
+#Ldir['gtagex'] = 'cas5_v3_lo8'
+#Ldir['gtagex'] = 'cas6_v3_lo8b'
+
+testing = False
+for_web = False # True for plots styled for the validation website
+
+# ***** End User Edits
+
 # +++ load ecology CTD cast data +++
 dir0 = Ldir['parent'] + 'ptools_data/ecology/'
 # load processed station info and data
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
-# add Canadian data
-dir1 = Ldir['parent'] + 'ptools_data/canada/'
-# load processed station info and data
-sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
-sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
-year = 2017
 Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
-Casts_ca = pd.read_pickle(dir1 + 'Casts_' + str(year) + '.p')
-Casts = pd.concat((Casts, Casts_ca), sort=False)
+try:
+    # add Canadian data
+    dir1 = Ldir['parent'] + 'ptools_data/canada/'
+    # load processed station info and data
+    sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
+    sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
+    Casts_ca = pd.read_pickle(dir1 + 'Casts_' + str(year) + '.p')
+    Casts = pd.concat((Casts, Casts_ca), sort=False)
+except FileNotFoundError:
+    pass
 
 # +++ load ecology bottle data +++
-Bottles = pd.read_pickle(dir0 + 'Bottles_' + str(year) + '.p')
+try:
+    Bottles = pd.read_pickle(dir0 + 'Bottles_' + str(year) + '.p')
+    do_bottles = True
+except FileNotFoundError:
+    do_bottles = False
+
 # still need to get Canadian bottle data
-
-# specify which model run to use
-#Ldir['gtagex'] = 'cas4_v2_lo6biom'
-#Ldir['gtagex'] = 'cas5_v3_lo8'
-Ldir['gtagex'] = 'cas6_v2_lo8'
-
-testing = False
-for_web = False # True for plots styled for the validation website
 
 if testing==True:
     sta_to_plot = [s for s in sta_df.index if 'HCB003' in s]
@@ -81,13 +94,16 @@ for station in sta_to_plot:
     calldates = casts.index
     castdates = calldates.unique() # a short list of unique dates (1 per cast)
     # also for bottles
-    bottles = Bottles[Bottles['Station'] == station]   
-    bottles = bottles.set_index('Date')    
-    # identify a single cast by its DATE
-    balldates = bottles.index
-    bottledates = balldates.unique() # a short list of unique dates (1 per cast)
-    # all valid dates (really bottledates should be a subset of castdates, right?)
-    dates = bottledates.union(castdates)
+    if do_bottles:
+        bottles = Bottles[Bottles['Station'] == station]   
+        bottles = bottles.set_index('Date')    
+        # identify a single cast by its DATE
+        balldates = bottles.index
+        bottledates = balldates.unique() # a short list of unique dates (1 per cast)
+        # all valid dates (really bottledates should be a subset of castdates, right?)
+        dates = bottledates.union(castdates)
+    else:
+        dates = castdates
     
     # some useful dictionaries for renaming and rescaling
     cast_vn_dict = {'Salinity': 'Salinity', 'Temperature': 'Temp. (deg C)',
@@ -101,16 +117,18 @@ for station in sta_to_plot:
     
     # rename the columns
     casts = casts.rename(columns=cast_vn_dict)
-    bottles = bottles.rename(columns=bot_vn_dict)
+    if do_bottles:
+        bottles = bottles.rename(columns=bot_vn_dict)
     
     # limit the columns
     casts = casts[['Station', 'Z'] + list(cast_vn_dict.values())]
-    bottles = bottles[['Station', 'Z', 'Znom'] + list(bot_vn_dict.values())]
+    if do_bottles:
+        bottles = bottles[['Station', 'Z', 'Znom'] + list(bot_vn_dict.values())]
     
     # Set the depths to look at.
     # [0,-10,-30] are the bottle nominal depths, but you can get deeper cast data
     # by adding to this list, e.g. -100
-    Z_list = [0,-10,-30]
+    Z_list = [0,-10,-30, -80]
 
     # loop over all casts at this station
     dates = dates[dates.year==year]
@@ -151,18 +169,19 @@ for station in sta_to_plot:
             except:
                 pass
     
-        try:
-            bo = bottles.loc[[dd],:]
-            bo = bo.set_index('Znom')
-            # for bottles we just put the data at Znom, ignoring the fact that
-            # sometimes it is at a different actual depth.  When I looked at the
-            # data it did not seem like a big problem.
-            for Zn in Z_list:
-                for vn in bot_vn_dict.values():
-                    bv = bo.loc[Zn, vn]
-                    bc.loc[Zn,vn] = bv
-        except KeyError:
-            pass
+        if do_bottles:
+            try:
+                bo = bottles.loc[[dd],:]
+                bo = bo.set_index('Znom')
+                # for bottles we just put the data at Znom, ignoring the fact that
+                # sometimes it is at a different actual depth.  When I looked at the
+                # data it did not seem like a big problem.
+                for Zn in Z_list:
+                    for vn in bot_vn_dict.values():
+                        bv = bo.loc[Zn, vn]
+                        bc.loc[Zn,vn] = bv
+            except KeyError:
+                pass
 
         # finally get the model fields for this day
         date_string = dd.strftime('%Y.%m.%d')

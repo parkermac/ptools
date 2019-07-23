@@ -22,10 +22,10 @@ import Lfun
 Ldir = Lfun.Lstart()
 import zfun
 
-#Ldir['gtagex'] = 'cas4_v2_lo6biom'
+Ldir['gtagex'] = 'cas4_v2_lo6biom'
 #Ldir['gtagex'] = 'cas5_v3_lo8'
-Ldir['gtagex'] = 'cas6_v2_lo8'
-year = 2017
+#Ldir['gtagex'] = 'cas6_v3_lo8b'
+year = 2018
 dir11 = Ldir['parent'] + 'ptools_output/ecology/'
 out_fn = 'ObsMod_' + Ldir['gtagex'] + '_'+ str(year) + '.p'
 print('Loading ' + out_fn)
@@ -70,8 +70,11 @@ for vn in ['Salinity', 'Temp. (deg C)', 'DO (mg L-1)', 'DIN (uM)', 'Chl (mg m-3)
     ii = 0
     for Zn in Z_list:
         Bcz = Bc[Bc['Znom']==Zn]
-        Bcz.plot(x=vn, y = 'Mod '+vn, style = 'o'+ clist[ii],
-            grid=True, ax=ax, legend=False, alpha=.4)
+        try:
+            Bcz.plot(x=vn, y = 'Mod '+vn, style = 'o'+ clist[ii],
+                grid=True, ax=ax, legend=False, alpha=.4)
+        except ValueError:
+            pass
         ii += 1
     ax.set_xlim(lim_dict[vn])
     ax.set_ylim(lim_dict[vn])

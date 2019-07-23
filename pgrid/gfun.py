@@ -4,7 +4,7 @@ Organizational functions for pgrid.
 """
 
 # **** USER EDIT ********
-gridname = 'cas6'
+gridname = 'sj0'
 # **** END USER EDIT ****
 
 import os

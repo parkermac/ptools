@@ -38,7 +38,8 @@ dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 #gtagex = 'cas4_v2_lo6biom'
 #gtagex = 'cas5_v3_lo8'
-gtagex = 'cas6_v2_lo8'
+#gtagex = 'cas6_v2_lo8'
+gtagex = 'cas6_v3_lo8b'
 
 year  = 2017
 

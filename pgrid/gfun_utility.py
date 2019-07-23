@@ -196,8 +196,6 @@ def make_nc(out_fn, plon, plat, lon, lat, z, m, dch):
         mask_var[tag][:] = np.ones_like(lon_dict[tag], dtype=int)
     
     h_var[:] = -z
-    if dch['do_cell_average']:
-        mask_var['rho'][:] = m
     pm_var[:] = 1/dx
     pn_var[:] = 1/dy
     f_var[:] = sw.f(lat_dict['rho'])

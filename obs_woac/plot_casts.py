@@ -1,5 +1,5 @@
 """
-Plot cast data.
+Plot cast data for WOAC cruises, comparing with a LiveOcean run
 """
 
 import os
@@ -8,7 +8,12 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-Ldir = Lfun.Lstart()
+
+# here is where we specify the ROMS run to use
+Ldir = Lfun.Lstart(gridname='cas6', tag='v3')
+Ldir['gtagex'] = Ldir['gtag']+'_'+'lo8b'
+year = 2017
+
 import zfun
 
 pth = os.path.abspath(Ldir['LO'] + 'plotting')
@@ -25,12 +30,15 @@ import netCDF4 as nc
 
 # load data
 in_dir = '../../ptools_data/woac/'
-Casts = pd.read_pickle(in_dir + 'Casts_2017.p')
+Casts = pd.read_pickle(in_dir + 'Casts_'+str(year)+'.p')
 sta_df = pd.read_pickle(in_dir + 'sta_df.p')
 
 # prepare for output
-out_dir = '../../ptools_output/woac/'
-Lfun.make_dir(out_dir)
+out_dir0 = '../../ptools_output/woac/'
+Lfun.make_dir(out_dir0)
+out_dir = out_dir0 + 'val_casts_' + Ldir['gtagex'] + '/'
+Lfun.make_dir(out_dir, clean=True)
+
 
 # PLOTTING
 plt.close('all')
@@ -80,7 +88,8 @@ for cn in sta_df.index:
     
     # get the corresponding model cast
     cinfo = sta_df.loc[cn,:]
-    in_dir_m = Ldir['LOo'] + 'cast/cas4_v2_lo6biom/'
+    #in_dir_m = Ldir['LOo'] + 'cast/cas4_v2_lo6biom/'
+    in_dir_m = Ldir['LOo'] + 'cast/'+Ldir['gtagex']+'/'
     fn_m = (in_dir_m + 'WOAC' + str(cinfo['Station']) + '_' +
             cinfo['Datetime'].strftime('%Y.%m.%d') + '.nc')
     ds = nc.Dataset(fn_m)
@@ -98,7 +107,10 @@ for cn in sta_df.index:
     
     for vn in vn_list:
         ax = fig.add_subplot(3,4,np_dict[vn])
-        cc.plot(x=vn, y='Z (m)', ax=ax, legend=False, style='-*b')
+        try:
+            cc.plot(x=vn, y='Z (m)', ax=ax, legend=False, style='-*b')
+        except ValueError:
+            pass
         ax.text(.05,.1, vn, transform=ax.transAxes, fontweight='bold')
         ax.set_xlabel('')
         # add model line
