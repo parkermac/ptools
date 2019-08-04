@@ -28,7 +28,7 @@ import numpy as np
 # **** USER CHOICES ********
 
 # show plot of markers for rho, u, v grids with masking
-flag_show_grids = True
+flag_show_grids = False
 
 # show resolution
 flag_show_res = False
