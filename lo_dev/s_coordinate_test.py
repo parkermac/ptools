@@ -8,7 +8,7 @@ pth = os.path.abspath('../../LiveOcean/alpha')
 if pth not in sys.path:
     sys.path.append(pth)
 import Lfun
-Ldir = Lfun.Lstart(gridname='cas4', tag='v2')
+Ldir = Lfun.Lstart(gridname='sj0', tag='v0')
 # NOTE hmin = 4 in the cas4 grid
 
 import zrfun
@@ -41,6 +41,10 @@ s['VTRANSFORM'] = 2
 s['VSTRETCHING'] = 4
 S = zrfun.get_S(s)
 
+# also get an actual grid file to inspect
+fn = '/Users/pm7/Documents/LiveOcean_roms/output/sj0_v0_lo8nest/f2019.07.23/ocean_his_0001.nc'
+GG, SS, TT = zrfun.get_basic_info(fn)
+# RESULT: 
 
 NX = 100
 x = np.arange(NX)

@@ -21,7 +21,7 @@ castnum
 7.0          11       CAB1065   47.373  -123.131  2017-04-07 22:30:12
 8.0          13       CAB1065  47.5494  -123.004  2017-04-07 00:05:10
 
-Note that the castnum index is a much cleaner was of identifying casts, and this carries over to the data in Casts_2017.
+Note that the castnum index is a much cleaner way of identifying casts, and this carries over to the data in Casts_2017.
 
 Note that when I extract casts from the model I append 'WOAC' to the station name (LiveOcean/x_cast).
 
@@ -61,7 +61,7 @@ Output: ptools_output/woac/station_map.png
 
 Input:	ptools_data/woac/sta_df.p
 		ptools_data/woac/Casts_2017.p
-		LiveOcean_output/cast/cas4_v2_lo6biom/WOAC[Station]_[YYYY.MM.DD].nc
+		LiveOcean_output/cast/cas6_v3_lo8b/WOAC[Station]_[YYYY.MM.DD].nc
 
 Output: one plot for each station in ptools_output/woac/ e.g. CAB1065_1_2017.04.09.png
 		meaning [Cruise]_[Station]_[YYYY.MM.DD].png

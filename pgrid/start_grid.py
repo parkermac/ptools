@@ -104,12 +104,35 @@ elif Gr['gridname'] == 'aestus1': # idealized model
                                         lat_list, y_res_list)
     dch['analytical'] = True
     dch['nudging_edges'] = ['north', 'south', 'west']
+    
+elif Gr['gridname'] == 'aestus2':
+    # idealized model, higher resolution and larger domain than aestus1
+    lon_list = [-2, 0, 1, 2, 3]
+    x_res_list = [2500, 500, 500, 2500, 2500]
+    lat_list = [43, 44.9, 45.1, 47]
+    y_res_list = [2500, 500, 500, 2500]
+    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+    dch['analytical'] = True
+    dch['nudging_edges'] = ['north', 'south', 'west']
+    
+elif Gr['gridname'] == 'aestus3':
+    # idealized model, like aestus2 but cut off just inside the estuary mouth,
+    # with the goal of more manipulative forcing of the exchange flow
+    lon_list = [-2, 0, .1]
+    x_res_list = [2500, 500, 500]
+    lat_list = [43, 44.9, 45.1, 47]
+    y_res_list = [2500, 500, 500, 2500]
+    plon_vec, plat_vec = gfu.stretched_grid(lon_list, x_res_list,
+                                        lat_list, y_res_list)
+    dch['analytical'] = True
+    dch['nudging_edges'] = ['north', 'south', 'west']
 
 # save the default choices for use by other code
 pickle.dump(dch, open(Gr['gdir'] + 'choices.p', 'wb'))
 
 plon, plat = np.meshgrid(plon_vec, plat_vec)
-ax_lims = (plon_vec[0], plon_vec[-1], plat_vec[0], plat_vec[-1])
+#ax_lims = (plon_vec[0], plon_vec[-1], plat_vec[0], plat_vec[-1])
 
 # make box centers
 lon_vec = plon_vec[:-1] + np.diff(plon_vec)/2
@@ -120,7 +143,7 @@ NR, NC = lon.shape
 # initialize the final bathymetry array
 z = np.nan * lon
 if dch['analytical']==True:
-    if Gr['gridname'] == 'aestus1':
+    if Gr['gridname'] in ['aestus1', 'aestus2', 'aestus3']:
         # make grid and bathymetry by hand
         z = np.zeros(lon.shape)
         x, y = zfun.ll2xy(lon, lat, 0, 45)
@@ -128,7 +151,8 @@ if dch['analytical']==True:
         zestuary = -20 + 20*x/1e5 + 20/(1e4)*np.abs(y)
         z = zshelf
         mask = zestuary < z
-        z[mask] = zestuary[mask]    
+        z[mask] = zestuary[mask]
+        m = np.ones_like(lon)
 else:
     # add bathymetry automatically from files
     # m is the start of a mask: 1=water, 0=land

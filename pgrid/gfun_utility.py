@@ -62,7 +62,7 @@ def stretched_grid(lon_list, x_res_list, lat_list, y_res_list):
         xres = (1-fr)*x_res_vec[i0] + fr*x_res_vec[i1]
         dlon = 180 * xres / (clat * R * np.pi)
         lon = lon + dlon
-        plon_list.append(lon)
+        plon_list.append(lon[0])
     lat = lat_list[0]
     plat_list.append(lat)
     while lat <= lat_list[-1]:
@@ -70,7 +70,7 @@ def stretched_grid(lon_list, x_res_list, lat_list, y_res_list):
         yres = (1-fr)*y_res_vec[i0] + fr*y_res_vec[i1]
         dlat = 180 * yres / (R * np.pi)
         lat = lat + dlat
-        plat_list.append(lat)
+        plat_list.append(lat[0])
     return np.array(plon_list), np.array(plat_list)
 
 def load_bathy_nc(t_fn):

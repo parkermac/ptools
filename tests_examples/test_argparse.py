@@ -51,6 +51,7 @@ def prog(in_str):
     return d
 
 in_list = ['-s hello', '-i 5', '-b False', '-ft', '-ff', '-b True', '-b False']
+#in_list = ['-s a,b,c']
 
 for in_str in in_list:
     print('\nInput string: ' + in_str)

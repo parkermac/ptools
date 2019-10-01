@@ -4,29 +4,20 @@ Organizational functions for pgrid.
 """
 
 # **** USER EDIT ********
-gridname = 'sj0'
+gridname = 'aestus3'
+#gridname = 'cas6'
 # **** END USER EDIT ****
 
-import os
-import sys
-pth = os.path.abspath('../../LiveOcean/alpha')
-if pth not in sys.path:
-    sys.path.append(pth)
+import os; import sys
+sys.path.append(os.path.abspath('../../LiveOcean/alpha'))
 import Lfun
 Ldir = Lfun.Lstart()
 
-pth = os.path.abspath('../../LiveOcean/plotting')
-if pth not in sys.path:
-    sys.path.append(pth)
-
+sys.path.append(os.path.abspath('../../LiveOcean/plotting'))
 
 dir0 = Ldir['parent']
 pgdir = dir0 + 'ptools_output/pgrid/'
-if 'aestus' in gridname:
-    ri_dir = dir0 + 'ptools_output/river/analytical/'
-else:
-    ri_dir = dir0 + 'ptools_output/river/pnw_all_2016_07/'
-    
+
 def default_choices(Gr, wet_dry=False):
     # Default choices (can override in each case)    
     dch = dict()    
@@ -77,6 +68,12 @@ def default_choices(Gr, wet_dry=False):
     return dch
 
 def gstart(gridname=gridname):
+    
+    if gridname in ['aestus1', 'aestus2']:
+        ri_dir = dir0 + 'ptools_output/river/analytical/'
+    else:
+        ri_dir = dir0 + 'ptools_output/river/pnw_all_2016_07/'
+    
     gdir = pgdir + gridname + '/'
     Gr ={'gridname': gridname, 'dir0': dir0, 'pgdir': pgdir, 'gdir': gdir,
          'ri_dir': ri_dir}

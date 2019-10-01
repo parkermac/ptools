@@ -4,7 +4,7 @@ First edit the gridname and (if needed) a few directory locations at the top of 
 
 In order to keep track of several choices typically made about a grid, we use "dch," a dict of "default choices":
 - dch =  gfun.default_choices(Gr)
-These are initialized in gfun.default_choices, but you typically override some of them in make_grid.py when doing the initial grid specification.  The choices are saved in a pickle file:
+These are initialized in gfun.default_choices, but you typically override some of them in start_grid.py when doing the initial grid specification.  The choices are saved in a pickle file:
 - pickle.dump(dch, open(Gr['gdir'] + 'choices.p', 'wb'))
 You can also go back and change things in dch later using Z_edit_dch.py.
 
