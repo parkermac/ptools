@@ -66,7 +66,7 @@ cdp = np.zeros(NX-1) # cdp = "concentration deep previous"
 csa, cda, f_tup = rfun.c_calc(csp, cdp, info_tup, ocn=Sin[-1])
 
 # PLOTTING
-plt.close('all')
+#plt.close('all')
 
 X = x/1e3
 Xm = xm/1e3
