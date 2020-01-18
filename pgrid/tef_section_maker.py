@@ -5,7 +5,7 @@ as lines to be used in tef_fun.py
 
 Can be run in ipython with a user-specified grid file
 
-run grid_explore.py -g sal0
+run tef_section_maker.py -g sal0
 
 """
 
