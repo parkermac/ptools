@@ -10,20 +10,28 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 
-testing = False
-if testing:
-    year_list = [2017]
-else:
-    year_list = range(2006, 2018)
 
 # read in stored station info (links station names to locations)
 dir0 = '../../ptools_data/ecology/'
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')
 
 # read in bottle data
-bottle_fn = dir0 + 'raw/Parker_2006-present_Nutrients.xlsx'
-sheet_name = '2006-2017'
-allbot = pd.read_excel(bottle_fn, sheet_name=sheet_name)
+if False:
+    testing = False
+    if testing:
+        year_list = [2017]
+    else:
+        year_list = range(2006, 2018)
+    bottle_fn = dir0 + 'raw/Parker_2006-present_Nutrients.xlsx'
+    sheet_name = '2006-2017'
+    allbot = pd.read_excel(bottle_fn, sheet_name=sheet_name)
+    naming_conv = 1
+else:
+    year_list = [2018, 2019]
+    bottle_fn = dir0 + 'raw/ParkerMacCready2019CTDDataFeb2020.xlsx'
+    sheet_name = '2018-2019NutrientData'
+    allbot = pd.read_excel(bottle_fn, sheet_name=sheet_name)
+    naming_conv = 2
 
 allbot = allbot.set_index('Date')
 
@@ -37,10 +45,23 @@ for year in year_list:
     for station in sta_df.index:
         
         # get just this station
-        sba = ybot[ybot['Station']==station]
+        sba = ybot[ybot['Station']==station].copy()
         
         # add some things
-        sba = sba.assign(Znom=-sba['NomDepth'])
+        if naming_conv == 1:
+            sba = sba.assign(Znom=-sba['NomDepth'])
+        elif naming_conv == 2:
+            sba.loc[sba['Nomdepth']=='NB','Nomdepth'] = np.nan
+            sba.loc[sba['Nomdepth']=='NBE','Nomdepth'] = np.nan
+            sba.loc[sba['Nomdepth']=='0E','Nomdepth'] = np.nan
+            sba.loc[sba['Nomdepth']=='10E','Nomdepth'] = np.nan
+            sba.loc[sba['Nomdepth']=='30E','Nomdepth'] = np.nan
+            sba.loc[sba['Nomdepth']=='140E','Nomdepth'] = np.nan
+            sba.loc[sba['Nomdepth']=='0J','Nomdepth'] = 0
+            sba.loc[sba['Nomdepth']=='10J','Nomdepth'] = 10
+            sba.loc[sba['Nomdepth']=='30J','Nomdepth'] = 30
+            sba = sba.assign(Znom=-sba['Nomdepth'])
+            
         sba = sba.assign(Z=-sba['Sampling Depth'])
         sba = sba.assign(DIN=sba.reindex(columns=['NO3(uM)D', 'NO2(uM)D', 'NH4(uM)D']).sum(axis=1))
         

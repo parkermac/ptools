@@ -24,8 +24,13 @@ for year in [2018]:#range(1999,2018):
         sheet_name = '2017Provisional_CTDResults'
     elif year == 2018:
         read_new = True
-        ctd_fn = dir0 + 'raw/Parker_2018.xlsx'
-        sheet_name = 'Results'
+        #ctd_fn = dir0 + 'raw/Parker_2018.xlsx'
+        ctd_fn = dir0 + 'raw/ParkerMacCready2018CTDDOMar2020.xlsx'
+        sheet_name = '2018_CTDDOResults'
+    elif year == 2019:
+        read_new = True
+        ctd_fn = dir0 + 'raw/ParkerMacCready2019CTDDataFeb2020.xlsx'
+        sheet_name = '2019Provisional_CTDResults'
     else:
         ctd_fn = dir0 + 'raw/ParkerMacCready1999-2016CTDDataMay2018.xlsx'
         sheet_name = '1999-2016Finalized_CTDResults'
@@ -42,13 +47,17 @@ for year in [2018]:#range(1999,2018):
         data_original_names = ['Salinity', 'Temp', 'Density',
                            'Chla_adjusted', 'DO_raw',
                            'Turbidity', 'Z']
-    elif year == 2018: # missing Chl and DO
-        date_col_name = 'UTCDate'
-        station_col_name = 'SiteCode'
-        depth_col_name = 'ActualDepthDecimal'
-        data_original_names = ['Salinity', 'Temperature', 'Density',
+    elif year == 2018: # missing Chl
+        #date_col_name = 'UTCDate'
+        #station_col_name = 'SiteCode'
+        #depth_col_name = 'ActualDepthDecimal'
+        data_original_names = ['Salinity', 'Temp', 'Density', 'DO_adjusted', 'Z']
+        data_new_names = ['Salinity', 'Temperature', 'Sigma', 'DO', 'Z']
+        
+    elif year == 2019: # missing Chl
+        data_original_names = ['Salinity', 'Temp', 'Density', 'DO_raw',
                            'Turbidity', 'Z']
-        data_new_names = ['Salinity', 'Temperature', 'Sigma','Turb', 'Z']
+        data_new_names = ['Salinity', 'Temperature', 'Sigma', 'DO', 'Turb', 'Z']
     else:
         data_original_names = ['Salinity', 'Temp', 'Density',
                            'Chla_adjusted', 'DO_adjusted',
@@ -100,7 +109,7 @@ for year in [2018]:#range(1999,2018):
             Casts = pd.concat((Casts, cast), ignore_index=True)
     
     if year == 2018:
-        Casts['DO'] = np.nan
+        Casts['Turb'] = np.nan
         Casts['Chl'] = np.nan
         
     # save result

@@ -126,7 +126,7 @@ for f_dir in f_list:
         ds.close()
         tt += 1
         
-    # next get arrays for flux claculations from the averages
+    # next get arrays for flux calculations from the averages
     a_list = os.listdir(dir0 + f_dir)
     a_list.sort()
     a_list = [x for x in a_list if x[:9]=='ocean_avg']

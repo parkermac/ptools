@@ -78,7 +78,7 @@ else:
 ax.set_xlim(-scl*r, scl*r)
 ax.set_ylim(-scl*r, scl*r)
 ax.set_zlim(-scl*r, scl*r)
-ax.set_aspect('equal')
+#ax.set_aspect('equal')
 
 ax.azim = -18
 ax.elev = 14

@@ -31,9 +31,9 @@ import pfun
 year = 2018
 
 # specify which model run to use
-Ldir['gtagex'] = 'cas4_v2_lo6biom'
+#Ldir['gtagex'] = 'cas4_v2_lo6biom'
 #Ldir['gtagex'] = 'cas5_v3_lo8'
-#Ldir['gtagex'] = 'cas6_v3_lo8b'
+Ldir['gtagex'] = 'cas6_v3_lo8b'
 
 testing = False
 for_web = False # True for plots styled for the validation website
@@ -66,7 +66,7 @@ except FileNotFoundError:
 # still need to get Canadian bottle data
 
 if testing==True:
-    sta_to_plot = [s for s in sta_df.index if 'HCB003' in s]
+    sta_to_plot = [s for s in sta_df.index if 'PSB003' in s]
     save_fig = False
 else:
     sta_to_plot = [s for s in sta_df.index]
@@ -106,8 +106,12 @@ for station in sta_to_plot:
         dates = castdates
     
     # some useful dictionaries for renaming and rescaling
-    cast_vn_dict = {'Salinity': 'Salinity', 'Temperature': 'Temp. (deg C)',
-        'Chl': 'Chl (mg m-3)', 'DO': 'DO (mg L-1)'}
+    if year == 2019:
+        cast_vn_dict = {'Salinity': 'Salinity', 'Temperature': 'Temp. (deg C)',
+            'DO': 'DO (mg L-1)'}
+    else:
+        cast_vn_dict = {'Salinity': 'Salinity', 'Temperature': 'Temp. (deg C)',
+            'Chl': 'Chl (mg m-3)', 'DO': 'DO (mg L-1)'}
     bot_vn_dict = {'DIN': 'DIN (uM)'}
     mod_fac_dict = {'salt': 1, 'temp': 1,
         'NO3': 1, 'phytoplankton': 2.5, 'oxygen': 0.032}
@@ -253,12 +257,17 @@ for station in sta_to_plot:
         ax.xaxis.set_tick_params(labelrotation=45)
         ax.text(.05, .9, vn, fontweight='bold', transform=ax.transAxes)
         if pp==1:
-            ax.text(.05, .5, 'Z =   0 m', color='r', fontweight='bold', transform=ax.transAxes)
-            ax.text(.05, .4, 'Z = -10 m', color='g', fontweight='bold', transform=ax.transAxes)
-            ax.text(.05, .3, 'Z = -30 m', color='b', fontweight='bold', transform=ax.transAxes)
+            z_counter = 0
+            for zz in Z_list:
+                ax.text(.05, .5-.1*z_counter, 'Z =   %d m' % (zz),
+                    color=clist[z_counter], fontweight='bold', transform=ax.transAxes)
+                z_counter += 1
+            # ax.text(.05, .5, 'Z =   0 m', color='r', fontweight='bold', transform=ax.transAxes)
+            # ax.text(.05, .4, 'Z = -10 m', color='g', fontweight='bold', transform=ax.transAxes)
+            # ax.text(.05, .3, 'Z = -30 m', color='b', fontweight='bold', transform=ax.transAxes)
             #ax.text(.05, .2, 'Z = Deepest', color='k', fontweight='bold', transform=ax.transAxes)
             ax.text(.05, .1, 'Solid = Observed, Dashed = Model',
-                fontweight='bold', color='k', transform=ax.transAxes)
+                style='italic', color='k', transform=ax.transAxes)
         if pp in [1,2]:
             ax.set_xticklabels('')
             ax.set_xlabel('')

@@ -52,7 +52,7 @@ which has variables:
 	h
 	zeta
 	Pair
-This now works on bioler because I have Utide there, and I have configured the code to use command line arguments so it should not need to be edited for new runs.
+This now works on boiler because I have Utide there, and I have configured the code to use command line arguments so it should not need to be edited for new runs.
 
 Output: is exactly like the files created by get_obs_tides.py, in:
 ptools_output/tide/mod_data/[m_, tide_, h_] except that now there is a new column in the tide_ Dataframe giving the atmospheric pressure from the model:
@@ -77,7 +77,7 @@ Output: screen plot of location map
 
 Input: all the output files for a given year and model run created by get_obs_tide.py and get_mod_tide.py above.
 
-Output: a folder full of png's of validation information, one for each station.  Depending on user-spcified choices these are either in:
+Output: a folder full of png's of validation information, one for each station.  Depending on user-specified choices these are either in:
 
 - ptools_output/tide/val_series_[gtagex]_[year]/[Station_Name].png which are full-featured plots including a map, or
 

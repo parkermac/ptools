@@ -28,10 +28,10 @@ import numpy as np
 # **** USER CHOICES ********
 
 # show plot of markers for rho, u, v grids with masking
-flag_show_grids = True
+flag_show_grids = False
 
 # show resolution
-flag_show_res = False
+flag_show_res = True
 
 # show bathymetry on some sections
 flag_show_sections = False
@@ -87,9 +87,9 @@ if flag_show_sections:
 fig = plt.figure(figsize=(8*NC,8))
 
 ax1 = fig.add_subplot(1,NC,1)
-cmap1 = plt.get_cmap(name='rainbow') # terrain, viridis
+cmap1 = plt.get_cmap(name='gist_earth') # terrain, viridis
 cs = ax1.pcolormesh(plon, plat, zm,
-                   vmin=-200, vmax=10, cmap = cmap1)
+                   vmin=-3000, vmax=10, cmap = cmap1)
 fig.colorbar(cs, ax=ax1, extend='both')
 pfun.add_coast(ax1)
 pfun.dar(ax1)
@@ -157,7 +157,7 @@ if flag_show_res:
     DY = 1/ds['pn'][:]
     res = np.maximum(DX, DY)
     ax = fig.add_subplot(1,NC,icr)
-    cmap = plt.get_cmap(name='jet') # terrain, viridis
+    cmap = plt.get_cmap(name='rainbow_r') # terrain, viridis
     cs = ax.pcolormesh(plon, plat, res,
                        vmin=500, vmax=1500, cmap = cmap)
     fig.colorbar(cs, ax=ax, extend='both')

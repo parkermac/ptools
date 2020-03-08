@@ -4,8 +4,8 @@ Organizational functions for pgrid.
 """
 
 # **** USER EDIT ********
-gridname = 'aestus3'
-#gridname = 'cas6'
+#gridname = 'aestus3'
+gridname = 'cas6'
 # **** END USER EDIT ****
 
 import os; import sys

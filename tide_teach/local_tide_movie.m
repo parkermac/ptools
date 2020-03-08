@@ -12,7 +12,7 @@ else
 end
 
 phome = '/Users/pm7/Documents/';
-indir = 'LiveOcean_roms/output/cas3_v0_lo6m/f2017.03.29/';
+indir = 'LiveOcean_roms/output/cas6_v3_lo8b/f2019.07.04/';
 infile = [phome,indir,'ocean_his_0001.nc'];
 lon = nc_varget(infile,'lon_psi');
 lat = nc_varget(infile,'lat_psi');
@@ -38,7 +38,7 @@ for tt = 1:ntt
     h = surfl(lon,lat,etap);
     aa = axis;
     %axis([aa(1:4) -3 3])
-    axis([-127.5 -122 43 50 -3 3])
+    axis([-130 -122 42 52 -3 3])
     shading flat
     colormap copper
     lighting phong
