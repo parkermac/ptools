@@ -1,4 +1,4 @@
-This code is deisgned to do mooring extractions for Alex Kurapov's WCOFS model runs, as part of the COMT 3 project led by Chris Edwards.  Because the model is on a rotated grid and has a different way of storing the output I have had to modify many of the methods used in LiveOcean/x_moor.
+This code is designed to do mooring extractions for Alex Kurapov's WCOFS model runs, as part of the COMT 3 project led by Chris Edwards.  Because the model is on a rotated grid and has a different way of storing the output I have had to modify many of the methods used in LiveOcean/x_moor.
 
 ===========================================================================================
 * mooring_extractor.py does the extraction, working over all the saved daily average files (in LiveOcean_roms/output/) and using mooring locations stored in LiveOcean/x_moor/moor_lists.py under job_name == 'comt3_2014_offshore'.
