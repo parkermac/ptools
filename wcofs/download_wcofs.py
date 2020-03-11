@@ -71,12 +71,17 @@ for dt in dt_list:
     print(' ' + outfile)
 
     if args.testing == False:
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(outfile, 'xb') as f:
-                for chunk in r.iter_content(chunk_size=8192): 
-                    if chunk: # filter out keep-alive new chunks
-                        f.write(chunk)
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(outfile, 'xb') as f:
+                    for chunk in r.iter_content(chunk_size=8192): 
+                        if chunk: # filter out keep-alive new chunks
+                            f.write(chunk)
+        except:
+            # sometimes the files is missing
+            # (wish I new the error code)
+            pass
             
     print('  -- took %0.1f seconds' % (time()-tt0))
     sys.stdout.flush()
