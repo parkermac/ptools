@@ -60,16 +60,27 @@ for dt in dt_list:
         '/nos.wcofs.avg.nowcast.' + this_day + '.t03z.nc')
     url = 'http://opendap.co-ops.nos.noaa.gov' + fn
     outfile = outdir + url.split('/')[-1]
+    
+    # get rid of the old version, if it exists
+    try:
+        os.remove(outfile)
+    except OSError:
+        pass # assume error was because the file did not exist
+    
     print(' ' + url)
     print(' ' + outfile)
 
     if args.testing == False:
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(outfile, 'xb') as f:
-                for chunk in r.iter_content(chunk_size=8192): 
-                    if chunk: # filter out keep-alive new chunks
-                        f.write(chunk)
+        try:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(outfile, 'xb') as f:
+                    for chunk in r.iter_content(chunk_size=8192): 
+                        if chunk: # filter out keep-alive new chunks
+                            f.write(chunk)
+        except HTTPError:
+            # sometimes the file does not exist
+            pass
             
     print('  -- took %0.1f seconds' % (time()-tt0))
     sys.stdout.flush()
