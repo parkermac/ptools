@@ -4,7 +4,9 @@ Code to download WCOFS model output, for the COMT 3 project.
 This is for the newer version, accessed March 9, 2020...
 
 RESULT: it works but performance is terrible.  Almost 10 minutes on both boiler and my mac
-for a file that is just 361 MB.  Thypcially this would be 36 sec at home and 4 sec at work.
+for a file that is just 361 MB.  Typcially this would be 36 sec at home and 4 sec at work.
+
+If you just need one day then you only need to pass the -0 argument.
 """
 
 import os; import sys
@@ -25,7 +27,7 @@ import argparse
 parser = argparse.ArgumentParser()
 # standard arguments
 parser.add_argument('-0', '--date_string0', type=str, default='2019.01.01')
-parser.add_argument('-1', '--date_string1', type=str, default='2019.01.03')
+parser.add_argument('-1', '--date_string1', type=str, default='')
 parser.add_argument('-test', '--testing', type=boolean_string, default=True)
 args = parser.parse_args()
 
@@ -40,6 +42,8 @@ Lfun.make_dir(outdir)
 
 # get time limits
 ds0 = args.date_string0; ds1 = args.date_string1
+if len(ds1) == 0:
+    ds1 = ds0
 dt0 = datetime.strptime(ds0, '%Y.%m.%d')
 dt1 = datetime.strptime(ds1, '%Y.%m.%d')
 
