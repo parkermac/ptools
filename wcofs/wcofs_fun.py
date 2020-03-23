@@ -58,9 +58,15 @@ def get_grid_info(fn):
     G['mask_rho'] = G['mask_rho'] == 1
     G['mask_u'] = G['mask_u'] == 1
     G['mask_v'] = G['mask_v'] == 1
-    ds.close()
+    # get vertical sigma-coordinate info (vectors are bottom to top)
+    s_varlist = ['s_rho', 's_w', 'hc', 'Cs_r', 'Cs_w', 'Vtransform']
+    S = dict()
+    for vv in s_varlist:
+        S[vv] = ds.variables[vv][:]
+    S['N'] = len(S['s_rho']) # number of vertical levels
     
-    return G
+    ds.close()
+    return G, S
     
 def get_itp_dict(sta_dict, sta_list, GG, Gcut):
     # get interpolants
