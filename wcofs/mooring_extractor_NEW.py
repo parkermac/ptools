@@ -21,7 +21,7 @@ that the time is 3 PM from the day before...?  Perhaps this is a side effect of 
 time averaging, like it is the start of the averaging time.
 """
 
-testing = True
+testing = False
 
 # setup
 import os, sys
@@ -253,6 +253,41 @@ for fn in fn_list:
 
     ds.close()
 # END OF EXTRACTING TIME-DEPENDENT FIELDS
+
+# create z_rho and z_w (has to be done after we have zeta)
+# also rotate velocity to be u = E-W, v = N-S
+for sn in sta_df.index:
+    out_fn = out_fn_dict[sn]
+    foo = nc.Dataset(out_fn, 'a')
+
+    zeta = foo['zeta'][:].squeeze()
+    hh = foo['h'][:] * np.ones_like(zeta)
+    z_rho, z_w = zrfun.get_z(hh, zeta, S)
+    
+    v_var = foo.createVariable('z_rho', float, ('ocean_time','s_rho'))
+    v_var.long_name = 'z on rho points (positive up)'
+    v_var.units = 'm'
+    v_var[:] = z_rho.T
+    
+    v_var = foo.createVariable('z_w', float, ('ocean_time','s_w'))
+    v_var.long_name = 'z on w points (positive up)'
+    v_var.units = 'm'
+    v_var[:] = z_w.T
+    
+    u = foo['u'][:]
+    v = foo['v'][:]
+    angle = foo['angle'][:] # scalar
+    # long_name: angle between xi axis and east
+    # units: degrees
+    # we use the minus sign to get back to Earth coordinates
+    ca = np.cos(-np.pi*angle/180)
+    sa = np.sin(-np.pi*angle/180)
+    uu = ca*u + sa*v
+    vv = ca*v - sa*u
+    foo['u'][:] = uu
+    foo['v'][:] = vv
+    
+    foo.close()
 
 
 
