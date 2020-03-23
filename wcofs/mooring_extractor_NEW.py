@@ -12,7 +12,8 @@ between the various C-grids.
 
 NOTE: in three instances the file size is larger, and there are two time levels
 instead of one.  This corresponds to times when the day before is missing, so
-I assume that these contain the "missing".
+I assume that these contain the "missing".  In any case this code skips the second
+time if there is a file with two times.
 
 Oddly, the timestamp for nos.wcofs.avg.nowcast.20190122.t03z.nc implies:
 datetime(2016,1,1) + timedelta(days=96476400/86400)
