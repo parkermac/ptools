@@ -250,6 +250,7 @@ for fn in fn_list:
         foo['u'][count,:] = VU[:,scount]
         foo['v'][count,:] = VV[:,scount]
         foo.close()
+        scount += 1
     count += 1
 
     ds.close()
