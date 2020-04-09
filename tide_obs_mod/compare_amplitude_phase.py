@@ -23,7 +23,8 @@ dir0 = Ldir['parent'] + 'ptools_output/tide/'
 
 # select model run
 
-for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8', 'cas6_v2_lo8', 'cas6_v3_lo8b']:
+#for gtagex in ['cas4_v2_lo6biom', 'cas5_v3_lo8', 'cas6_v1_lo8', 'cas6_v2_lo8', 'cas6_v3_lo8b']:
+for gtagex in ['cas6_v3_lo8b']:
 
     year  = 2017
 
