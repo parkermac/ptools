@@ -1,6 +1,6 @@
 """
-Compare observed and modeled amplitude and phase for ONE constituents
-at all stations.  The goal is to create a single map that conveys the tidal
+Compare observed and modeled amplitude and phase for two constituents
+at all stations.  The goal is to create maps that conveys the tidal
 validation results.
 
 """
@@ -20,86 +20,60 @@ import matplotlib.pyplot as plt
 
 import obsfun as ofn
 
-dir0 = Ldir['parent'] + 'ptools_output/tide/'
-
-# select model run
+# select model run, year, and constituents to plot (2)
 gtagex = 'cas6_v3_lo8b'
 year  = 2017
+const_list = ['M2', 'K1']
 
+# input
+dir0 = Ldir['parent'] + 'ptools_output/tide/'
+obs_dir = dir0 + 'obs_data/'
+mod_dir = dir0 + 'mod_data/' + gtagex + '/'
+
+# output
+outdir = dir0 + 'obs_mod_summary_output_cas6/'
+Lfun.make_dir(outdir)
+outfn = outdir + 'map_validation_' + gtagex + '_' + str(year) + '.png'
+
+# get info
 noaa_sn_dict, dfo_sn_dict, sn_dict = ofn.get_sn_dicts()
 sn_list = sn_dict.keys()
 
-def get_AG(hn, Hobs, Hmod):
-    ho = Hobs
-    hm = Hmod
-    Ao = ho.A[ho.name==hn]
-    Am = hm.A[hm.name==hn]
-    Go = ho.g[ho.name==hn]
-    Gm = hm.g[hm.name==hn]
-    Fo = 24*ho.aux.frq[ho.name==hn] # cycles per day
-    Fm = 24*hm.aux.frq[hm.name==hn]
-    # Amplitude (A) [m], Phase (G) [deg], Frequency (F) [cpd]
-    # o = observed, m = model
-    return Ao, Am, Go, Gm, Fo, Fm
-
-sn_coast = ['Charleston', 'South Beach', 'Garibaldi', 'Toke Point',
-    'Westport', 'La Push', 'Neah Bay', 'Tofino', 'Bamfield']
-sn_salish = ['Port Angeles', 'Friday Harbor', 'Cherry Point', 'Port Townsend',
-    'Seattle', 'Tacoma', 'Point Atkinson', 'Vancouver', 'Patricia Bay',
-    'Victoria Harbour', 'Campbell River', 'New Westminster']
-
-df_dict = dict() # each DataFrame has one constituent
-df = pd.DataFrame(index=sn_list, columns=['ar', 'dph'])
-for hn in ofn.hn_list:
-    df_dict[hn] = df.copy()
-
 map_df_dict = dict()
-const_list = ['M2', 'K1']
-#const_list = ['S2', 'O1']
 for const in const_list:
-    map_df = pd.DataFrame(index = sn_list)#, columns=['lon','lat','Ao','Am','Dph'])
+    map_df = pd.DataFrame(index = sn_list)
     for name in sn_list:
         # load observational data
-        obs_dir = dir0 + 'obs_data/'
-        sn = sn_dict[name]
+        sn = sn_dict[name] # station number
         hfn = obs_dir + 'h_' + str(sn) + '_' + str(year) + '.p'
         Hobs = pickle.load(open(hfn, 'rb'))
         # get station locations
         mfn = obs_dir + 'm_' + str(sn) + '_' + str(year) + '.csv'
-        M = Lfun.csv_to_dict(mfn)
+        M = Lfun.csv_to_dict(mfn) # has name and lon,lat info for a station
         map_df.loc[name,'lon'] = float(M['lon'])
         map_df.loc[name,'lat'] = float(M['lat'])
         # load model data
-        mod_dir = dir0 + 'mod_data/' + gtagex + '/'
         hfn = mod_dir + 'h_' + str(sn) + '_' + str(year) + '.p'
         Hmod = pickle.load(open(hfn, 'rb'))
         # get constituent info
         for hn in ofn.hn_list: # hn is a constituent name like M2
-            Ao, Am, Go, Gm, Fo, Fm = get_AG(hn, Hobs, Hmod)
-            df_dict[hn].loc[name, 'ar'] = Am/Ao
-            # fix phase difference when they straddle 360
-            if (Gm - Go) > 180:
-                Gm = Gm - 360
-            elif (Gm - Go) < -180:
-                Gm = Gm + 360
-            else:
-                pass
-            df_dict[hn].loc[name, 'dph'] = Gm - Go
+            Ao, Am, Go, Gm, Fo, Fm = ofn.get_AG(hn, Hobs, Hmod)
             if hn == const:
-                map_df.loc[name,'Ao'] = Ao[0]
-                map_df.loc[name,'Am'] = Am[0]
-                map_df.loc[name,'Go'] = Go[0]
-                map_df.loc[name,'Gm'] = Gm[0]
-                map_df.loc[name,'Dph'] = Gm[0] - Go[0]
+                map_df.loc[name,'Ao'] = Ao
+                map_df.loc[name,'Am'] = Am
+                map_df.loc[name,'Go'] = Go
+                map_df.loc[name,'Gm'] = Gm
+                map_df.loc[name,'Dph'] = Gm - Go
     map_df_dict[const] = map_df
 
 # plotting
 plt.close('all')
 fig = plt.figure(figsize=(8,8))
 fs = 18
+abc = 'abc'
 
-x0 = -127; x1 = -121.5
-y0 = 42.5; y1 = 50.5
+# axis limits
+x0 = -127; x1 = -121.5; y0 = 42.5; y1 = 50.5
 dx = x1 - x0; dy = y1 - y0
 
 counter = 1
@@ -131,8 +105,8 @@ for const in const_list:
         ax.quiver(xx,yy, 0*xx, np.ones_like(yy),
             transform=ax.transAxes, scale=20, scale_units='height',
             headwidth=0,headlength=0, angles=Gm, color='r')
-    ax.text(.05, .9, '$%s_{%s}$' % (const[0], const[1]),
-        fontsize=fs*1.5, transform=ax.transAxes)
+    ax.text(.96, .93, '(%s) $%s_{%s}$' % (abc[counter-1], const[0], const[1]),
+        fontsize=fs*1.5, transform=ax.transAxes, ha='right')
     if counter == 1:
         ax.set_xlabel('Longitude', fontsize=fs)
         ax.set_ylabel('Latitude', fontsize=fs)
@@ -160,5 +134,7 @@ for const in const_list:
         
     ax.tick_params(labelsize=.8*fs)
     counter += 1
+    
 fig.tight_layout()
+plt.savefig(outfn)
 plt.show()

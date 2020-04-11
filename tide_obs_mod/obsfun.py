@@ -10,6 +10,26 @@ import pytz
 import utide
 from matplotlib.dates import date2num
 
+def get_AG(hn, Hobs, Hmod):
+    #convenience function for loading constituent info
+    ho = Hobs
+    hm = Hmod
+    # we use the "[0]" becasue these are arrays and we want floats
+    Ao = ho.A[ho.name==hn][0]
+    Am = hm.A[hm.name==hn][0]
+    Go = ho.g[ho.name==hn][0]
+    Gm = hm.g[hm.name==hn][0]
+    Fo = 24*ho.aux.frq[ho.name==hn][0] # cycles per day
+    Fm = 24*hm.aux.frq[hm.name==hn][0]
+    # fix when phase difference straddles 360
+    if (Gm - Go) > 180:
+        Gm = Gm - 360
+    elif (Gm - Go) < -180:
+        Gm = Gm + 360
+    else:
+        pass
+    return Ao, Am, Go, Gm, Fo, Fm
+
 # list of frequencies to consider.  Sometimes we want to limit this
 # because for shorter records utide can't separate nearby peaks
 #hn_list = ['M2','S2','N2','O1','P1','K1']
