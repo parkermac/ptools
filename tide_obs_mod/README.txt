@@ -83,14 +83,22 @@ Output: a folder full of png's of validation information, one for each station. 
 
 - ptools_output/tide/web_series_[gtagex]_[year]/[Station_Name].png which are more compact versions, designed to use with the google click-map on the website.  The code also produced some screen output with station locations designed to be cut and pasted into the webpage javascript.
 
-It also produces a little bit of screen output with statistics for the whole group of stations.  E.g. for cas6_v1_lo8 it gave:
+It also produces a little bit of screen output with statistics for the whole group of stations:
+	cas6_v3_lo8b
 	Average Error Statistics
-	RMS Error = 0.32 (m)
-	RMS Error = 40.09 (% of RMS Tide)
+	RMS Error = 0.31 (m)
+	RMS Error = 39.27 (% of RMS Tide)
 	RMS Tide = 0.82 (m)
 
 =================================================================================
-* plot_response.py takes the output of get_[obs, mod]_tide.py and does a "reponse" plot comparing the Amplitude ratio and phase shift for a pari of stations, tyically one coastal and one inland, following Sutherland et al. (2005)
+* plot_map_validation.py makes publication-ready plots of observed and modeled tidal constitients for two phases.
+
+Input: like plot_validation above.
+
+Output: ptools_output/tide/obs_mod_summary_output_cas6/map_validation_cas6_v3_lo8b_2017.png
+
+=================================================================================
+* plot_response.py takes the output of get_[obs, mod]_tide.py and does a "reponse" plot comparing the Amplitude ratio and phase shift for a pair of stations, tyically one coastal and one inland, following Sutherland et al. (2005)
 
 Output: a figure
 
