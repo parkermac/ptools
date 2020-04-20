@@ -107,9 +107,16 @@ the full list of columns is:
 ======================================================================
 * plot_obsmod_scatter.py makes time a scatterplot comparing obs & mod over a year.  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
 
-Input: ptools_output/ecology/ObsMod_cas4_v2_lo6biom.p
+Input: ptools_output/ecology/ObsMod_cas6_v3_lo8b_2017.p
 	   
 Output: a scatterplot of all data (for three depths)
+
+======================================================================
+* plot_obsmod_map.py makes plots that are map summary info about fields at three depths, comparing modeled and observed fields.
+
+Input: ptools_output/ecology/ObsMod_cas6_v3_lo8b_2017.p
+
+Output: ptools_output/ecology/obsmod_maps/cas6_v3_lo8b_2017_DIN.png for example
 
 ======================================================================
 * bin_by_region.py replicates a step in obs_collias.  It gathers all the casts in a Region, for all years, and then for each cast interpolates in the vertical to just have data at [-30, -10, 0] m.

@@ -10,7 +10,6 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 
-
 # read in stored station info (links station names to locations)
 dir0 = '../../ptools_data/ecology/'
 sta_df = pd.read_pickle(dir0 + 'sta_df.p')

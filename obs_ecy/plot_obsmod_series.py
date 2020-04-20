@@ -28,7 +28,7 @@ import pfun
 
 # ***** User Edits
 
-year = 2018
+year = 2017
 
 # specify which model run to use
 #Ldir['gtagex'] = 'cas4_v2_lo6biom'
@@ -66,7 +66,7 @@ except FileNotFoundError:
 # still need to get Canadian bottle data
 
 if testing==True:
-    sta_to_plot = [s for s in sta_df.index if 'PSB003' in s]
+    sta_to_plot = [s for s in sta_df.index if 'SOG42' in s]
     save_fig = False
 else:
     sta_to_plot = [s for s in sta_df.index]
@@ -191,6 +191,8 @@ for station in sta_to_plot:
         date_string = dd.strftime('%Y.%m.%d')
         dir0m = Ldir['LOo'] + 'cast/'
         fnm = dir0m + Ldir['gtagex'] + '/' + station + '_' + date_string + '.nc'
+        if testing == True:
+            print(fnm)
         try:
             ds = nc4.Dataset(fnm)
             z = ds['z_rho'][:].squeeze()
@@ -207,6 +209,8 @@ for station in sta_to_plot:
                         pass
             ds.close()
         except OSError:
+            if testing == True:
+                print('error reading fnm')
             pass
         Bc = pd.concat((Bc,bc), ignore_index=True, sort=False)
             

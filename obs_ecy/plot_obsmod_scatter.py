@@ -31,6 +31,9 @@ out_fn = 'ObsMod_' + Ldir['gtagex'] + '_'+ str(year) + '.p'
 print('Loading ' + out_fn)
 Bc = pd.read_pickle(dir11 + out_fn)
 
+# output plot name
+out_plot_fn = dir11 + 'ecy_scatter_' + Ldir['gtagex'] + '_'+ str(year) + '.png'
+
 # add density to calculate stratification
 Bc['Density (kg m-3)'] = sw.dens0(Bc['Salinity'], Bc['Temp. (deg C)'])
 Bc['Mod Density (kg m-3)'] = sw.dens0(Bc['Mod Salinity'], Bc['Mod Temp. (deg C)'])
@@ -43,7 +46,6 @@ S5 = D10['Density (kg m-3)'].values - D0['Density (kg m-3)'].values
 S20 = D30['Density (kg m-3)'].values - D10['Density (kg m-3)'].values
 SM5 = D10['Mod Density (kg m-3)'].values - D0['Mod Density (kg m-3)'].values
 SM20 = D30['Mod Density (kg m-3)'].values - D10['Mod Density (kg m-3)'].values
-
 
 lim_dict = {'Salinity': (0, 34), 'Temp. (deg C)': (0, 24),
     'DO (mg L-1)': (0, 20), 'DIN (uM)': (0,55), 'Chl (mg m-3)': (0,50)}
@@ -123,4 +125,5 @@ ax.text(.95, .17, '10-30 m', color='c', fontweight='bold',
     transform=ax.transAxes, horizontalalignment='right')
 
 fig.tight_layout()
+plt.savefig(out_plot_fn)
 plt.show()

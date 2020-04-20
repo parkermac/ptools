@@ -2,8 +2,7 @@
 Plots data from the Department of Ecology, combining data from CTD casts
 and bottles at the same station.  Also including model output.
 
-This makes a summary map.  Now the AREA of symbols is proportional to
-the value they represent (had been the radius).
+This makes a summary map, using color in side-by-side boxes.
 
 """
 import os, sys
@@ -19,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seawater as sw
 
-testing = True
+testing = False
 
 Ldir = Lfun.Lstart()
 Ldir['gtagex'] = 'cas6_v3_lo8b'
@@ -65,24 +64,13 @@ sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
 x0 = -124.5; x1 = -122; y0 = 46; y1 = 49.5 # Salish Sea
 aa = [x0, x1, y0, y1]
 
-# def msz(vv, v0, v1, scl=40):
-#     msz = scl*(vv - v0)/(v1 - v0)
-#     if msz < 1:
-#         msz = 6.3/40
-#     msz_new = (40/6.3)*np.sqrt(msz)
-#     return msz_new
-def msz(vv, v0, v1):
-    vvs = (vv - v0)/(v1 - v0)
-    scl = 40
-    if vvs < 0:
-        vvs = 1/scl**2
-    msz = scl*np.sqrt(vvs)
-    return msz
+import matplotlib
+import matplotlib.cm as cm
 
 v_dict = {
-    'Salinity': (16,34,'Salinity','salt',[0, -10, -80]),
+    'Salinity': (20,34,'Salinity','salt',[0, -10, -80]),
     'Temp. (deg C)': (8,18,'Temp. [$^{\circ} C$]','temp',[0, -10, -80]),
-    'DO (mg L-1)': (3,10,'DO [$mg\ L^{-1}$]','DO',[0, -10, -80]),
+    'DO (mg L-1)': (0,12,'DO [$mg\ L^{-1}$]','DO',[0, -10, -80]),
     'DIN (uM)': (0,35,'DIN [$\mu M$]','DIN',[0, -10, -30])
     }
     
@@ -93,14 +81,16 @@ if testing:
 # PLOTTING
 plt.close('all')
 fs = 18
-co = 'c'; ao = .5
-cm = 'b'
+dx = .04
+sz = 10
 abc = 'abcd'
 for vname in v_list:
 
     fig = plt.figure(figsize=(20,12))
     v0, v1, vname_str, short_name, z_list = v_dict[vname]
-    v01 = (v0+v1)/2
+    
+    norm = matplotlib.colors.Normalize(vmin=v0, vmax=v1, clip=True)
+    mapper = cm.ScalarMappable(norm=norm, cmap=cm.rainbow)
     
     counter = 1
     for z in z_list:
@@ -126,16 +116,23 @@ for vname in v_list:
             vo = Bc.loc[mask,vname].mean()
             vm = Bc.loc[mask,'Mod ' + vname].mean()
             
-            # print('Obs. Value = %0.1f msz = %0.1f' % (vo, msz(vo, v0, v1)))
-            # print('Mod. Value = %0.1f msz = %0.1f' % (vm, msz(vm, v0, v1)))
+            if np.isnan(vo):
+                voc='None'
+            else:
+                voc = mapper.to_rgba(vo)
+
+            if np.isnan(vm):
+                vmc='None'
+            else:
+                vmc = mapper.to_rgba(vm)
     
-            ax.plot(xs, ys, 'o', markerfacecolor=co, markeredgecolor=co,
-                markersize=msz(vo, v0, v1), alpha=ao)
-            ax.plot(xs, ys, 'o', markerfacecolor='None', markeredgecolor=cm,
-                markersize=msz(vm, v0, v1))
+            ax.plot(xs-dx, ys, 's', markerfacecolor=voc, markeredgecolor='k',
+                markersize=sz)
+            ax.plot(xs+dx, ys, 's', markerfacecolor=vmc, markeredgecolor='k',
+                markersize=sz)
             
-            if counter == 3:
-                ax.text(xs, ys, sn, ha='center', va='center', size=.5*fs)
+            # if counter == 3:
+            #     ax.text(xs, ys, sn, ha='center', va='center', size=.5*fs)
         
         if counter == 1:
             ax.text(.95, .98, '(%s) Z = %d (m)\nMonths %d to %d' % (abc[counter-1], z, mo0, mo1),
@@ -154,25 +151,19 @@ for vname in v_list:
             ax.set_ylabel('Latitude', size=fs)
             
             # legend
-            lx = .7; ly = .15
-            ax.plot(lx, ly, 'o', markerfacecolor=co, markeredgecolor=co,
-                markersize=msz(v1, v0, v1), alpha=ao, transform=ax.transAxes)
-            ax.plot(lx, ly, 'o', markerfacecolor='None', markeredgecolor=cm,
-                markersize=msz(v0, v0, v1), transform=ax.transAxes)
-            ax.plot(lx, ly, 'o', markerfacecolor='None', markeredgecolor=cm,
-                markersize=msz(v01, v0, v1), transform=ax.transAxes)
-            ax.plot(lx, ly, 'o', markerfacecolor='None', markeredgecolor=cm,
-                markersize=msz(v1, v0, v1), transform=ax.transAxes)
-            ax.text(lx, ly+.05, 'Observed (%d)' % (v1),
-                ha='center', va='center', size=fs, style='italic', color=co,
-                transform=ax.transAxes)
-            ax.text(lx, ly-.06, 'Modeled (%d, %d, %d)' % (v0, v01, v1),
-                ha='center', va='center', size=fs, style='italic', color=cm,
-                transform=ax.transAxes)
-            ax.text(lx, .03, '$Circle\ Area\ \propto\ Value$',
-                ha='center', va='center', size=.8*fs, style='italic', color='k',
-                transform=ax.transAxes,bbox=dict(facecolor='w', edgecolor='None'))
-                        
+            lx = -122.5; ly = 46.7; ldx = .2; lsz = 50
+            ax.plot(lx-ldx, ly, 's', markersize=lsz, markerfacecolor='None', markeredgecolor='k')
+            ax.text(lx-ldx, ly, 'Obs', size=fs, ha='center', va='center')
+            ax.plot(lx+ldx, ly, 's', markersize=lsz, markerfacecolor='None', markeredgecolor='k')
+            ax.text(lx+ldx, ly, 'Mod', size=fs, ha='center', va='center')
+            
+            # Inset colorbar
+            from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+            cbaxes = inset_axes(ax, width="4%", height="40%", loc=2, borderpad=2.5) 
+            cb = fig.colorbar(mapper, cax=cbaxes, orientation='vertical')
+            
+            plt.setp(cb.ax.yaxis.get_ticklabels(), fontsize=fs)
+            
         counter += 1
     
     outname = Ldir['gtagex'] + '_' + year_str + '_' + short_name + '.png'
