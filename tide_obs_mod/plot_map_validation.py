@@ -71,10 +71,14 @@ plt.close('all')
 fig = plt.figure(figsize=(8,8))
 fs = 18
 abc = 'abc'
+scl = 50
 
 # axis limits
 x0 = -127; x1 = -121.5; y0 = 42.5; y1 = 50.5
 dx = x1 - x0; dy = y1 - y0
+
+co = 'c'
+cm = 'b'
 
 counter = 1
 for const in const_list:
@@ -91,29 +95,28 @@ for const in const_list:
         Go = map_df.loc[name,'Go']
         Gm = map_df.loc[name,'Gm']
         Dph = map_df.loc[name,'Dph']
-        scl = 50
         ax.plot(x,y,'o', markersize=Ao*scl,
-            markerfacecolor='None', markeredgecolor='k')
+            markerfacecolor='None', markeredgecolor=co, markeredgewidth=3)
         ax.plot(x,y,'o', markersize=Am*scl,
-            markerfacecolor='None', markeredgecolor='r')
+            markerfacecolor='None', markeredgecolor=cm, markeredgewidth=1)
         # fractional positions
         xx = (x - x0)/dx
         yy = (y - y0)/dy
         ax.quiver(xx,yy, 0*xx, np.ones_like(yy),
             transform=ax.transAxes, scale=20, scale_units='height',
-            headwidth=0,headlength=0, angles=Go)
+            headwidth=0,headlength=0, angles=Go, color=co)
         ax.quiver(xx,yy, 0*xx, np.ones_like(yy),
             transform=ax.transAxes, scale=20, scale_units='height',
-            headwidth=0,headlength=0, angles=Gm, color='r')
+            headwidth=0,headlength=0, angles=Gm, color=cm)
     ax.text(.96, .93, '(%s) $%s_{%s}$' % (abc[counter-1], const[0], const[1]),
         fontsize=fs*1.5, transform=ax.transAxes, ha='right')
     if counter == 1:
         ax.set_xlabel('Longitude', fontsize=fs)
         ax.set_ylabel('Latitude', fontsize=fs)
         ax.text(.03, .08, 'Observed',
-            fontsize=fs, transform=ax.transAxes, color='k', style='italic')
+            fontsize=fs, transform=ax.transAxes, color=co, style='italic')
         ax.text(.03, .04, 'Modeled',
-            fontsize=fs, transform=ax.transAxes, color='r', style='italic')
+            fontsize=fs, transform=ax.transAxes, color=cm, style='italic')
     if counter == 2:
         ax.set_xlabel('Longitude', fontsize=fs)
         ax.set_yticklabels([])
@@ -125,11 +128,11 @@ for const in const_list:
         ax.text(xx0,yy0+.08,'$1\ m$\nAmplitude', size=.6*fs, ha='center', va='center',transform=ax.transAxes)
         ax.quiver(xx0,yy0, 0, 1,
             transform=ax.transAxes, scale=20, scale_units='height',
-            headwidth=0,headlength=0, angles=0)
+            headwidth=0,headlength=0, angles=0, color=co)
         ax.quiver(xx0,yy0, 0, 1,
             transform=ax.transAxes, scale=20, scale_units='height',
-            headwidth=0,headlength=0, angles=15, color='r')
-        ax.text(xx0,yy0-.08,'Model Phase', size=.6*fs, ha='center', va='center',transform=ax.transAxes, color='r')
+            headwidth=0,headlength=0, angles=15, color=cm)
+        ax.text(xx0,yy0-.08,'Model Phase', size=.6*fs, ha='center', va='center',transform=ax.transAxes, color=cm)
         ax.text(xx0,yy0-.11,'lags by $15^{\circ}$', size=.6*fs, ha='center', va='center',transform=ax.transAxes)
         
     ax.tick_params(labelsize=.8*fs)
