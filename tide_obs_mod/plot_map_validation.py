@@ -113,18 +113,23 @@ for const in const_list:
     if counter == 1:
         ax.set_xlabel('Longitude', fontsize=fs)
         ax.set_ylabel('Latitude', fontsize=fs)
-        ax.text(.03, .08, 'Observed',
+        ax.text(.96, .08, 'Observed', ha='right',
             fontsize=fs, transform=ax.transAxes, color=co, style='italic')
-        ax.text(.03, .04, 'Modeled',
+        ax.text(.96, .04, 'Modeled', ha='right',
             fontsize=fs, transform=ax.transAxes, color=cm, style='italic')
     if counter == 2:
         ax.set_xlabel('Longitude', fontsize=fs)
         ax.set_yticklabels([])
         
         # scale
-        xx0 = .85; yy0=.2
-        ax.plot(xx0,yy0,'o', markersize=scl,
-            markerfacecolor='None', markeredgecolor='k',transform=ax.transAxes)
+        xx0 = .85; yy0=.23
+        ax.plot(xx0,yy0,'o', markersize=scl, transform=ax.transAxes,
+            markerfacecolor='None', markeredgecolor=co, markeredgewidth=3)
+        ax.plot(xx0,yy0,'o', markersize=scl, transform=ax.transAxes,
+            markerfacecolor='None', markeredgecolor=cm, markeredgewidth=1)
+            
+        # ax.plot(xx0,yy0,'o', markersize=scl,
+        #     markerfacecolor='None', markeredgecolor='k',transform=ax.transAxes)
         ax.text(xx0,yy0+.08,'$1\ m$\nAmplitude', size=.6*fs, ha='center', va='center',transform=ax.transAxes)
         ax.quiver(xx0,yy0, 0, 1,
             transform=ax.transAxes, scale=20, scale_units='height',
@@ -132,8 +137,12 @@ for const in const_list:
         ax.quiver(xx0,yy0, 0, 1,
             transform=ax.transAxes, scale=20, scale_units='height',
             headwidth=0,headlength=0, angles=15, color=cm)
-        ax.text(xx0,yy0-.08,'Model Phase', size=.6*fs, ha='center', va='center',transform=ax.transAxes, color=cm)
-        ax.text(xx0,yy0-.11,'lags by $15^{\circ}$', size=.6*fs, ha='center', va='center',transform=ax.transAxes)
+        # ax.text(xx0,yy0-.08,'Model Phase', size=.6*fs, ha='center', va='center',transform=ax.transAxes, color=cm)
+        ax.text(xx0,yy0-.11,'Model phase\nshown with\nlag of $15^{\circ}$', size=.6*fs,
+            ha='center', va='center',transform=ax.transAxes, color=cm)
+        
+        ax.text(.96, .03,'$Amplitude \ \propto \ circle\ diameter$', size=.6*fs,
+            ha='right', va='center', transform=ax.transAxes, bbox=dict(facecolor='w', edgecolor='None'))
         
     ax.tick_params(labelsize=.8*fs)
     counter += 1

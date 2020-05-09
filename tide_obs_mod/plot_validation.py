@@ -38,7 +38,7 @@ gtagex = 'cas6_v3_lo8b'
 year  = 2017
 
 testing = False
-for_web = True # plots styled for the validation website
+for_web = False # plots styled for the validation website
 
 if testing==True:
     sn_list = ['Seattle']

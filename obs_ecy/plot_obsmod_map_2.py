@@ -68,15 +68,15 @@ import matplotlib
 import matplotlib.cm as cm
 
 v_dict = {
-    'Salinity': (20,34,'Salinity','salt',[0, -10, -80]),
-    'Temp. (deg C)': (8,18,'Temp. [$^{\circ} C$]','temp',[0, -10, -80]),
-    'DO (mg L-1)': (0,12,'DO [$mg\ L^{-1}$]','DO',[0, -10, -80]),
-    'DIN (uM)': (0,35,'DIN [$\mu M$]','DIN',[0, -10, -30])
+    'Salinity': (20,34,'Salinity','salt',[0, -10, -80], cm.rainbow),
+    'Temp. (deg C)': (8,18,'Temp. [$^{\circ} C$]','temp',[0, -10, -80], cm.Spectral_r),
+    'DO (mg L-1)': (2,12,'DO [$mg\ L^{-1}$]','DO',[0, -10, -80], cm.rainbow_r),
+    'DIN (uM)': (0,35,'DIN [$\mu M$]','DIN',[0, -10, -30], cm.cool)
     }
     
 v_list = list(v_dict.keys())
 if testing:
-    v_list = ['Salinity']
+    v_list = ['DO (mg L-1)']
 
 # PLOTTING
 plt.close('all')
@@ -87,10 +87,10 @@ abc = 'abcd'
 for vname in v_list:
 
     fig = plt.figure(figsize=(20,12))
-    v0, v1, vname_str, short_name, z_list = v_dict[vname]
+    v0, v1, vname_str, short_name, z_list, cmap = v_dict[vname]
     
     norm = matplotlib.colors.Normalize(vmin=v0, vmax=v1, clip=True)
-    mapper = cm.ScalarMappable(norm=norm, cmap=cm.rainbow)
+    mapper = cm.ScalarMappable(norm=norm, cmap=cmap)
     
     counter = 1
     for z in z_list:
@@ -128,7 +128,7 @@ for vname in v_list:
     
             ax.plot(xs-dx, ys, 's', markerfacecolor=voc, markeredgecolor='k',
                 markersize=sz)
-            ax.plot(xs+dx, ys, 's', markerfacecolor=vmc, markeredgecolor='k',
+            ax.plot(xs+dx, ys, '>', markerfacecolor=vmc, markeredgecolor='k',
                 markersize=sz)
             
             # if counter == 3:
@@ -151,11 +151,11 @@ for vname in v_list:
             ax.set_ylabel('Latitude', size=fs)
             
             # legend
-            lx = -122.5; ly = 46.7; ldx = .2; lsz = 50
+            lx = -122.5; ly = 46.7; ldx = .23; lsz = 60
             ax.plot(lx-ldx, ly, 's', markersize=lsz, markerfacecolor='None', markeredgecolor='k')
-            ax.text(lx-ldx, ly, 'Obs', size=fs, ha='center', va='center')
-            ax.plot(lx+ldx, ly, 's', markersize=lsz, markerfacecolor='None', markeredgecolor='k')
-            ax.text(lx+ldx, ly, 'Mod', size=fs, ha='center', va='center')
+            ax.text(lx-ldx, ly, 'Obs', size=.8*fs, ha='center', va='center')
+            ax.plot(lx+ldx, ly, '>', markersize=lsz, markerfacecolor='None', markeredgecolor='k')
+            ax.text(lx+.75*ldx, ly, 'Mod', size=.8*fs, ha='center', va='center')
             
             # Inset colorbar
             from mpl_toolkits.axes_grid1.inset_locator import inset_axes

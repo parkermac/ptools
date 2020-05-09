@@ -112,7 +112,14 @@ Input: ptools_output/ecology/ObsMod_cas6_v3_lo8b_2017.p
 Output: a scatterplot of all data (for three depths)
 
 ======================================================================
-* plot_obsmod_map.py makes plots that are map summary info about fields at three depths, comparing modeled and observed fields.
+* plot_obsmod_map.py [OBSOLETE] makes plots that are map summary info about fields at three depths, comparing modeled and observed fields.  This makes circles to compare obs-mod, with area proportional to value.  I decided I did not like them, and went to version _2 below.
+
+Input: ptools_output/ecology/ObsMod_cas6_v3_lo8b_2017.p
+
+Output: ptools_output/ecology/obsmod_maps/cas6_v3_lo8b_2017_DIN.png for example
+
+======================================================================
+* plot_obsmod_map_2.py makes plots that are map summary info about fields at three depths, comparing modeled and observed fields.  This one uses colored side-by-side boxes for the comparison.
 
 Input: ptools_output/ecology/ObsMod_cas6_v3_lo8b_2017.p
 

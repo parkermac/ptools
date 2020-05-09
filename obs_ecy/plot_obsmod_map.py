@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seawater as sw
 
-testing = True
+testing = False
 
 Ldir = Lfun.Lstart()
 Ldir['gtagex'] = 'cas6_v3_lo8b'
@@ -175,7 +175,7 @@ for vname in v_list:
                         
         counter += 1
     
-    outname = Ldir['gtagex'] + '_' + year_str + '_' + short_name + '.png'
+    outname = Ldir['gtagex'] + '_' + year_str + '_' + short_name + '_CIRCLES.png'
     out_fn = outdir + outname
     #fig.tight_layout()
     if not testing:
