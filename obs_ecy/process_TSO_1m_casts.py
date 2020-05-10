@@ -27,6 +27,13 @@ testing = False
 
 # ***** End User Edits
 
+# +++ load Ecology and Canadian CTD cast data +++
+dir0 = Ldir['parent'] + 'ptools_data/ecology/'
+dir1 = Ldir['parent'] + 'ptools_data/canada/'
+sta_df = pd.read_pickle(dir0 + 'sta_df.p')
+sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
+sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
+
 for year in [2017, 2018, 2019]:
     
     print('\n***** ' + str(year) + ' *****')
@@ -35,12 +42,6 @@ for year in [2017, 2018, 2019]:
     out_dir = Ldir['parent'] + 'ptools_output/ecology/'
     out_fn = 'TSO_1m_casts_' + Ldir['gtagex'] + '_' + str(year) + '.p'
 
-    # +++ load Ecology and Canadian CTD cast data +++
-    dir0 = Ldir['parent'] + 'ptools_data/ecology/'
-    dir1 = Ldir['parent'] + 'ptools_data/canada/'
-    sta_df = pd.read_pickle(dir0 + 'sta_df.p')
-    sta_df_ca = pd.read_pickle(dir1 + 'sta_df.p')
-    sta_df = pd.concat((sta_df, sta_df_ca), sort=False)
     #
     Casts = pd.read_pickle(dir0 + 'Casts_' + str(year) + '.p')
     try:
