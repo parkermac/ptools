@@ -38,9 +38,11 @@ for year in [2017, 2018, 2019]:
     TSO = pd.read_pickle(in_dir + in_fn)
     TSO_dict[year] = TSO
     TSO_all = pd.concat((TSO_all, TSO), sort=False)
-    
-this_TSO = TSO_dict[2017]
-zlev = -15.
+
+year = 2017
+this_TSO = TSO_dict[year]
+
+out_fn = Ldir['parent'] + 'ptools_output/ecology/TSO_'+str(year)+'.png'
 
 sn_dict = {
     0: ['SJF001','ADM002','ADM001','ADM003','PSB003','EAP001','CMB003',
@@ -53,7 +55,9 @@ lab_dict = {
     1: '(b) JdF to Hood Canal',
     2: '(c) JdF to Whidbey Basin'}
 
-c_dict = {0: 'darkgoldenrod', 1: 'orange', 2: 'gold'}
+c_dict = {0: 'red', 1: 'olive', 2: 'orange'}
+
+zlev_dict = {0: -20., 1: -10, 2:-10}
 
 def make_dist(sn_list, sta_df):
     # create a distance vector
@@ -76,6 +80,10 @@ def make_dist(sn_list, sta_df):
 
 # PLOTTING
 fs=14
+plt.rc('font', size=fs)
+alpha = .5
+print('\n******** YEAR = ' + str(year) + ' ********')
+
 plt.close('all')
 fig = plt.figure(figsize=(14,11))
 
@@ -86,13 +94,17 @@ ax3.set_xlim(-123.25, -122.25)
 ax3.set_ylim(47, 48.5)
 pfun.dar(ax3)
 ax3.text(.95,.05,'(d)', transform=ax3.transAxes, color='k',
-    size=fs, weight='bold', ha='right')
-
-
+    size=1.3*fs, weight='bold', ha='right')
+ax3.set_xticks([-123, -122.5])
+ax3.set_yticks([47,48])
+ax3.set_xlabel('Longitude')
+ax3.set_ylabel('Latitude')
         
 for ii in [0, 1, 2]:
     
     sn_list = sn_dict[ii]
+    
+    zlev = zlev_dict[ii]
     
     ts_df = pd.DataFrame(index=sn_list,
             columns=['Longitude','Latitude', 'Distance (km)',
@@ -123,24 +135,45 @@ for ii in [0, 1, 2]:
     
     if ii == 0:
         ax = plt.subplot2grid((3,3), (0,0), colspan=3)
+        ax.text(.9,.85,'MODELED ' + str(year), weight='bold', style='italic', color='b', alpha=alpha,
+            transform=ax.transAxes, ha='right', size=1.3*fs)
+        ax.text(.9,.4,'OBSERVED ' + str(year), weight='bold', style='italic', color='r', alpha=alpha,
+            transform=ax.transAxes, ha='right', size=1.3*fs)
     elif ii == 1:
         ax = plt.subplot2grid((3,3), (1,0), colspan=2)
     elif ii == 2:
         ax = plt.subplot2grid((3,3), (2,0), colspan=2)
+        ax.set_xlabel('Distance from JdF [km]')
+    ax.set_ylabel('Salinity')
             
     s0 = pd.to_numeric(ts_df['S top'].to_numpy())
     s1 = pd.to_numeric(ts_df['S bot'].to_numpy())
-    ax.fill_between(dd, s0, s1, color='r', alpha=.5)
+    
+    # print stats
+    print('\n'+lab_dict[ii]+', zlev = ' + str(-zlev) + ' [m]')
+    BB = np.polyfit(dd,(s0+s1)/2,1)
+    dsdx = BB[0] # slope
+    DS = (s1-s0).mean()
+    print('OBSERVED dS/dx = %0.2f [psu/100 km], DS = %0.2f [psu]' % (-100*dsdx,DS))
+    ax.fill_between(dd, s0, s1, color='r', alpha=alpha)
     s0 = pd.to_numeric(ts_df['Mod S top'].to_numpy())
     s1 = pd.to_numeric(ts_df['Mod S bot'].to_numpy())
-    ax.fill_between(dd, s0, s1, color='b', alpha=.5)
-    ax.set_ylim(25,32)
+    BB = np.polyfit(dd,(s0+s1)/2,1)
+    m_dsdx = BB[0] # slope
+    m_DS = (s1-s0).mean()
+    print('MODELED  dS/dx = %0.2f [psu/100 km], DS = %0.2f [psu]' % (-100*m_dsdx,m_DS))
+    print('RATIO MOD/OBS  = %0.2f                    %0.2f' % (m_dsdx/dsdx,m_DS/DS))
+    ax.fill_between(dd, s0, s1, color='b', alpha=alpha)
+    ax.set_ylim(24,32)
     
     ax.text(.05,.1,lab_dict[ii], transform=ax.transAxes, color=c_dict[ii],
-        size=fs, weight='bold')
+        size=1.3*fs, weight='bold')
         #bbox=dict(facecolor='gray', edgecolor='None', alpha=0.5))
     
     ts_df.plot(x='Longitude', y='Latitude', style='-o', color=c_dict[ii],
         linewidth=4-ii, ax=ax3, legend=False, markersize=12-(3*ii))
     
 plt.show()
+fig.savefig(out_fn)
+plt.rcdefaults()
+
