@@ -36,7 +36,11 @@ year = 2017
 Ldir['gtagex'] = 'cas6_v3_lo8b'
 
 testing = False
-for_web = False # True for plots styled for the validation website
+no_map = True
+
+for_web = False
+if for_web:
+    no_map = True
 
 # ***** End User Edits
 
@@ -66,7 +70,7 @@ except FileNotFoundError:
 # still need to get Canadian bottle data
 
 if testing==True:
-    sta_to_plot = [s for s in sta_df.index if 'SOG42' in s]
+    sta_to_plot = [s for s in sta_df.index if 'SAR003' in s]
     save_fig = False
 else:
     sta_to_plot = [s for s in sta_df.index]
@@ -80,7 +84,10 @@ else:
 if save_fig==True:
     dir11 = Ldir['parent'] + 'ptools_output/ecology/'
     Lfun.make_dir(dir11)
-    dir1 = dir11 + tag + '_series_' + Ldir['gtagex'] + '_'+ str(year) + '/'
+    if no_map == True:
+        dir1 = dir11 + tag + '_series_' + Ldir['gtagex'] + '_'+ str(year) + '_nomap/'
+    else:
+        dir1 = dir11 + tag + '_series_' + Ldir['gtagex'] + '_'+ str(year) + '/'
     Lfun.make_dir(dir1, clean=True)
 
 Bc = pd.DataFrame() # DataFrame to hold all bottle and cast data
@@ -138,7 +145,6 @@ for station in sta_to_plot:
     dates = dates[dates.year==year]
     
     for dd in dates:
-        
 
         #Initialize a DataFrame for this station/date
         bc_columns = ['Station', 'Date', 'Znom', 'Z',
@@ -222,20 +228,31 @@ if testing == False:
     Bc.to_pickle(dir11 + out_fn)
 
 # # plotting
+fs=16
+plt.rc('font', size=fs)
 plt.close('all')
 # x limits for plotting
 dt0 = pd.datetime(year,1,1)
 dt1 = pd.datetime(year,12,31)
 # y limits for plotting
-lim_dict = {'Salinity': (0, 34), 'Temp. (deg C)': (0, 24),
-    'DO (mg L-1)': (0, 20), 'DIN (uM)': (0,55), 'Chl (mg m-3)': (0,50)}
+lim_dict = {'Salinity': (10,35), 'Temp. (deg C)': (5,20),
+'DO (mg L-1)': (0, 15), 'DIN (uM)': (0,40)}
+
+# lim_dict = {'Salinity': (0, 34), 'Temp. (deg C)': (0, 24),
+#     'DO (mg L-1)': (0, 20), 'DIN (uM)': (0,55), 'Chl (mg m-3)': (0,50)}
+lab_dict = {'Salinity':'(a) Salinity', 'Temp. (deg C)':'(b) Temperature [$^{\circ}C$]',
+    'DO (mg L-1)': '(c) DO [$mg \ L^{-1}$]', 'DIN (uM)':'(d) DIN  [$\mu M$]'}
 
 if for_web:
     figsize = (6,4)
     NR = 2; NC = 2
 else:
-    figsize = (12,5)
-    NR = 2; NC = 3
+    if no_map == True:
+        figsize = (15,8)
+        NR = 2; NC = 2
+    else:
+        figsize = (12,5)
+        NR = 2; NC = 3
     
 clist = ['r', 'g', 'b', 'k']
 for station in sta_to_plot:
@@ -243,6 +260,7 @@ for station in sta_to_plot:
     A = Bc[Bc['Station'] == station]   
     A = A.set_index('Date')
     pp = 1
+        
     for vn in ['Salinity', 'Temp. (deg C)', 'DO (mg L-1)', 'DIN (uM)']:
         ax = fig.add_subplot(NR, NC ,pp)
         ii = 0
@@ -259,19 +277,16 @@ for station in sta_to_plot:
         ax.xaxis.set_major_locator(mdates.MonthLocator())
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         ax.xaxis.set_tick_params(labelrotation=45)
-        ax.text(.05, .9, vn, fontweight='bold', transform=ax.transAxes)
+        ax.text(.05, .9, lab_dict[vn], fontweight='bold', transform=ax.transAxes)
         if pp==1:
+            ax.text(.05, .05, 'Solid = Observed, Dashed = Model',
+                style='italic', color='k', transform=ax.transAxes)
+        if pp == 3:
             z_counter = 0
             for zz in Z_list:
-                ax.text(.05, .5-.1*z_counter, 'Z =   %d m' % (zz),
+                ax.text(.05, .3 - .08*z_counter, 'Z =   %d m' % (zz),
                     color=clist[z_counter], fontweight='bold', transform=ax.transAxes)
                 z_counter += 1
-            # ax.text(.05, .5, 'Z =   0 m', color='r', fontweight='bold', transform=ax.transAxes)
-            # ax.text(.05, .4, 'Z = -10 m', color='g', fontweight='bold', transform=ax.transAxes)
-            # ax.text(.05, .3, 'Z = -30 m', color='b', fontweight='bold', transform=ax.transAxes)
-            #ax.text(.05, .2, 'Z = Deepest', color='k', fontweight='bold', transform=ax.transAxes)
-            ax.text(.05, .1, 'Solid = Observed, Dashed = Model',
-                style='italic', color='k', transform=ax.transAxes)
         if pp in [1,2]:
             ax.set_xticklabels('')
             ax.set_xlabel('')
@@ -279,10 +294,10 @@ for station in sta_to_plot:
             ax.set_xlabel('Date ' + str(year))
         ax.grid(True)
         pp += 1
-        if (pp==3) and (for_web == False):
+        if (pp==3) and (no_map == False):
             pp = 4
     
-    if for_web == False:
+    if no_map == False:
         # add station location map
         ax = fig.add_subplot(1,3,3)
         lon = sta_df.loc[station, 'Longitude']
@@ -308,3 +323,5 @@ for station in sta_to_plot:
         plt.close()
     else:
         plt.show()
+
+plt.rcdefaults()
