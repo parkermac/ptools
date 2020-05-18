@@ -75,20 +75,15 @@ Output: plots, one per station, names like ADM001.png, in folders like
 	ptools_output/ecology/casts_cas4_v2_lo6biom/ if you include the model
 	
 ======================================================================
-* plot_obsmod_series.py makes time series plots comparing obs & mod over a year (just 2017).  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
+* process_obsmod_series.py makes DataFrames comparing obs & mod at 3-4 depths.  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
 
 Input: ptools_data/ecology/Casts_2017.p & ptools_data/canada/Casts_2017.p &
 	   ptools_data/ecology/Bottles_2017.p
 	   and model extractions like
-	   LiveOcean_output/cast/cas4_v2_lo6biom/PSB003_2017.12.11.nc
+	   LiveOcean_output/cast/cas6_v3_lo8b/PSB003_2017.12.11.nc
+	   [or other years like 2018 and 2019]
 	   
-Output: plots, one per station, names like ADM001.png, in folders like
-	ptools_output/ecology/val_series_cas4_v2_lo6biom/ or
-	ptools_output/ecology/web_series_cas4_v2_lo6biom/ (formatted for the website, e.g. no map)
-	
-	and...
-	
-	ptools_output/ecology/ObsMod_cas4_v2_lo6biom.p (used in the scatterplot below) with data like
+Output: ptools_output/ecology/ObsMod_cas6_v6_lo8b_2017.p (used in the series and scatter plots below) with data like
 	
      Station       Date  Znom         ...          Mod DIN (uM) Density (kg m-3) Mod Density (kg m-3)
 0     ADM001 2017-02-23     0         ...               18.3425          1022.36              1021.87
@@ -103,6 +98,16 @@ the full list of columns is:
        'Chl (mg m-3)', 'DO (mg L-1)', 'DIN (uM)', 'Mod Salinity',
        'Mod Temp. (deg C)', 'Mod Chl (mg m-3)', 'Mod DO (mg L-1)',
        'Mod DIN (uM)', 'Density (kg m-3)', 'Mod Density (kg m-3)']
+	   
+======================================================================
+* plot_obsmod_series.py makes time series plots comparing obs & mod over a year (2017,8,9).  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
+
+Input: ptools_output/ecology/ObsMod_cas6_v6_lo8b_2017.p
+	   
+Output: plots, one per station, names like ADM001.png, in folders like
+	ptools_output/ecology/val_series_cas4_v2_lo6biom/ or
+	ptools_output/ecology/web_series_cas4_v2_lo6biom/ (formatted for the website, e.g. no map)
+	
 
 ======================================================================
 * plot_obsmod_scatter.py makes time a scatterplot comparing obs & mod over a year.  Because this can also be used with LiveOcean model output, it is not modified to be part of the SSMSP workflow.
