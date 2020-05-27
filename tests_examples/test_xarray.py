@@ -13,7 +13,7 @@ extract using xarray = 0.26 sec
 extract using netCDF4 = 0.17 sec
 (on my mac)
 ** no apparent advantage using xarray in this test,
-although there may be other times where lazy computation is desireable
+although there may be other times where lazy computation is desirable
 or maybe when we use a full year of history files...?
 
 This seems so fast - why does a mooring extraction take many hours for a year
@@ -42,10 +42,10 @@ fn_list = Lfun.get_fn_list('hourly', Ldir, '2019.07.04', '2019.07.05')
 # benchmark two ways of doing a mooring extraction
 vn_list = ['u','v','salt','temp','oxygen','NO3','phytoplankton']
 
+tt0 = time()
 a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
         data_vars='minimal', coords='minimal', compat='override')
         # need combine to work with concat_dim
-tt0 = time()
 xr_dict = {}
 for vn in vn_list:
      xr_dict[vn]= a[vn][:,:,10,10].values
@@ -56,7 +56,6 @@ nc0 = np.nan * np.ones(xr_dict['u'].shape)
 nc_dict = {}
 for vn in vn_list:
     nc_dict[vn] = nc0.copy()
-    
 counter = 0
 for fn in fn_list:
     ds = nc.Dataset(fn)
