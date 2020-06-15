@@ -1,5 +1,5 @@
 """
-Plots along-channel values for salinity and maybe temperature
+Plots along-channel values for salinity
 from Ecology CTD casts.  Uses all depths in 1 m
 increments, averaged into upper and lower layers.
 

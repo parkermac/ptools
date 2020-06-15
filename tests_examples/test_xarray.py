@@ -42,17 +42,11 @@ fn_list = Lfun.get_fn_list('hourly', Ldir, '2019.07.04', '2019.07.05')
 # benchmark two ways of doing a mooring extraction
 vn_list = ['u','v','salt','temp','oxygen','NO3','phytoplankton']
 
-tt0 = time()
-a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
-        data_vars='minimal', coords='minimal', compat='override')
-        # need combine to work with concat_dim
-xr_dict = {}
-for vn in vn_list:
-     xr_dict[vn]= a[vn][:,:,10,10].values
-print('extract using xarray = %0.2f sec' % (time()-tt0))
+ds = nc.Dataset(fn_list[0])
+nc0 = np.nan * np.ones((len(fn_list),len(ds['s_rho'][:])))
+ds.close()
 
 tt0 = time()
-nc0 = np.nan * np.ones(xr_dict['u'].shape)
 nc_dict = {}
 for vn in vn_list:
     nc_dict[vn] = nc0.copy()
@@ -64,4 +58,14 @@ for fn in fn_list:
     ds.close()
     counter += 1
 print('extract using netCDF4 = %0.2f sec' % (time()-tt0))
+
+tt0 = time()
+a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
+        data_vars='minimal', coords='minimal', compat='override')
+        # need combine to work with concat_dim
+xr_dict = {}
+for vn in vn_list:
+     xr_dict[vn]= a[vn][:,:,10,10].values
+print('extract using xarray = %0.2f sec' % (time()-tt0))
+
 
