@@ -83,7 +83,7 @@ def select_file(Gr, using_old_grid=False):
     # interactive selection
     if using_old_grid==True:
         fn_list = []
-        dir0 = '/Users/pm7/Documents/LiveOcean_data/grids/'
+        dir0 = Ldir['parent'] + 'LiveOcean_data/grids/'
         gn_list = ['cascadia1', 'cascadia2']
         for gn in gn_list:
             fn_list.append(dir0 + gn + '/grid.nc')

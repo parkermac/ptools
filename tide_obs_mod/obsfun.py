@@ -162,7 +162,7 @@ def read_dfo_info(fn):
     
 def get_harmonics(df, lat):
     t = date2num(df.index.to_pydatetime())
-    z = df['eta'].values
+    z = df['eta'].to_numpy()
     h = utide.solve(t, z, v=None,
                  lat=lat,
                  nodal=False,
