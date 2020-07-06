@@ -150,15 +150,15 @@ for name in sn_list:
     ax.legend(loc='lower right', ncol=2)
     ax.set_xlim(dt00, dt11)
     ax.set_ylim(-3.5,3.5)
-    ax.set_ylabel('SSH (m)', size=fs)
+    ax.set_ylabel('SSH [m]', size=fs)
     if for_web==True:
         ax.text(.5,.9, tstr, weight='bold', color='k', transform=ax.transAxes, ha='center', va='center', size=fs)
     else:
         ax.text(.05,.9, tstr, weight='bold', color='k', transform=ax.transAxes, size=fs)
     if for_web==False:
-        ax.text(.01, .1, ('SSH Std. Dev. = %0.2f (m)' % (obs_std)),
+        ax.text(.01, .1, ('SSH Std. Dev. = %0.2f [m]' % (obs_std)),
                 transform=ax.transAxes, size=fs*.8)
-        ax.text(.01, .03, ('Error Std. Dev. = %0.2f (m) (%d%%)' % (err, int(100*err/obs_std))),
+        ax.text(.01, .03, ('Error Std. Dev. = %0.2f [m] (%d%%)' % (err, int(100*err/obs_std))),
                 transform=ax.transAxes, size=fs*.8)
     ax.grid(False)
     if for_web==True:
@@ -210,7 +210,7 @@ for name in sn_list:
         ax.set_xlim(flo, fhi)
         ax.set_ylim(0, 1.4)
         ax.grid()
-        ax.set_xlabel('Frequency (cycles/day)', size=fs)
+        ax.set_xlabel('Frequency [cycles/day]', size=fs)
         ax.text(.05,.9, '(c) Amplitude (m)', weight='bold', color='k',
             transform=ax.transAxes, size=fs)
         ax.text(.05,.77, 'OBSERVATION', weight='bold', color='r',
@@ -231,8 +231,8 @@ for name in sn_list:
         ax.set_xlim(flo, fhi)
         ax.set_ylim(0, 360)
         ax.grid()
-        ax.set_xlabel('Frequency (cycles/day)', size=fs)
-        ax.text(.05,.9, '(d) Phase (degrees)', weight='bold', color='k',
+        ax.set_xlabel('Frequency [cycles/day]', size=fs)
+        ax.text(.05,.9, '(d) Phase [degrees]', weight='bold', color='k',
             transform=ax.transAxes, size=fs)
         for hn in hn_list:
             Ao, Am, Go, Gm, Fo, Fm = ofn.get_AG(hn, Hobs, Hmod)
@@ -257,9 +257,9 @@ for name in sn_list:
 print('')
 print(gtagex)
 print('Average Error Statistics')
-print('RMS Error = %0.2f (m)' % (np.array(err_std_list).mean()))
+print('RMS Error = %0.2f [m]' % (np.array(err_std_list).mean()))
 print('RMS Error = %0.2f (%% of RMS Tide)' % (np.array(err_pct_list).mean()))
-print('RMS Tide = %0.2f (m)' % (np.array(obs_std_list).mean()))
+print('RMS Tide = %0.2f [m]' % (np.array(obs_std_list).mean()))
 print('')
 
 if for_web == True:

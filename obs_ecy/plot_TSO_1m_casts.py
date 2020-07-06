@@ -90,8 +90,8 @@ fig = plt.figure(figsize=(14,11))
 # map
 ax3 = plt.subplot2grid((3,3), (1,2), rowspan=2)
 pfun.add_coast(ax3)
-ax3.set_xlim(-123.25, -122.25)
-ax3.set_ylim(47, 48.5)
+ax3.set_xlim(-123.5, -122)
+ax3.set_ylim(47, 49)
 pfun.dar(ax3)
 ax3.text(.95,.05,'(d)', transform=ax3.transAxes, color='k',
     size=1.3*fs, weight='bold', ha='right')
@@ -171,7 +171,7 @@ for ii in [0, 1, 2]:
         #bbox=dict(facecolor='gray', edgecolor='None', alpha=0.5))
     
     ts_df.plot(x='Longitude', y='Latitude', style='-o', color=c_dict[ii],
-        linewidth=4-ii, ax=ax3, legend=False, markersize=12-(3*ii))
+        linewidth=4-ii, ax=ax3, legend=False, markersize=12-(3*ii), alpha=.6)
     
 plt.show()
 fig.savefig(out_fn)

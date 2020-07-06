@@ -32,12 +32,12 @@ df = pd.read_csv(ri_fn, index_col='rname')
 
 #%% set time range and select rivers
 
-testing = False
+testing = True
 
 if testing == True:
     dt0 = datetime(1900,1,1)
-    dt1 = datetime(2018,12,31)
-    df = df.loc[['puyallup'],:]
+    dt1 = datetime(2019,12,31)
+    df = df.loc[['skagit'],:]
     save_data = False
 else:
     dt0 = datetime(1900,1,1)
@@ -81,7 +81,7 @@ if testing:
     plt.close('all')
     fig = plt.figure(figsize=(17,9))
     ax = fig.add_subplot(111)
-    qt = qt_dict['puyallup']
+    qt = qt_dict['skagit']
     qt.plot()
     plt.show()
 

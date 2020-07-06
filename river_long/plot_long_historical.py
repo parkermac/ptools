@@ -17,7 +17,7 @@ out_dir0 = '../../ptools_output/'
 ri_fn = '../ssmsp/river_info.csv'
 df = pd.read_csv(ri_fn, index_col='rname')
 #df = df.loc[['skagit', 'snohomish', 'puyallup', 'deschutes', 'skokomish'],:]
-df = df.loc[['skokomish'],:]
+df = df.loc[['skagit'],:]
 
 # where the extracted data is
 out_dir = out_dir0 + 'river_long/'
