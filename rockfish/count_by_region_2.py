@@ -18,6 +18,10 @@ experiments, so this takes a total of 10 minutes.  Not bad.
 7/20/2018 Added more detailed information about which polygon
 the "lost to land" ones ended up in.
 
+7/23/2020 Changed age range:
+OLD: age_range = range(90,121) => counted_by_region_3
+NEW: age_range = range(30,121) => counted_by_region_4
+
 """
 
 # setup
@@ -43,7 +47,7 @@ filterwarnings('ignore') # skip some warning messages
 
 # create the list of run files
 indir = Ldir['parent'] + 'ptools_output/rockfish/'
-outdir = indir + 'counted_by_region_3/'
+outdir = indir + 'counted_by_region_4/'
 Lfun.make_dir(outdir, clean=True)
 ex_list_raw = os.listdir(indir)
 ex_list = []
@@ -123,7 +127,7 @@ for ex in ex_list:
     Release_day = release_day * np.ones(shape=(NT,1))
     
     # age limits to consider
-    age_range = range(90,121)
+    age_range = range(30,121)
     
     if testing:
         age_range = [115]

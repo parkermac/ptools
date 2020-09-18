@@ -5,7 +5,7 @@ import scipy.io as io
 import netCDF4 as nc
 import subprocess
 import numpy as np
-import time
+from time import time
 import seawater as sw
 
 # assume path to alpha set by calling function
@@ -13,6 +13,13 @@ import Lfun
 Ldir = Lfun.Lstart()
 import zrfun
 import zfun
+
+def fillit(a):
+    # ensures a is an array with nan's for masked values
+    # instead of a masked array
+    if isinstance(a, np.ma.MaskedArray):
+        a = a.filled(np.nan)
+    return a
 
 def get_layer(fn, NZ=-1, aa=[], print_info=False):
     # function to extract and process fields from a history file
@@ -36,13 +43,6 @@ def get_layer(fn, NZ=-1, aa=[], print_info=False):
         
     plon = G['lon_psi'][j0:j1-1, i0:i1-1]
     plat = G['lat_psi'][j0:j1-1, i0:i1-1]
-
-    def fillit(a):
-        # ensures a is an array with nan's for masked values
-        # instead of a masked array
-        if isinstance(a, np.ma.MaskedArray):
-            a = a.filled(np.nan)
-        return a
 
     # extract needed info from history file
     v_dict = dict()
@@ -71,13 +71,27 @@ def get_layer(fn, NZ=-1, aa=[], print_info=False):
     z_rho = zrfun.get_z(h, 0*h, S, only_rho=True)
     depth = -z_rho[NZ, :, :].squeeze()
     pres = sw.pres(depth, lat)
+    pres = fillit(pres)
     v_dict['pres'] = pres
     temp = sw.ptmp(v_dict['salt'], v_dict['temp'], 0, v_dict['pres'])
+    temp = fillit(temp)
     v_dict['temp'] = temp
     
     # convert from umol/L to umol/kg using in situ dentity
     v_dict['alkalinity'] = 1000 * v_dict['alkalinity'] / (v_dict['rho'] + 1000)
     v_dict['TIC'] = 1000 * v_dict['TIC'] / (v_dict['rho'] + 1000)
+    
+    # % **** FIX BAD VALUES ****
+    # % 11/28/2016 there were two near-zero values of TIC along the
+    # % north row, and these caused CO2SYS to choke.
+    # % The 100 value is arbitrary, but seemed reasonable to me.
+    # DIC(DIC<100) = NaN;
+    # ALK(ALK<100) = NaN;
+    with np.errstate(invalid='ignore'):
+        for vn in ['alkalinity', 'TIC']:
+            vtemp = v_dict[vn]
+            vtemp[vtemp < 100] = np.nan
+            v_dict[vn] = vtemp
     
     # clean up
     v_dict.pop('rho') # no longer needed, so don't pass to worker
@@ -95,14 +109,13 @@ def get_carbon(v_dict, tempdir, print_info=False):
     
     # run the matlab code
     if print_info:
-        tt0 = time.time()
+        tt0 = time()
     func = "worker(\'" + tempdir + "\')"
     cmd = Ldir['which_matlab']
     run_cmd = [cmd, "-nodisplay", "-r", func, "&"]
     proc = subprocess.run(run_cmd, stdout=subprocess.PIPE)
     if print_info:
-        print('\n TIME to do calculation:')
-        print(' -- run CO2SYS %0.1f s' % (time.time()-tt0))
+        print(' -- run CO2SYS %0.1f s' % (time()-tt0))
         
     # load the output of CO2SYS
     PH = io.loadmat(tempdir + 'PH.mat')['PH']

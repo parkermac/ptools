@@ -42,6 +42,12 @@ NOTE: 2018.03.15 In response to this request from Kelly Andrews:
    
 I made count_by_region_2.py, and revised it on 2018.05.19,
 and sent new results.
+
+7/23/2020 Changed age range in count_by_region_2.py:
+OLD: age_range = range(90,121) => counted_by_region_3
+NEW: age_range = range(30,121) => counted_by_region_4
+and sent results to Kelly.
+
                                                           
 """
 
