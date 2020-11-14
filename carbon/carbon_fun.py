@@ -77,7 +77,7 @@ def get_layer(fn, NZ=-1, aa=[], print_info=False):
     temp = fillit(temp)
     v_dict['temp'] = temp
     
-    # convert from umol/L to umol/kg using in situ dentity
+    # convert from umol/L to umol/kg using in situ density
     v_dict['alkalinity'] = 1000 * v_dict['alkalinity'] / (v_dict['rho'] + 1000)
     v_dict['TIC'] = 1000 * v_dict['TIC'] / (v_dict['rho'] + 1000)
     

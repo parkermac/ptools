@@ -42,7 +42,7 @@ def fillit(a):
 
 # (1) Get and package input fields
 # file to work on
-fn = (Ldir['roms'] + '/output/' + 'cas4_v2_lo6biom/f2018.09.29/ocean_his_0001.nc')
+fn = (Ldir['roms'] + '/output/' + 'cas6_v3_lo8b/f2019.07.04/ocean_his_0001.nc')
 
 tt0 = time.time()
 ds = nc.Dataset(fn)

@@ -47,7 +47,7 @@ fn = (Ldir['roms'] + '/output/' + 'cas6_v3_lo8b/f2019.07.04/ocean_his_0001.nc')
 
 do_both = False # only use the matlab version for a limited region
 # specify a geographic region (aa=[] for full region)
-if True:
+if False:
     aa = [-124.4, -123.6, 46, 47.2] # Willapa Bay OA2 plot
 else:
     aa = []
@@ -55,7 +55,7 @@ if len(aa) == 4:
     do_both = True
 
 # specify layer number (S-coordinates, 0=bottom, -1=top)
-NZ = 0
+NZ = 20
 # get the fields
 tt0 = time()
 v_dict, plon, plat = cfun.get_layer(fn, NZ=NZ, aa=aa, print_info=True)
@@ -76,7 +76,7 @@ CO2dict = CO2SYS(v_dict['alkalinity'], v_dict['TIC'], 1, 2, v_dict['salt'], v_di
 # A = CO2SYS(a.alkalinity(:), a.TIC(:), 1, 2, a.salt(:), a.temp(:), a.temp(:), a.pres(:), a.pres(:), 50, 2, 1, 10, 1);
 #
 # NOTE that the "in" and "out" versions of the returned variables will be identical because we pass the same
-# pressure and temperature for input and output (in-situ inboth cases)
+# pressure and temperature for input and output (in-situ in both cases)
 print(' -- run PyCO2SYS %0.1f s' % (time()-tt0))
 PH_alt = CO2dict['pHout']
 PH_alt = PH_alt.reshape((v_dict['salt'].shape))

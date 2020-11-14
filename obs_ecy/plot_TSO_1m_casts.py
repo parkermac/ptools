@@ -29,7 +29,7 @@ Ldir['gtagex'] = 'cas6_v3_lo8b'
 TSO_all = pd.DataFrame()
 TSO_dict = dict()
 
-for year in [2017, 2018, 2019]:
+for year in [2017]:#, 2018, 2019]:
     
     # input location
     in_dir = Ldir['parent'] + 'ptools_output/ecology/'
@@ -95,6 +95,9 @@ ax3.set_ylim(47, 49)
 pfun.dar(ax3)
 ax3.text(.95,.05,'(d)', transform=ax3.transAxes, color='k',
     size=1.3*fs, weight='bold', ha='right')
+ax3.text(-123.135, 47.6093, 'Hood Canal', ha='center', va='center', rotation=60)
+ax3.text(-122.413, 48.1933, 'Whidbey Basin', ha='center', va='center', rotation=-50,
+    bbox=dict(facecolor='w', edgecolor='None', alpha=0.5))
 ax3.set_xticks([-123, -122.5])
 ax3.set_yticks([47,48])
 ax3.set_xlabel('Longitude')
