@@ -1,5 +1,8 @@
 """
 Plot the Chatwin TEF and M solutions.
+
+This is my original development code, before I started packaging functions
+in rflx_fun.py (as used in chatwin1.py).
 """
 
 import numpy as np

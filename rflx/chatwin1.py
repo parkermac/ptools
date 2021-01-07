@@ -1,5 +1,9 @@
 """
 Solve the efflux-reflux system with a 1-segment Chatwin solution.
+
+This is focused on testing how well the numerical scheme (the flux engine)
+reproduced the original salinities.
+
 """
 
 import numpy as np
@@ -11,7 +15,6 @@ reload(rfun)
 
 # Naming conventions
 #  Layers: s = shallow, d = deep
-#  Channels: o_ = outer, i_ = inner (does not apply here)
 
 B = 3e3     # width (m)
 hs = 10     # thickness of shallow layer (m)
@@ -34,7 +37,7 @@ Qout = -Qr*Sin/(Sin - Sout)
 ndays = 100
 dx = np.diff(x)
 NX = len(x)
-xm = x[:-1] + dx/2
+xm = x[:-1] + dx/2 # x at box centers
 
 # cell volumes (at bin centers)
 dvs = B*hs*dx
