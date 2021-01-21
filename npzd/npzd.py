@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Mon May 22 15:08:29 2017
-
-@author: PM5
-
 Code for time-dependent NPZD simulation.
 Based on Banas etal. (2009) JGR, RISE
 
