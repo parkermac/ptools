@@ -21,11 +21,11 @@ def a_calc(Sin, Sout):
     Sin0 = Sin[:-1]
     Sout1 = Sout[1:]
     Sout0 = Sout[:-1]
-    # Calculate Efflux-Reflux fractions (a11 and a00), at xm
+    # Calculate Efflux-Reflux fractions (a1 and a0), at xm
     # (notation different from Cokelet and Stewart 1985)
-    a00 = (Sout0/Sin0)*(Sin1-Sin0)/(Sin1-Sout0) # reflux - down
-    a11 = (Sin1/Sout1)*(Sout1-Sout0)/(Sin1-Sout0) # efflux - up
-    return a00, a11
+    a0 = (Sout0/Sin0)*(Sin1-Sin0)/(Sin1-Sout0) # reflux - down
+    a1 = (Sin1/Sout1)*(Sout1-Sout0)/(Sin1-Sout0) # efflux - up
+    return a0, a1
     
 def get_time_step(dx, Qout, B, hs, ndays):
     """
@@ -35,20 +35,36 @@ def get_time_step(dx, Qout, B, hs, ndays):
     for cfl_factor > 1.1).
     """
     cfl_factor = 0.9
-    dt = cfl_factor * np.min(dx/(-Qout[1:]/(B*hs))) # time step (s)
+    dt = cfl_factor * np.min(dx/(Qout[1:]/(B*hs))) # time step (s)
     NT = int(ndays*86400/dt) # total number of time steps
     NS = 10 # number of saves
     return dt, NT, NS
 
-def c_calc(csp, cdp, info_tup, riv=0, ocn=0):
+def c_calc(csp, cdp, info_tup, riv=0, ocn=0, Ts=np.inf, Td=np.inf, Cs=1, Cd=0):
+    """
+    This is the main computational engine for the time dependent solution.
+    
+    csp, cdp = vectors [xm] of initial tracer concentrations in the two layers
+    csa, cda = arrays [time, xm] of the surface and deep concentrations
+        over the course of the simulation
+    
+    info_tup = tuple of properties defining the grid, timestep and circulation
+    
+    riv = value of tracer coming in from river
+    ocn = value of tracer coming in from ocean
+    Ts = relaxation timescale [days] for surface layer
+    Td = relaxation timescale [days] for deep layer
+    Cs = value of tracer to relax to in surface layer
+    Cd = value of tracer to relax to in deep layer
+    """
     # unpack some parameters
-    NS, NX, NT, dt, dvs, dvd, Qout, Qin, a00, a11 = info_tup
+    NS, NX, NT, dt, dvs, dvd, Qout, Qin, a0, a1 = info_tup
     # Get Q's at box edges used in the box model.
     # NOTE: all Q's are positive for the box model, whereas
     # Qout is negative in my usual TEF sign convention.
-    Qout0 = -Qout[:-1]
+    Qout0 = Qout[:-1]
     Qin0 = Qin[:-1]
-    Qout1 = -Qout[1:]
+    Qout1 = Qout[1:]
     Qin1 = Qin[1:]
     NTs = int(NT/NS) # save interval, in timesteps
     # initialize arrays to save in
@@ -60,8 +76,10 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0):
         Cout0 = np.concatenate(([riv], csp[:-1])) # river
         Cin1 = np.concatenate((cdp[1:], [ocn])) # ocean
         # update fields
-        cs = csp + (dt/dvs)*( Qout0*(1-a00)*Cout0 + Qin1*a11*Cin1 - Qout1*csp)
-        cd = cdp + (dt/dvd)*( Qin1*(1-a11)*Cin1 + Qout0*a00*Cout0 - Qin0*cdp)
+        cs = csp + (dt/dvs)*( Qout0*(1-a0)*Cout0 + Qin1*a1*Cin1 - Qout1*csp) + (Cs-csp)*(dt/86400)/Ts
+        cd = cdp + (dt/dvd)*( Qin1*(1-a1)*Cin1 + Qout0*a0*Cout0 - Qin0*cdp) + (Cd-cdp)*(dt/86400)/Td
+        cs[cs<0] = 0
+        cd[cd<0] = 0
         cd[0] = cd[1] # this helps when using riv = ocn = const.
         csp = cs.copy()
         cdp = cd.copy()
@@ -71,3 +89,4 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0):
             cda[tta,:] = cd
             tta += 1
     return csa, cda
+    
