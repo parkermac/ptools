@@ -17,13 +17,6 @@ reload(efun)
 import tractive_functions as tfun
 reload(tfun)
 
-alp = os.path.abspath('../../LiveOcean/alpha')
-if alp not in sys.path:
-    sys.path.append(alp)
-import zfun
-
-
-
 # conversion factors
 m2f = 3.28
 f2m = 1/3.28
@@ -123,7 +116,7 @@ sun_moon_fac = ( cons_df.loc['P1','Amplitude'] /
     (cons_df.loc['P1','Amplitude'] + cons_df.loc['O1','Amplitude']) )
 pred_df['SunDec'] = sun_moon_fac *pred_df['K1'] + pred_df['P1']
 pred_df['MoonDec'] = (1-sun_moon_fac)*pred_df['K1'] + pred_df['O1']
-pred_df['z3'] = pred_df['SNE'] + pred_df['SunDec'] + pred_df['MoonDec']
+pred_df['z3'] = pred_df['SNE'] + pred_df['SunDec'] + pred_df['MoonDec'] + obs_df['z'].mean()
 
 # get some orbital information
 moon_orbit_df = efun.get_moon_orbit(dt00, dt11)
@@ -165,6 +158,9 @@ if True:
     ax1 = fig.add_subplot(211)
     obs_df.plot(y='z', title=('Observed Tide Height (feet) ' + city),
             legend=False, style='-b', ax=ax1, lw=lw, grid=True, xlim=(dt0,dt1))
+    if True: # overlay sum of the three parts of the synthetic tide
+        pred_df.plot(y='z3', legend=False, style='-k', ax=ax1, lw=lw/2, grid=True, xlim=(dt0,dt1))
+    
     ax1.set_xticklabels('')
     ax1.set_xlabel('')
     
@@ -178,7 +174,7 @@ if True:
             title='...Is Mostly the Sum of Three Separate Patterns')
     ax.set_xlabel('Date')
     
-if True:
+if False:
     fig = plt.figure(figsize=figsize)
     
     ax = fig.add_subplot(211)
@@ -196,7 +192,7 @@ if True:
              
     ax.set_xlabel('Date')
              
-if True:
+if False:
     fig = plt.figure(figsize=figsize)
     
     ax = fig.add_subplot(211)
