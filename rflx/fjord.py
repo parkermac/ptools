@@ -1,5 +1,5 @@
 """
-Solve the efflux-reflux system with a Chatwin solution.
+Solve the efflux-reflux system with a fjord solution.
 
 """
 
@@ -22,45 +22,50 @@ Lfun.make_dir(outdir)
 # define bathymetry and layer thickness
 B = 3e3     # width (m)
 hs = 20     # thickness of shallow layer (m)
-hd = 20     # thickness of deep layer (m)
+hd = 60     # thickness of deep layer (m)
 nx = 100    # number of steps to initially define a channel
+
 # estuary physical parameters
 Socn = 30  # ocean salinity
-ds = 5 # Sin - Sout at the mouth
-
-qr = np.zeros(nx-1)
-qr[0] = 300
-qr[10] = 300
-qr[20] = 300
-
-Qr = np.cumsum(qr) # river flow [m3/s]
-Qr = np.concatenate(([0], Qr))
+ds = 3 # Sin - Sout at the mouth
+Qr = 1e3 # river flow [m3/s]
 
 # get the solution at box edges
-Sin, Sout, x, L = rfun.get_Sio_chatwin(Socn, ds, nx)
+Sin, Sout, x, L = rfun.get_Sio_fjord(Socn, ds, nx)
+
+# calculate transports at box edges from Knudsen
+# sign convention: all Q's positive
 Qout = Qr*Sin/(Sin - Sout)
 Qin = Qr*Sout/(Sin - Sout)
+Qout[0] = Qr
+Qin[0] = 0
 
 # run specifications
-ndays = 200
+ndays = 1000
 dx = np.diff(x)
 NX = len(x)
 xm = x[:-1] + dx/2 # x at box centers
+
 # box volumes (at box centers)
 dvs = B*hs*dx
 dvd = B*hd*dx
+
 # calculate Efflux-Reflux fractions (a11 and a00) for each box
+# using from,to notation.
 a0, a1 = rfun.a_calc(Sin, Sout)
+a0[0] = 0
+a1[0] = 1
+
 # get time step
 dt, NT, NS = rfun.get_time_step(dx, Qout, B, hs, ndays)
 # pack some parameters
-info_tup = (NS, NX, NT, dt, dvs, dvd, Qout, Qin, a0, a1, qr)
+info_tup = (NS, NX, NT, dt, dvs, dvd, Qout, Qin, a0, a1)
 
 # intial condition vectors
 csp = np.zeros(NX-1) # csp = "concentration shallow previous"
 cdp = np.zeros(NX-1) # cdp = "concentration deep previous"
 
-exp = 'salt'
+exp = 'oxy'
 plot_s = False
 if exp == 'salt':
     # Reproduce salinity state
@@ -93,9 +98,9 @@ elif exp == 'ocean_one_nomix':
     csa, cda = rfun.c_calc(csp, cdp, info_tup, riv=0, ocn=1)
     print('Tracer flux out at mouth %0.3f [c m3/s]' % (-Qout[-1]*csa[-1,-1]))
     print('Tracer flux in at mouth %0.3f [c m3/s]' % (1*Qin[-1]))
-elif exp == 'river_oxy':
-    # Constant ocean source to test tracer conservation
-    csa, cda = rfun.c_calc(csp, cdp, info_tup, riv=1, ocn=0 , Ts=1, Td=10, Cs=1, Cd=0)
+elif exp == 'oxy':
+    # a tracer with relaxation times
+    csa, cda = rfun.c_calc(csp, cdp, info_tup, riv=1, ocn=.5 , Ts=5, Td=20, Cs=1, Cd=0)
 
 else:
     print('exp = %s not supported' % (exp))
@@ -136,7 +141,7 @@ else:
     ax.set_ylabel('Concentration')
     ax.text(.1, .8, '$C_{in}$', c=cin, transform=ax.transAxes, size=1.5*fs,
         bbox=dict(facecolor='w', edgecolor='None', alpha=0.5))
-    ax.text(.2, .8, 'C_{out}$', c=cout, transform=ax.transAxes, size=1.5*fs,
+    ax.text(.2, .8, '$C_{out}$', c=cout, transform=ax.transAxes, size=1.5*fs,
         bbox=dict(facecolor='w', edgecolor='None', alpha=0.5))
     ax.set_ylim(0, 1.1)
 ax.set_xlabel('X (km)')
@@ -153,7 +158,7 @@ ax.text(.1, .85, 'Reflux $a_{0}$', c=c0, transform=ax.transAxes, size=1.3*fs,
 ax.text(.1, .7, 'Efflux $a_{1}$', c=c1, transform=ax.transAxes, size=1.3*fs,
     bbox=dict(facecolor='w', edgecolor='None', alpha=0.5))
 ax.set_xlim(0,X[-1])
-ax.set_ylim(0, 1.1)
+ax.set_ylim(bottom=0)
 
 fig.tight_layout()
 fig.savefig(outdir + exp + '.png')

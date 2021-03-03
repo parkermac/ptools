@@ -5,15 +5,18 @@ Functions for the rflx code.
 import numpy as np
 
 # function to create Sin and Sout
-def get_Sio_chatwin(Qr, Socn, ds, nx):
-    L0 = 50e3 # length of salt intrusion for Qr = Qr0
-    Qr0 = 1e3 # m3/s
-    L= L0 * (Qr/Qr0)**(-1/3) # length of salt intrusion (m)
+def get_Sio_chatwin(Socn, ds, nx, L=50e3):
     a = Socn/(L**1.5)
     alpha = ds/L
     x = np.linspace((alpha/(2*a))**2,L,nx)
     Sin = a*x**1.5 + alpha*x/2
     Sout = a*x**1.5 - alpha*x/2
+    return Sin, Sout, x, L
+
+def get_Sio_fjord(Socn, ds, nx, L=100e3):
+    x = np.linspace(0,L,nx)
+    Sin = np.linspace(Socn - ds, Socn, nx)
+    Sout = np.linspace(Socn - 2*ds, Socn - ds, nx)
     return Sin, Sout, x, L
 
 def a_calc(Sin, Sout):
@@ -58,7 +61,7 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0, Ts=np.inf, Td=np.inf, Cs=1, Cd=0):
     Cd = value of tracer to relax to in deep layer
     """
     # unpack some parameters
-    NS, NX, NT, dt, dvs, dvd, Qout, Qin, a0, a1 = info_tup
+    NS, NX, NT, dt, dvs, dvd, Qout, Qin, a0, a1, qr = info_tup
     # Get Q's at box edges used in the box model.
     # NOTE: all Q's are positive for the box model, whereas
     # Qout is negative in my usual TEF sign convention.
@@ -73,10 +76,10 @@ def c_calc(csp, cdp, info_tup, riv=0, ocn=0, Ts=np.inf, Td=np.inf, Cs=1, Cd=0):
     tta = 0 # index for periodic saves
     for tt in range(NT):
         # boundary conditions
-        Cout0 = np.concatenate(([riv], csp[:-1])) # river
+        Cout0 = np.concatenate(([0], csp[:-1])) # river
         Cin1 = np.concatenate((cdp[1:], [ocn])) # ocean
         # update fields
-        cs = csp + (dt/dvs)*( Qout0*(1-a0)*Cout0 + Qin1*a1*Cin1 - Qout1*csp) + (Cs-csp)*(dt/86400)/Ts
+        cs = csp + (dt/dvs)*( Qout0*(1-a0)*Cout0 + Qin1*a1*Cin1 - Qout1*csp + qr*riv) + (Cs-csp)*(dt/86400)/Ts
         cd = cdp + (dt/dvd)*( Qin1*(1-a1)*Cin1 + Qout0*a0*Cout0 - Qin0*cdp) + (Cd-cdp)*(dt/86400)/Td
         cs[cs<0] = 0
         cd[cd<0] = 0
