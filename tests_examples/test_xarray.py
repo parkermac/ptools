@@ -18,6 +18,16 @@ or maybe when we use a full year of history files...?
 
 This seems so fast - why does a mooring extraction take many hours for a year
 on boiler?  The test above suggest it should take like 1-6 minutes!
+
+Here are results from the same test on perigee:
+
+In [1]: run test_xarray.py
+extract using netCDF4 = 62.91 sec
+extract using xarray = 4.92 sec
+
+In [2]: run test_xarray.py
+extract using netCDF4 = 0.21 sec
+extract using xarray = 3.68 sec
 """
 
 import xarray as xr
@@ -61,7 +71,7 @@ print('extract using netCDF4 = %0.2f sec' % (time()-tt0))
 
 tt0 = time()
 a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
-        data_vars='minimal', coords='minimal', compat='override')#, chunks={'ocean_time':1})
+        data_vars='minimal', coords='minimal', compat='override', chunks={'ocean_time':1})
         # need combine to work with concat_dim
 xr_dict = {}
 for vn in vn_list:
