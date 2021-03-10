@@ -9,15 +9,15 @@ s = a.salt.mean(axis=0).values
 # look at a.ocean_time.values
 
 RESULT (7 3-D variables at one x,y for 49 times (2 days)):
-extract using xarray = 0.26 sec
-extract using netCDF4 = 0.17 sec
+extract using netCDF4 = 0.22 sec (was more like 2.2 sec the first time)
+extract using xarray = 2.37 sec
 (on my mac)
 ** no apparent advantage using xarray in this test,
 although there may be other times where lazy computation is desirable
 or maybe when we use a full year of history files...?
 
 This seems so fast - why does a mooring extraction take many hours for a year
-on boiler?  The test above suggest it should take like a minute!
+on boiler?  The test above suggest it should take like 1-6 minutes!
 """
 
 import xarray as xr
@@ -61,7 +61,7 @@ print('extract using netCDF4 = %0.2f sec' % (time()-tt0))
 
 tt0 = time()
 a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
-        data_vars='minimal', coords='minimal', compat='override')
+        data_vars='minimal', coords='minimal', compat='override')#, chunks={'ocean_time':1})
         # need combine to work with concat_dim
 xr_dict = {}
 for vn in vn_list:
