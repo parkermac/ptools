@@ -71,8 +71,9 @@ print('extract using netCDF4 = %0.2f sec' % (time()-tt0))
 
 tt0 = time()
 a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
-        data_vars='minimal', coords='minimal', compat='override', chunks={'ocean_time':1})
+        data_vars='minimal', coords='minimal', compat='override')#, chunks={'ocean_time':1})
         # need combine to work with concat_dim
+        # using chunks made no difference in this test
 xr_dict = {}
 for vn in vn_list:
      xr_dict[vn]= a[vn][:,:,10,10].values
