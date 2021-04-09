@@ -44,6 +44,8 @@ print('Time initialize using ncks = %0.1f sec' % (time() - tt0))
 
 ds_out = nc.Dataset(out_fn, 'a')
 ds_out.createVariable('uuvv', float, ('ocean_time', 'eta_rho', 'xi_rho'))
+ds_out.createVariable('u', float, ('ocean_time', 'eta_rho', 'xi_rho'))
+ds_out.createVariable('v', float, ('ocean_time', 'eta_rho', 'xi_rho'))
 
 f = zfun.godin_shape()
 NT = len(f)
@@ -65,6 +67,8 @@ for day in day_list:
             zr = ds['zeta'][tt,:,:].squeeze()*f[ii]
             ur = ds['u'][tt,:,:].squeeze()
             vr = ds['v'][tt,:,:].squeeze()
+            u = ur*f[ii]
+            v = vr*f[ii]
             uuvv = (ur*ur + vr*vr)*f[ii]
             uuvv[uuvv.mask] = 0
             uuvv[zr.mask] = np.nan
@@ -73,11 +77,15 @@ for day in day_list:
             zr = zr + ds['zeta'][tt,:,:].squeeze()*f[ii]
             ur = ds['u'][tt,:,:].squeeze()
             vr = ds['v'][tt,:,:].squeeze()
+            u = u + ur*f[ii]
+            v = v + vr*f[ii]
             uuvv1 = (ur*ur + vr*vr)*f[ii]
             uuvv1[uuvv1.mask] = 0
             uuvv = uuvv + uuvv1
         ii += 1
     ds_out['zeta'][day,:,:] = zr
+    ds_out['u'][day,:,:] = u
+    ds_out['v'][day,:,:] = v
     ds_out['uuvv'][day,:,:] = uuvv
     ds_out['ocean_time'][day] = t
     

@@ -62,12 +62,8 @@ iy1 = zfun.find_nearest_ind(yr[:,0], aa[3])
 
 xxp = xp[iy0-1:iy1+1,ix0-1:ix1+1]
 yyp = yp[iy0-1:iy1+1,ix0-1:ix1+1]
-
-plt.close('all')
-fs=16
-plt.rc('font', size=fs)
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-cmap = 'Spectral_r'
+xxr = xr[iy0-1:iy1+1,ix0-1:ix1+1]
+yyr = yr[iy0-1:iy1+1,ix0-1:ix1+1]
 
 if do_all:
     pass
@@ -79,13 +75,20 @@ day_list = [item for item in range(len(ot))]
 for day in day_list:
     zr = ds['zeta'][day,iy0:iy1+1,ix0:ix1+1].squeeze()
     uuvv = ds['uuvv'][day,iy0:iy1+1,ix0:ix1+1].squeeze()
+    u = ds['u'][day,iy0:iy1+1,ix0:ix1+1].squeeze()
+    v = ds['v'][day,iy0:iy1+1,ix0:ix1+1].squeeze()
     zr = zr - zr.mean()
     if day == 0:
         zrm = zr/nt
         uuvvm = uuvv/nt
+        um = u/nt
+        vm = v/nt
     else:
         zrm += zr/nt
         uuvvm += uuvv/nt
+        um += u/nt
+        vm += v/nt
+        
 ds.close()
 
 time_format = '%Y.%m.%d'
@@ -95,39 +98,67 @@ T1 = Lfun.modtime_to_datetime(ot[-1])
 Tstr1 = T1.strftime(time_format)
 
 # PLOTTING
-fig = plt.figure(figsize=(17,8))
+plt.close('all')
+fs=16
+plt.rc('font', size=fs)
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+cmap = 'Spectral_r'
 
-ax = fig.add_subplot(131)
-cs = ax.pcolormesh(xxp,yyp,9.8*zrm, vmin=vmin, vmax=vmax, cmap=cmap)
-pfun.add_coast(ax)
-ax.axis(aa)
-pfun.dar(ax)
-ax.set_xticks(xlist)
-ax.set_yticks(ylist)
-ax.set_title(r'$g\eta\ [m^{2}s^{-2}]$')
-ax.text(.05,.1,Tstr0, transform=ax.transAxes)
-ax.text(.05,.05,Tstr1, transform=ax.transAxes)
+if False:
+    # Bernoulli plot
+    fig = plt.figure(figsize=(17,8))
 
-ax = fig.add_subplot(132)
-cs = ax.pcolormesh(xxp,yyp,0.5*uuvvm, vmin=vmin, vmax=vmax, cmap=cmap)
-pfun.add_coast(ax)
-ax.axis(aa)
-pfun.dar(ax)
-ax.set_xticks(xlist)
-ax.set_yticks([])
-ax.set_title(r'$(u^{2} + v^{2})/2$')
-# Inset colorbar
-cbaxes = inset_axes(ax, width="4%", height="40%", loc=aloc, borderpad=3) 
-fig.colorbar(cs, cax=cbaxes, orientation='vertical')
+    ax = fig.add_subplot(131)
+    cs = ax.pcolormesh(xxp,yyp,9.8*zrm, vmin=vmin, vmax=vmax, cmap=cmap)
+    pfun.add_coast(ax)
+    ax.axis(aa)
+    pfun.dar(ax)
+    ax.set_xticks(xlist)
+    ax.set_yticks(ylist)
+    ax.set_title(r'$g\eta\ [m^{2}s^{-2}]$')
+    ax.text(.05,.1,Tstr0, transform=ax.transAxes)
+    ax.text(.05,.05,Tstr1, transform=ax.transAxes)
 
-ax = fig.add_subplot(133)
-cs = ax.pcolormesh(xxp,yyp,9.8*zrm + 0.5*uuvvm, vmin=vmin, vmax=vmax, cmap=cmap)
-pfun.add_coast(ax)
-ax.axis(aa)
-pfun.dar(ax)
-ax.set_xticks(xlist)
-ax.set_yticks([])
-ax.set_title(r'$g\eta+(u^{2} + v^{2})/2$')
+    ax = fig.add_subplot(132)
+    cs = ax.pcolormesh(xxp,yyp,0.5*uuvvm, vmin=vmin, vmax=vmax, cmap=cmap)
+    pfun.add_coast(ax)
+    ax.axis(aa)
+    pfun.dar(ax)
+    ax.set_xticks(xlist)
+    ax.set_yticks([])
+    ax.set_title(r'$(u^{2} + v^{2})/2$')
+    # Inset colorbar
+    cbaxes = inset_axes(ax, width="4%", height="40%", loc=aloc, borderpad=3) 
+    fig.colorbar(cs, cax=cbaxes, orientation='vertical')
+
+    ax = fig.add_subplot(133)
+    cs = ax.pcolormesh(xxp,yyp,9.8*zrm + 0.5*uuvvm, vmin=vmin, vmax=vmax, cmap=cmap)
+    pfun.add_coast(ax)
+    ax.axis(aa)
+    pfun.dar(ax)
+    ax.set_xticks(xlist)
+    ax.set_yticks([])
+    ax.set_title(r'$g\eta+(u^{2} + v^{2})/2$')
+    
+else:
+    # speed plot
+    fig = plt.figure(figsize=(8,12))
+    
+    ax = fig.add_subplot(111)
+    cs = ax.pcolormesh(xxp,yyp,np.sqrt(um*um + vm*vm), vmin=0, vmax=0.6, cmap=cmap)
+    pfun.add_coast(ax)
+    ax.axis(aa)
+    pfun.dar(ax)
+    ax.set_xticks(xlist)
+    ax.set_yticks(ylist)
+    ax.set_title(r'Speed of Mean Currents $[m\ s^{-1}]$')
+    nskp = 5
+    ax.quiver(xxr[::nskp,::nskp], yyr[::nskp,::nskp], um[::nskp,::nskp], vm[::nskp,::nskp],
+        units='y', scale=10, scale_units='y', color='gray', pivot='middle')
+    # Inset colorbar
+    cbaxes = inset_axes(ax, width="4%", height="40%", loc=aloc, borderpad=4) 
+    fig.colorbar(cs, cax=cbaxes, orientation='vertical')
+    
 
 fig.tight_layout()
 plt.show()

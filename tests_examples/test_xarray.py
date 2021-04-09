@@ -22,7 +22,7 @@ on boiler?  The test above suggest it should take like 1-6 minutes!
 Here are results from the same test on perigee:
 
 In [1]: run test_xarray.py
-extract using netCDF4 = 62.91 sec
+extract using netCDF4 = 62.91 sec <= SLOW!
 extract using xarray = 4.92 sec
 
 In [2]: run test_xarray.py
@@ -47,7 +47,7 @@ Ldir = Lfun.Lstart()
 
 # get list of history files
 Ldir['gtagex'] = 'cas6_v3_lo8b'
-fn_list = Lfun.get_fn_list('hourly', Ldir, '2019.07.04', '2019.07.05')
+fn_list = Lfun.get_fn_list('hourly', Ldir, '2019.07.04', '2019.07.06')
 
 # benchmark two ways of doing a mooring extraction
 vn_list = ['u','v','salt','temp','oxygen','NO3','phytoplankton']
@@ -74,6 +74,7 @@ a = xr.open_mfdataset(fn_list, combine='nested', concat_dim='ocean_time',
         data_vars='minimal', coords='minimal', compat='override')#, chunks={'ocean_time':1})
         # need combine to work with concat_dim
         # using chunks made no difference in this test
+        # using parallel=True made it a little slower
 xr_dict = {}
 for vn in vn_list:
      xr_dict[vn]= a[vn][:,:,10,10].values

@@ -92,7 +92,7 @@ ptools_data/Cushman_Dam.
 Log: I re-ran on 2019.03.21 just for hamma and skokomish.
 
 ===================================================================
-* test_ec.py
+* test_ec.py <<<<< REMOVED 2021.03.30
 
 Code to test the timespan covered by EC river data sources, and attempts
 at error handling.  One issue is that I found this error in river_class.get_ec_data():
@@ -108,6 +108,15 @@ Currently the problem should not come up because I now have historical EC data t
 of 2018, and if I make riv2 forcing files the live EC data they get will be from just the
 first few months of 2019.  But by late 2020 if I am trying to make riv2 files for early 2019
 it will be a problem.
+
+===================================================================
+* test_ec_historical.py
+* test_ec_realtime.py
+
+Updated, simpler versions of test_ec.py to more easily work out bugs in getting
+Canadian river flow data.  Created 2021.03.30.
+
+Result: There were small edits needed to get the data in both cases.
 
 ===================================================================
 * make_clim.py
