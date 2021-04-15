@@ -25,7 +25,7 @@ cruises = sta_df['Cruise'].unique()
 fs=16
 plt.rc('font', size=fs)
 plt.close('all')
-fig = plt.figure(figsize=(18,8))
+fig = plt.figure(figsize=(14,11))
 ii = 1
 
 # sort cruises by date
@@ -33,7 +33,7 @@ cruise_list = cruise_list = ['CAB1079', 'AQ201710', 'RC001',
     'RBTSN201805', 'RC006', 'RC007', 'NORSEMANIIOCT2018']
 
 for cruise in cruise_list:
-    ax = fig.add_subplot(2,4,ii)
+    ax = fig.add_subplot(3,3,ii)
     
     c_df = sta_df[sta_df['Cruise']==cruise]
     
@@ -56,5 +56,6 @@ for cruise in cruise_list:
     
     ii += 1
     
+fig.tight_layout()
 plt.show()
 plt.rcdefaults()
