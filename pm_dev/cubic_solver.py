@@ -4,6 +4,8 @@ def cubic_solver(a,b,c,d):
     a*x**3 + b*x**2 + c*x + d = 0
     Parker MacCready 12/5/2002, recoded in python 10/25/2017
     """
+    import numpy as np
+    
     b3a = b/(3*a)
     b3a2 = b3a * b3a
     b3a3 = b3a * b3a * b3a
