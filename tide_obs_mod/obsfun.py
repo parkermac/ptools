@@ -14,7 +14,7 @@ def get_AG(hn, Hobs, Hmod):
     #convenience function for loading constituent info
     ho = Hobs
     hm = Hmod
-    # we use the "[0]" becasue these are arrays and we want floats
+    # we use the "[0]" because these are arrays and we want floats
     Ao = ho.A[ho.name==hn][0]
     Am = hm.A[hm.name==hn][0]
     Go = ho.g[ho.name==hn][0]

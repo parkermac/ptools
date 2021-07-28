@@ -22,6 +22,9 @@ the "lost to land" ones ended up in.
 OLD: age_range = range(90,121) => counted_by_region_3
 NEW: age_range = range(30,121) => counted_by_region_4
 
+5/25/2021 Changed age range again:
+NEW: age_range = range(1,121) => counted_by_region_5
+
 """
 
 # setup
@@ -47,7 +50,7 @@ filterwarnings('ignore') # skip some warning messages
 
 # create the list of run files
 indir = Ldir['parent'] + 'ptools_output/rockfish/'
-outdir = indir + 'counted_by_region_4/'
+outdir = indir + 'counted_by_region_5/'
 Lfun.make_dir(outdir, clean=True)
 ex_list_raw = os.listdir(indir)
 ex_list = []
@@ -127,7 +130,7 @@ for ex in ex_list:
     Release_day = release_day * np.ones(shape=(NT,1))
     
     # age limits to consider
-    age_range = range(30,121)
+    age_range = range(1,121)
     
     if testing:
         age_range = [115]
