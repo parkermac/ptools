@@ -44,8 +44,15 @@ plotdir = indir + 'plots/'
 Lfun.make_dir(plotdir)
 save_plots = True
 
-# testing
-ex_list = ex_list[-12:]
+# testing, and for new figures for Kelly Andrews 2021.08.19
+if True:
+    ex_list = [
+        'rockfish_2006_Experiment_3_13.nc',
+        'rockfish_2006_Experiment_4_16.nc',
+        'rockfish_2006_Experiment_3_6.nc',
+        'rockfish_2006_Experiment_4_6.nc']
+    show_series = False
+    save_tif = True
 #ex = 'rockfish_2006_Experiment_4_4.nc'
 
 # retrieve experimental data
@@ -125,10 +132,17 @@ for ex in ex_list:
         location = exdf.loc[exind, 'Site']
         
         # PLOTTING
-        fig = plt.figure(figsize=(13,7))
+        
+        if show_series:
+            fig = plt.figure(figsize=(13,7))
+        else:
+            fig = plt.figure(figsize=(8,8))
         
         # MAP
-        ax = fig.add_subplot(1,2,1)
+        if show_series:
+            ax = fig.add_subplot(1,2,1)
+        else:
+            ax = fig.add_subplot(111)
         ax.set_xlabel('Longitude')
         ax.set_ylabel('Latitude')
         pfun.add_coast(ax)
@@ -146,16 +160,21 @@ for ex in ex_list:
         ax.set_title('%s : %s : %s' % (exind, species.title(), location))
         
         # TIME SERIES
-        age_days = np.linspace(0, nt/24, nt)
-        ax = fig.add_subplot(2,2,2)
-        ax.plot(age_days, zz,'-', alpha=0.25)
-        ax.set_ylabel('Z (m)')
-        ax.set_xlabel('Age (days)')
+        if show_series:
+            age_days = np.linspace(0, nt/24, nt)
+            ax = fig.add_subplot(2,2,2)
+            ax.plot(age_days, zz,'-', alpha=0.25)
+            ax.set_ylabel('Z (m)')
+            ax.set_xlabel('Age (days)')
         
         # save or plot figures
         if save_plots:
-            out_fn = plotdir + ex.strip('.nc') + '.png'
-            plt.savefig(out_fn)
+            if save_tif:
+                out_fn = plotdir + ex.strip('.nc') + '.tif'
+                plt.savefig(out_fn, dpi=300)
+            else:
+                out_fn = plotdir + ex.strip('.nc') + '.png'
+                plt.savefig(out_fn)
             plt.close()
         else:
             plt.show()

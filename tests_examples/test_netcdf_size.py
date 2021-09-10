@@ -16,7 +16,7 @@ data model version, one of `NETCDF3_CLASSIC`, `NETCDF4`,
 `NETCDF4_CLASSIC`, `NETCDF3_64BIT_OFFSET` or `NETCDF3_64BIT_DATA`.
 Also, the default for "format" is NETCDF4.
 
-In my current LO history files the format is NETCDF3 and the dat_model
+In my current LO history files the format is NETCDF3 and the data_model
 is NETCDF3_64BIT_OFFSET.  Also in the LO_ROMS makefile we do not appear
 to ask it to use NETCDF4:
 
