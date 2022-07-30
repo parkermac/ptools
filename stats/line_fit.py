@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 N = 50
 x = np.linspace(0,1,N)
 y_0 = 5 # y-intercept
-dydx = 1 # slope
+dydx = 10 # slope
 y_std = .1
 y_noise = y_std * np.random.randn(N)
 # original points
@@ -44,7 +44,7 @@ ci_mean = s_y * stats.t.ppf(1-ci_fac,N-1) / np.sqrt(N)
 ci_trend = s_eps * stats.t.ppf(1-ci_fac,N-2) / np.sqrt((N-1)*s_x*s_x)
 
 # Alternatively, fit the line using python tools
-BB = np.polyfit(x,y,1, full=True)
+BB = np.polyfit(x,y,1, full=True)[0]
 dyydx_alt = BB[0] # slope
 yy0_alt = BB[1] # y-intercept
 # RESULT: these are identical to the y-intercept and slope
@@ -67,3 +67,7 @@ ax.text(.05, .8, '95% Confidence Intervals',
     transform=ax.transAxes, size=fs)
 ax.set_title('N = %d' % (N), size=fs+2)
 plt.show()
+
+# test of the new linefit function
+from lo_tools import zfun
+z_slope, z_y0, z_r, z_ci_mean, z_ci_trend = zfun.linefit(x,y)
